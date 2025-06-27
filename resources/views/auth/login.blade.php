@@ -76,13 +76,13 @@
                     @endif
 
                     <!-- Form -->
-                   <form method="POST" action="{{ route('login.submit') }}">
+                    <form method="POST" action="{{ route('login.submit') }}">
                         @csrf
-                        <!-- Phone -->
+                        <!-- Email -->
                         <div class="mb-3">
-                            <label for="phoneInput" class="form-label">Số điện thoại</label>
-                            <input type="tel" id="phoneInput" class="form-control @error('phone') is-invalid @enderror"
-                                   name="phone" placeholder="Nhập số điện thoại"
+                            <label for="loginInput" class="form-label">Mã đăng nhập</label>
+                            <input type="text" id="loginInput" class="form-control @error('phone') is-invalid @enderror"
+                                   name="phone" placeholder="Nhập tên đăng nhập"
                                    value="{{ old('phone') }}" required autofocus>
                             @error('phone')
                             <span class="invalid-feedback" role="alert">
@@ -116,6 +116,12 @@
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary">Đăng Nhập</button>
                             </div>
+
+{{--                            <div class="d-md-flex justify-content-between mt-4">--}}
+{{--                                <div>--}}
+{{--                                    <a href="{{ route('password.request') }}" class="text-inherit fs-5">Quên mật khẩu?</a>--}}
+{{--                                </div>--}}
+{{--                            </div>--}}
                         </div>
                     </form>
                 </div>
