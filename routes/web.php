@@ -112,7 +112,7 @@ Route::middleware(['auth', 'role:0'])->prefix('admin')->name('admin.')->group(fu
 
     // User Management - Complete CRUD for all users
     Route::resource('users', UserController::class);
-    Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::patch('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
 
     // Bulk operations
     Route::post('/users/bulk-update-role', [UserController::class, 'bulkUpdateRole'])->name('users.bulk-update-role');
