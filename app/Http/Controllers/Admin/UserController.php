@@ -14,6 +14,8 @@ public function index(Request $request)
 {
     $query = User::query();
 
+    // Lọc bỏ admin (role = 0) khỏi danh sách hiển thị
+    $query->where('role', '!=', 0);
     // Filter by role group if specified
     if ($request->has('role')) {
         $roleParam = $request->get('role');
@@ -60,14 +62,16 @@ public function index(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|unique:users,phone|max:20',
+            'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|integer|in:0,1,2,3,4,5,6,7', // All new roles
+            'role' => 'required|integer|in:1,2,3,4,5,6,7', // Bỏ role 0 (admin)
             'is_active' => 'boolean',
         ]);
 
         User::create([
             'name' => $request->name,
+            'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
@@ -77,6 +81,7 @@ public function index(Request $request)
         return redirect()->route('admin.users.index')
             ->with('success', 'Tạo tài khoản thành công!');
     }
+
 
     public function show(User $user)
     {
@@ -98,13 +103,19 @@ public function index(Request $request)
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => [
+            'phone' => [
                 'required',
+                'string',
+                'max:20',
+                Rule::unique('users')->ignore($user->id),
+            ],
+            'email' => [
+                'nullable',
                 'email',
                 Rule::unique('users')->ignore($user->id),
             ],
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|integer|in:0,1,2,3,4,5,6,7',
+            'role' => 'required|integer|in:1,2,3,4,5,6,7', // Bỏ role 0 (admin)
             'is_active' => 'boolean',
         ]);
 
@@ -116,6 +127,7 @@ public function index(Request $request)
 
         $updateData = [
             'name' => $request->name,
+            'phone' => $request->phone,
             'email' => $request->email,
             'role' => $request->role,
             'is_active' => $request->boolean('is_active'),

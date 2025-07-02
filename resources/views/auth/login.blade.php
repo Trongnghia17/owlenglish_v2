@@ -80,9 +80,9 @@
                         @csrf
                         <!-- Email -->
                         <div class="mb-3">
-                            <label for="loginInput" class="form-label">Mã đăng nhập</label>
+                            <label for="loginInput" class="form-label">Số điện thoại</label>
                             <input type="text" id="loginInput" class="form-control @error('phone') is-invalid @enderror"
-                                   name="phone" placeholder="Nhập tên đăng nhập"
+                                   name="phone" placeholder="Nhập số điện thoại của bạn" autocomplete="phone"
                                    value="{{ old('phone') }}" required autofocus>
                             @error('phone')
                             <span class="invalid-feedback" role="alert">
