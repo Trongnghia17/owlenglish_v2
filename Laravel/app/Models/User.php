@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable ,SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes;
 
     const ROLE_ADMIN = 0;
     const ROLE_TEACHER_TEACHING = 1;
@@ -47,6 +49,8 @@ class User extends Authenticatable
         'is_active',
     ];
 
+    
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -66,6 +70,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
             'role' => 'integer',
@@ -201,21 +206,50 @@ class User extends Authenticatable
         ];
     }
     public function getRoleInfo(): array
-{
-    $roleGroups = [
-        'admin' => ['color' => 'danger', 'name' => 'Admin'],
-        'teacher' => ['color' => 'success', 'name' => 'Giáo viên'], 
-        'assistant' => ['color' => 'warning', 'name' => 'Trợ lý'],
-        'student' => ['color' => 'primary', 'name' => 'Học viên']
-    ];
+    {
+        $roleGroups = [
+            'admin' => ['color' => 'danger', 'name' => 'Admin'],
+            'teacher' => ['color' => 'success', 'name' => 'Giáo viên'],
+            'assistant' => ['color' => 'warning', 'name' => 'Trợ lý'],
+            'student' => ['color' => 'primary', 'name' => 'Học viên']
+        ];
 
-    $group = $this->getRoleGroup();
-    $roleName = self::ROLE_NAMES[$this->role] ?? 'Không xác định';
+        $group = $this->getRoleGroup();
+        $roleName = self::ROLE_NAMES[$this->role] ?? 'Không xác định';
 
-    return [
-        'name' => $roleName,
-        'color' => $roleGroups[$group]['color'] ?? 'secondary',
-        'group' => $roleGroups[$group]['name'] ?? 'Không xác định'
-    ];
-}
+        return [
+            'name' => $roleName,
+            'color' => $roleGroups[$group]['color'] ?? 'secondary',
+            'group' => $roleGroups[$group]['name'] ?? 'Không xác định'
+        ];
+    }
+
+    // Relationships 
+    public function identities(): HasMany
+    {
+        return $this->hasMany(UserIdentity::class);
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(UserContact::class);
+    }
+
+    public function primaryEmail(): HasOne
+    {
+        return $this->hasOne(UserContact::class)
+            ->where('type', 'email')->where('is_primary', true);
+    }
+
+    public function primaryPhone(): HasOne
+    {
+        return $this->hasOne(UserContact::class)
+            ->where('type', 'phone')->where('is_primary', true);
+    }
+
+    /** Mutators (giữ email chuẩn hoá, phone bạn có thể E164 hoá nếu cần) */
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = $value ? mb_strtolower(trim($value)) : null;
+    }
 }
