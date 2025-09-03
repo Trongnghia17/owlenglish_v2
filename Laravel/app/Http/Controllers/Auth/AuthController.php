@@ -29,7 +29,7 @@ class AuthController extends Controller
         ]);
 
         $credentials = $request->only('phone', 'password');
-        
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::user();
             
@@ -60,22 +60,47 @@ class AuthController extends Controller
         return redirect()->route('login');
     }
 
-     private function redirectBasedOnRole(User $user)
+    /**
+     * Redirect user based on their role
+     */
+    private function redirectBasedOnRole(User $user)
     {
         switch ($user->role) {
             case User::ROLE_ADMIN:
                 return redirect()->route('admin.dashboard');
+            
             case User::ROLE_TEACHER_TEACHING:
             case User::ROLE_TEACHER_GRADING:
             case User::ROLE_TEACHER_CONTENT:
                 return redirect()->route('teacher.dashboard');
+            
             case User::ROLE_STUDENT_CARE:
             case User::ROLE_ASSISTANT_CONTENT:
                 return redirect()->route('assistant.dashboard');
+            
             case User::ROLE_STUDENT_CENTER:
             case User::ROLE_STUDENT_VISITOR:
             default:
                 return redirect()->route('student.dashboard');
         }
+    }
+
+    /**
+     * Handle home page redirect - check authentication and redirect based on role
+     */
+    public function home()
+    {
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            if (!$user->is_active) {
+                auth()->logout();
+                return redirect()->route('login')->with('error', 'Tài khoản của bạn đã bị vô hiệu hóa.');
+            }
+
+            return $this->redirectBasedOnRole($user);
+        }
+
+        return redirect()->route('login');
     }
 }

@@ -13,8 +13,6 @@ class UserController extends Controller
 public function index(Request $request)
 {
     $query = User::query();
-
-    // Lọc bỏ admin (role = 0) khỏi danh sách hiển thị
     $query->where('role', '!=', 0);
     // Filter by role group if specified
     if ($request->has('role')) {
