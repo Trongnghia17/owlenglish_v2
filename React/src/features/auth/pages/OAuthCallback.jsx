@@ -11,17 +11,18 @@ export default function OAuthCallback() {
   useEffect(() => {
     (async () => {
       const token = sp.get('token');
+      console.log({ token });
       const provider = sp.get('provider') || 'google';
       if (!token) {
         nav('/login?error=missing_token', { replace: true });
         return;
-      }
+      } 
       try {
         setToken(token);
-        const me = await getMe(); // gọi /me để lấy thông tin người dùng
+        const me = await getMe(); 
+        console.log({ me });
         setUser(me.data);
-        // chuyển vào trang chính (sau này bạn đổi thành /dashboard hoặc /courses)
-        nav('/', { replace: true });
+        nav('/dashboard', { replace: true });
       } catch (e) {
         setToken(null);
         setUser(null);

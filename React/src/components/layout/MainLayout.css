@@ -1,0 +1,26 @@
+/* src/components/layout/MainLayout.css */
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-body {
+  flex: 1;
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background: #f5f6fa;
+}
+
+.main-footer {
+  text-align: center;
+  padding: 12px;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  font-size: 14px;
+  color: #666;
+}

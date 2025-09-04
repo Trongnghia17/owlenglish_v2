@@ -1,22 +1,28 @@
 import React from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/common/ProtectedRoute';
+import GuestRoute from '@/components/common/GuestRoute';
 import AuthLayout from '@/components/layout/AuthLayout';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
-// Auth pages
 import Login from '@/features/auth/pages/Login';
 import Register from '@/features/auth/pages/Register';
 import OAuthCallback from '@/features/auth/pages/OAuthCallback';
+import Home from '@/features/home/pages/Home';
 
-// (tạm thời bỏ MyAttendance / SessionCheckin nếu bạn chưa cần)
+const PublicShell = (
+  <DashboardLayout /> 
+);
 
 export const router = createBrowserRouter([
-  // điều hướng mọi đường dẫn gốc sang /login
-  { path: '/', element: <Navigate to="/login" /> },
+
+  { element: PublicShell, children: [
+      { path: '/', element: <Home /> },           
+    ]
+  },
 
   {
-    element: <AuthLayout />,
+    element: <GuestRoute><AuthLayout /></GuestRoute>,
     children: [
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
@@ -24,18 +30,15 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // (giữ khu vực protected để sau này dùng)
-  {
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    children: [
-      // thêm các route sau này (ví dụ /dashboard, /courses, ...)
-    ],
-  },
+  // PROTECTED (ví dụ sau này: /courses, /attendance, ...)
+  // {
+  //   element: <ProtectedRoute><DashboardLayout /></ProtectedRoute>,
+  //   children: [
+  //     { path: '/courses', element: <CourseList /> },
+  //     { path: '/attendance/me', element: <MyAttendance /> },
+  //   ],
+  // },
 
-  // // không khớp gì thì về /login
-  // { path: '*', element: <Navigate to="/login" /> },
+  // fallback
+  { path: '*', element: <Navigate to="/" /> },
 ]);

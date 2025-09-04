@@ -6,11 +6,19 @@ const useAuth = create()(
     (set) => ({
       token: null,
       user: null,
+      initialized: false,
       setToken: (t) => set({ token: t }),
       setUser: (u) => set({ user: u }),
       logout: () => set({ token: null, user: null }),
+      setInitialized: (v) => set({ initialized: v }),
     }),
-    { name: 'owl-auth' }
+    {
+      name: 'owl-auth',
+      onRehydrateStorage: () => (state) => {
+        // khi state load xong từ localStorage
+        state?.setInitialized(true);
+      },
+    }
   )
 );
 
