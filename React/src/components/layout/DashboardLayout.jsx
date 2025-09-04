@@ -1,25 +1,49 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import useAuth from '@/features/auth/store/auth.store';
 
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
+  const { pathname } = useLocation();
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: '100vh' }}>
-      <aside style={{ borderRight: '1px solid #eee', padding: 16 }}>
-        <h3>OWL</h3>
-        <nav style={{ display: 'grid', gap: 8 }}>
-          <Link to="/courses">Courses</Link>
-          <Link to="/attendance/me">My Attendance</Link>
-        </nav>
-      </aside>
-      <main style={{ padding: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div>Xin chào, {user?.name || 'User'}</div>
-          <button onClick={logout}>Logout</button>
+    <div className="app-shell">
+      {/* Header */}
+      <header className="app-header">
+        <div className="brand">
+          <span className="logo">🦉</span>
+          <span>OWL English</span>
         </div>
-        <Outlet />
-      </main>
+        <div className="spacer" />
+        <div className="me">
+          <span>{user?.name || 'User'}</span>
+          <button className="btn" onClick={logout}>Logout</button>
+        </div>
+      </header>
+
+      <div className="app-body">
+        {/* Sidebar */}
+        <aside className="app-sidebar">
+          <nav>
+            <Link className={navCls(pathname === '/')} to="/">Trang chủ</Link>
+            <Link className={navCls(pathname.startsWith('/courses'))} to="/courses">Khoá học</Link>
+            <Link className={navCls(pathname.startsWith('/attendance'))} to="/attendance/me">Điểm danh của tôi</Link>
+          </nav>
+        </aside>
+
+        {/* Content */}
+        <main className="app-content">
+          <Outlet />
+        </main>
+      </div>
+
+      {/* Footer */}
+      <footer className="app-footer">
+        <span>© {new Date().getFullYear()} OWL English</span>
+      </footer>
     </div>
   );
+}
+
+function navCls(active) {
+  return `nav-link ${active ? 'active' : ''}`;
 }

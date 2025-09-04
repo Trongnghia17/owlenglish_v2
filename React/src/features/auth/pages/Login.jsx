@@ -13,7 +13,7 @@ export default function Login() {
   const socialRedirect = (provider) => {
   const map = {
     google: `${import.meta.env.VITE_API_BASE_URL}/oauth/google/redirect`,
-    facebook: `${import.meta.env.VITE_API_BASE_URL}/oauth/facebook/redirect`, // sau này làm tiếp
+    facebook: `${import.meta.env.VITE_API_BASE_URL}/oauth/facebook/redirect`,
   };
   window.location.href = map[provider];
 };
@@ -26,7 +26,7 @@ export default function Login() {
       const res = await api.post('/auth/login', { email, password });
       setToken(res.data.token);
       setUser(res.data.user);
-      nav('/'); // sẽ Navigate -> /login hoặc vào khu vực protected tuỳ bạn cấu hình tiếp
+      nav('/');
     } catch (err) {
       alert(err?.response?.data?.message || 'Đăng nhập thất bại');
     }

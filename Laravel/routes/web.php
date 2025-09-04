@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Api\AuthApiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -259,3 +260,10 @@ Route::prefix('error')->group(function () {
         return view('errors.500');
     })->name('error.500');
 });
+
+
+Route::get('/oauth/google/redirect', [AuthApiController::class, 'googleRedirect'])->name('oauth.google.redirect');
+Route::get('/oauth/google/callback', [AuthApiController::class, 'googleCallback'])->name('oauth.google.callback');
+
+Route::get('/oauth/facebook/redirect', [AuthApiController::class, 'facebookRedirect'])->name('oauth.facebook.redirect');
+Route::get('/oauth/facebook/callback', [AuthApiController::class, 'facebookCallback'])->name('oauth.facebook.callback');

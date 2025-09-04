@@ -3,7 +3,7 @@ import useAuth from '@/features/auth/store/auth.store';
 import { getMe } from '@/features/users/api/users.api';
 
 export default function AuthProvider({ children }) {
-  const { setUser, token } = useAuth();
+  const { setUser, token , setInitialized } = useAuth();
 
   useEffect(() => {
     (async () => {
@@ -13,6 +13,8 @@ export default function AuthProvider({ children }) {
         setUser(res.data);
       } catch {
         setUser(null);
+      } finally {
+        setInitialized(true); // 👈 rất quan trọng
       }
     })();
   }, [token, setUser]);
