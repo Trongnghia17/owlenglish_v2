@@ -10,7 +10,7 @@ export default function Topbar() {
       <div>
         {user && (
           <span>
-            Xin chào, <b>{user.name}</b>
+            Xin chào 123, <b>{user.name}</b>
           </span>
         )}
       </div>
