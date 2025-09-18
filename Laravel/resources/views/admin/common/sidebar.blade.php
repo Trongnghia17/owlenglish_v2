@@ -67,24 +67,7 @@
                                     Tất cả người dùng
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request('role') === 'teacher' ? 'active' : '' }}" 
-                                   href="{{ route('admin.users.index', ['role' => 'teacher']) }}">
-                                    Giáo viên
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request('role') === 'assistant' ? 'active' : '' }}" 
-                                   href="{{ route('admin.users.index', ['role' => 'assistant']) }}">
-                                    Trợ lý
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link {{ request('role') === 'student' ? 'active' : '' }}" 
-                                   href="{{ route('admin.users.index', ['role' => 'student']) }}">
-                                    Học viên
-                                </a>
-                            </li>
+                        
                         </ul>
                     </div>
                 </li>

@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::user();
-            
+
             if (!$user->is_active) {
                 Auth::logout();
                 throw ValidationException::withMessages([
@@ -65,24 +65,7 @@ class AuthController extends Controller
      */
     private function redirectBasedOnRole(User $user)
     {
-        switch ($user->role) {
-            case User::ROLE_ADMIN:
-                return redirect()->route('admin.dashboard');
-            
-            case User::ROLE_TEACHER_TEACHING:
-            case User::ROLE_TEACHER_GRADING:
-            case User::ROLE_TEACHER_CONTENT:
-                return redirect()->route('teacher.dashboard');
-            
-            case User::ROLE_STUDENT_CARE:
-            case User::ROLE_ASSISTANT_CONTENT:
-                return redirect()->route('assistant.dashboard');
-            
-            case User::ROLE_STUDENT_CENTER:
-            case User::ROLE_STUDENT_VISITOR:
-            default:
-                return redirect()->route('student.dashboard');
-        }
+
     }
 
     /**
