@@ -3,9 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -77,6 +79,34 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserContact::class)
             ->where('type', 'phone')->where('is_primary', true);
+    }
+
+    // Role relationship and methods
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Role::class);
+    }
+
+    public function hasRole($roleId): bool
+    {
+        return $this->role_id == $roleId;
+    }
+
+    public function hasAnyRole(array $roleIds): bool
+    {
+        return in_array($this->role_id, $roleIds);
+    }
+
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        return $this->role->permissions()
+            ->whereIn('name', $permissions)
+            ->exists();
     }
 
     /** Mutators (giữ email chuẩn hoá, phone bạn có thể E164 hoá nếu cần) */

@@ -20,23 +20,23 @@
 
                 <div id="navDashboard" class="collapse " data-bs-parent="#sideNavbar">
                     <ul class="nav flex-column">
-                        @if(Auth()->user()->role == 4)
+{{--                        @if(Auth()->user()->role_id == 4)--}}
+{{--                            <li class="nav-item">--}}
+{{--                                <a class="nav-link" href="{{ route('admin.statistic.student') }}">--}}
+{{--                                    Thống kê--}}
+{{--                                </a>--}}
+{{--                            </li>--}}
+{{--                        @endif--}}
+{{--                        @if(Auth()->user()->role_id == 3)--}}
+{{--                            <li class="nav-item">--}}
+{{--                                <a class="nav-link" href="{{ route('admin.statistic.teacher') }}">--}}
+{{--                                    Thống kê--}}
+{{--                                </a>--}}
+{{--                            </li>--}}
+{{--                        @endif--}}
+                        @if(Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.statistic.student') }}">
-                                    Thống kê
-                                </a>
-                            </li>
-                        @endif
-                        @if(Auth()->user()->role == 3)
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.statistic.teacher') }}">
-                                    Thống kê
-                                </a>
-                            </li>
-                        @endif
-                        @if(Auth()->user()->role == 1 || Auth()->user()->role == 2)
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('admin.statistic.class_management') }}">
+                                <a class="nav-link" href="{{ route('admin.dashboard') }}">
                                     Thống kê
                                 </a>
                             </li>
@@ -49,25 +49,25 @@
             <li class="nav-item">
                 <div class="navbar-heading">QUẢN LÝ</div>
             </li>
- @if(Auth()->user()->role == 0)
+ @if(Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
                 <li class="nav-item">
-                    <a class="nav-link has-arrow {{ request()->routeIs('admin.users.*') ? '' : 'collapsed' }}" 
+                    <a class="nav-link has-arrow {{ request()->routeIs('admin.users.*') ? '' : 'collapsed' }}"
                        href="#!" data-bs-toggle="collapse" data-bs-target="#navUsers"
-                       aria-expanded="{{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}" 
+                       aria-expanded="{{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}"
                        aria-controls="navUsers">
                         <i data-feather="users" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý người dùng
                     </a>
-                    <div id="navUsers" class="collapse {{ request()->routeIs('admin.users.*') ? 'show' : '' }}" 
+                    <div id="navUsers" class="collapse {{ request()->routeIs('admin.users.*') ? 'show' : '' }}"
                          data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.users.index') && !request('role') ? 'active' : '' }}" 
+                                <a class="nav-link {{ request()->routeIs('admin.users.index') && !request('role') ? 'active' : '' }}"
                                    href="{{ route('admin.users.index') }}">
                                     Tất cả người dùng
                                 </a>
                             </li>
-                        
+
                         </ul>
                     </div>
                 </li>

@@ -6,12 +6,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckRole
+class CheckPermission
 {
     /**
      * Handle an incoming request.
      */
-    public function handle(Request $request, Closure $next, string ...$roles): Response
+    public function handle(Request $request, Closure $next, string ...$permissions): Response
     {
         $user = auth()->user();
 
@@ -22,15 +22,12 @@ class CheckRole
             return redirect()->route('login');
         }
 
-        // Convert roles to integers
-        $allowedRoles = array_map('intval', $roles);
-
-        if (!$user->hasAnyRole($allowedRoles)) {
+        if (!$user->hasAnyPermission($permissions)) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Bạn không có quyền truy cập chức năng này.',
-                    'required_roles' => $allowedRoles,
-                    'current_role' => $user->role_id
+                    'required_permissions' => $permissions,
+                    'current_role' => $user->role?->name
                 ], 403);
             }
 

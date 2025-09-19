@@ -33,8 +33,14 @@ Route::middleware('auth')->group(function () {
 | Admin Routes (Role 0)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'permission:manage_users'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    // User management routes - only for Super Admin and Org Admin
+    Route::middleware('role:1,2')->group(function () {
+        Route::resource('users', UserController::class);
+        Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    });
 
     // Admin Settings (placeholder)
     Route::get('/settings', function() {
