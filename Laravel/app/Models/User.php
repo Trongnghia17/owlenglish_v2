@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -114,4 +115,67 @@ class User extends Authenticatable
     {
         $this->attributes['email'] = $value ? mb_strtolower(trim($value)) : null;
     }
+    public function permissions(): BelongsToMany
+{
+    return $this->belongsToMany(Permission::class, 'user_permissions')
+                ->withTimestamps()
+                ->withPivot(['granted', 'expires_at', 'deleted_at']);
+}
+
+public function hasPermission(string $permissionName): bool
+{
+    // Check role permissions
+    if ($this->role && $this->role->hasPermission($permissionName)) {
+        return true;
+    }
+    
+    // Check direct user permissions
+    return $this->permissions()
+                ->where('name', $permissionName)
+                ->wherePivot('granted', true)
+                ->where(function($query) {
+                    $query->whereNull('user_permissions.expires_at')
+                          ->orWhere('user_permissions.expires_at', '>', now());
+                })
+                ->exists();
+}
+
+public static function getRoleOptions(): array
+{
+    return [
+        1 => 'Super Admin',
+        2 => 'Org Admin', 
+        3 => 'Academic Manager',
+        4 => 'Assessment & Curriculum Planning',
+        5 => 'Teaching',
+        6 => 'Student',
+        7 => 'Parent/Guardian',
+        8 => 'Content Author',
+        9 => 'Finance',
+        10 => 'Marketing'
+    ];
+}
+
+public function getRoleInfo(): array
+{
+    $roleColors = [
+        1 => 'danger',    // Super Admin
+        2 => 'warning',   // Org Admin
+        3 => 'primary',   // Academic Manager
+        4 => 'info',      // ACP
+        5 => 'success',   // Teaching
+        6 => 'secondary', // Student
+        7 => 'light',     // Parent
+        8 => 'dark',      // Content Author
+        9 => 'warning',   // Finance
+        10 => 'info'      // Marketing
+    ];
+
+    $roleOptions = self::getRoleOptions();
+    
+    return [
+        'name' => $roleOptions[$this->role_id] ?? 'Unknown',
+        'color' => $roleColors[$this->role_id] ?? 'secondary'
+    ];
+}
 }
