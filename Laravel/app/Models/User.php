@@ -143,15 +143,15 @@ public function hasPermission(string $permissionName): bool
 public static function getRoleOptions(): array
 {
     return [
-        1 => 'Super Admin',
-        2 => 'Org Admin', 
-        3 => 'Academic Manager',
-        4 => 'Assessment & Curriculum Planning',
-        5 => 'Teaching',
-        6 => 'Student',
-        7 => 'Parent/Guardian',
-        8 => 'Content Author',
-        9 => 'Finance',
+        1 => 'Super Admin (Chủ hệ thống)',
+        2 => 'Org Admin (Quản trị hệ thống)', 
+        3 => 'Academic Manager (Giáo vụ)',
+        4 => 'Assessment & Curriculum Planning (Chấm & giáo trình)',
+        5 => 'Teaching (Giáo viên)',
+        6 => 'Student (Học viên)',
+        7 => 'Parent/Guardian (Phụ huynh)',
+        8 => 'Content Author (Biên soạn nội dung)',
+        9 => 'Finance (Kế toán)',
         10 => 'Marketing'
     ];
 }
