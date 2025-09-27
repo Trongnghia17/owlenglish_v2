@@ -352,7 +352,7 @@
                                                                             </div>
 
                                                                             <!-- Role Permissions -->
-                                                                            @if($user->role && $user->role->permissions->count() > 0)
+                                                                            <!-- @if($user->role && $user->role->permissions->count() > 0)
                                                                                 <div class="card">
                                                                                     <div class="card-header">
                                                                                         <h6 class="mb-0">Quyền từ vai trò</h6>
@@ -376,7 +376,7 @@
                                                                                         @endforeach
                                                                                     </div>
                                                                                 </div>
-                                                                            @endif
+                                                                            @endif -->
                                                                         
                                                                     </div>
                                                                     <div class="modal-footer">
