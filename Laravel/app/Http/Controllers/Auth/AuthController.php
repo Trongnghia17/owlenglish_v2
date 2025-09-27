@@ -63,10 +63,59 @@ class AuthController extends Controller
     /**
      * Redirect user based on their role
      */
-    private function redirectBasedOnRole(User $user)
-    {
-
+   
+private function redirectBasedOnRole(User $user)
+{
+    // Super Admin và Org Admin -> Dashboard admin
+    if ($user->hasAnyRole([1, 2])) {
+        return redirect()->route('admin.dashboard');
     }
+
+    // Academic Manager -> Dashboard giáo vụ  
+    if ($user->hasRole(3)) {
+        return redirect()->route('admin.statistic.teacher');
+    }
+
+    // Assessment & Curriculum Planning -> Dashboard ACP
+    if ($user->hasRole(4)) {
+        return redirect()->route('admin.statistic.student');
+    }
+
+    // Teaching -> Dashboard giáo viên
+    if ($user->hasRole(5)) {
+        return redirect()->route('teacher.dashboard');
+    }
+
+    // Student -> Trang học viên (có thể là React app)
+    if ($user->hasRole(6)) {
+        // Redirect đến React app hoặc student portal
+        $frontendUrl = config('app.frontend_url', env('FRONTEND_APP_URL', 'http://localhost:5173'));
+        return redirect()->away($frontendUrl . '/student/dashboard');
+    }
+
+    // Parent -> Trang phụ huynh
+    if ($user->hasRole(7)) {
+        return redirect()->route('parent.dashboard');
+    }
+
+    // Content Author -> Dashboard biên soạn
+    if ($user->hasRole(8)) {
+        return redirect()->route('content.dashboard');
+    }
+
+    // Finance -> Dashboard kế toán
+    if ($user->hasRole(9)) {
+        return redirect()->route('finance.dashboard');
+    }
+
+    // Marketing -> Dashboard marketing
+    if ($user->hasRole(10)) {
+        return redirect()->route('marketing.dashboard');
+    }
+
+    // Mặc định -> trang chủ hoặc dashboard chung
+    return redirect()->route('admin.dashboard');
+}
 
     /**
      * Handle home page redirect - check authentication and redirect based on role
