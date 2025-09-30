@@ -3,9 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,26 +18,6 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes , HasApiTokens;
-
-    const ROLE_ADMIN = 0;
-    const ROLE_TEACHER_TEACHING = 1;
-    const ROLE_TEACHER_GRADING = 2;
-    const ROLE_TEACHER_CONTENT = 3;
-    const ROLE_STUDENT_CARE = 4;
-    const ROLE_ASSISTANT_CONTENT = 5;
-    const ROLE_STUDENT_CENTER = 6;
-    const ROLE_STUDENT_VISITOR = 7;
-
-    const ROLE_NAMES = [
-        self::ROLE_ADMIN => 'Quản lý tài khoản Admin',
-        self::ROLE_TEACHER_TEACHING => 'Giáo viên giảng dạy',
-        self::ROLE_TEACHER_GRADING => 'Giáo viên chấm sửa bài',
-        self::ROLE_TEACHER_CONTENT => 'Giáo viên làm đề, chủ đề',
-        self::ROLE_STUDENT_CARE => 'Chăm sóc học viên',
-        self::ROLE_ASSISTANT_CONTENT => 'Trợ lý chuyên môn làm đề, chủ đề',
-        self::ROLE_STUDENT_CENTER => 'Học viên trung tâm',
-        self::ROLE_STUDENT_VISITOR => 'Học viên vãng lai',
-    ];
 
     /**
      * The attributes that are mass assignable.
@@ -46,11 +29,9 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
-        'role',
+        'role_id',
         'is_active',
     ];
-
-    
 
     /**
      * The attributes that should be hidden for serialization.
@@ -74,158 +55,11 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'role' => 'integer',
+            'role_id' => 'integer',
         ];
     }
 
-    /**
-     * Get the name of the unique identifier for the user.
-     *
-     * @return string
-     */
-    public function getAuthIdentifierName()
-    {
-        return 'phone';
-    }
-
-    /**
-     * Get the username field name.
-     *
-     * @return string
-     */
-    public function username()
-    {
-        return 'phone';
-    }
-
-    // Role checking methods
-    public function isAdmin(): bool
-    {
-        return $this->role === self::ROLE_ADMIN;
-    }
-
-    public function isTeacher(): bool
-    {
-        return in_array($this->role, [
-            self::ROLE_TEACHER_TEACHING,
-            self::ROLE_TEACHER_GRADING,
-            self::ROLE_TEACHER_CONTENT
-        ]);
-    }
-
-    public function isAssistant(): bool
-    {
-        return in_array($this->role, [
-            self::ROLE_STUDENT_CARE,
-            self::ROLE_ASSISTANT_CONTENT
-        ]);
-    }
-
-    public function isStudent(): bool
-    {
-        return in_array($this->role, [
-            self::ROLE_STUDENT_CENTER,
-            self::ROLE_STUDENT_VISITOR
-        ]);
-    }
-
-    public function hasRole(int $role): bool
-    {
-        return $this->role === $role;
-    }
-
-    public function hasAnyRole(array $roles): bool
-    {
-        return in_array($this->role, $roles);
-    }
-
-    public function canEditRole(): bool
-    {
-        // Chỉ admin mới có thể sửa vai trò
-        return $this->role === self::ROLE_ADMIN;
-    }
-
-    public function canDeleteUser(): bool
-    {
-        // Admin không thể xóa chính mình
-        return $this->role === self::ROLE_ADMIN && $this->id !== auth()->id();
-    }
-
-    public static function getMainRoleGroups(): array
-    {
-        return [
-            'admin' => [self::ROLE_ADMIN],
-            'teacher' => [self::ROLE_TEACHER_TEACHING, self::ROLE_TEACHER_GRADING, self::ROLE_TEACHER_CONTENT],
-            'assistant' => [self::ROLE_STUDENT_CARE, self::ROLE_ASSISTANT_CONTENT],
-            'student' => [self::ROLE_STUDENT_CENTER, self::ROLE_STUDENT_VISITOR]
-        ];
-    }
-
-    public function getRoleGroup(): string
-    {
-        $groups = self::getMainRoleGroups();
-        foreach ($groups as $group => $roles) {
-            if (in_array($this->role, $roles)) {
-                return $group;
-            }
-        }
-        return 'unknown';
-    }
-
-    public function getRoleNameAttribute(): string
-    {
-        return self::ROLE_NAMES[$this->role] ?? 'Không xác định';
-    }
-
-    public static function getRoleOptions(): array
-    {
-        return self::ROLE_NAMES;
-    }
-
-    public static function getTeacherRoles(): array
-    {
-        return [
-            self::ROLE_TEACHER_TEACHING,
-            self::ROLE_TEACHER_GRADING,
-            self::ROLE_TEACHER_CONTENT
-        ];
-    }
-
-    public static function getAssistantRoles(): array
-    {
-        return [
-            self::ROLE_STUDENT_CARE,
-            self::ROLE_ASSISTANT_CONTENT
-        ];
-    }
-
-    public static function getStudentRoles(): array
-    {
-        return [
-            self::ROLE_STUDENT_CENTER,
-            self::ROLE_STUDENT_VISITOR
-        ];
-    }
-    public function getRoleInfo(): array
-    {
-        $roleGroups = [
-            'admin' => ['color' => 'danger', 'name' => 'Admin'],
-            'teacher' => ['color' => 'success', 'name' => 'Giáo viên'],
-            'assistant' => ['color' => 'warning', 'name' => 'Trợ lý'],
-            'student' => ['color' => 'primary', 'name' => 'Học viên']
-        ];
-
-        $group = $this->getRoleGroup();
-        $roleName = self::ROLE_NAMES[$this->role] ?? 'Không xác định';
-
-        return [
-            'name' => $roleName,
-            'color' => $roleGroups[$group]['color'] ?? 'secondary',
-            'group' => $roleGroups[$group]['name'] ?? 'Không xác định'
-        ];
-    }
-
-    // Relationships 
+    // Relationships
     public function identities(): HasMany
     {
         return $this->hasMany(UserIdentity::class);
@@ -248,9 +82,100 @@ class User extends Authenticatable
             ->where('type', 'phone')->where('is_primary', true);
     }
 
+    // Role relationship and methods
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Role::class);
+    }
+
+    public function hasRole($roleId): bool
+    {
+        return $this->role_id == $roleId;
+    }
+
+    public function hasAnyRole(array $roleIds): bool
+    {
+        return in_array($this->role_id, $roleIds);
+    }
+
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+
+        return $this->role->permissions()
+            ->whereIn('name', $permissions)
+            ->exists();
+    }
+
     /** Mutators (giữ email chuẩn hoá, phone bạn có thể E164 hoá nếu cần) */
     public function setEmailAttribute($value): void
     {
         $this->attributes['email'] = $value ? mb_strtolower(trim($value)) : null;
     }
+    public function permissions(): BelongsToMany
+{
+    return $this->belongsToMany(Permission::class, 'user_permissions')
+                ->withTimestamps()
+                ->withPivot(['granted', 'expires_at', 'deleted_at']);
+}
+
+public function hasPermission(string $permissionName): bool
+{
+    // Check role permissions
+    if ($this->role && $this->role->hasPermission($permissionName)) {
+        return true;
+    }
+    
+    // Check direct user permissions
+    return $this->permissions()
+                ->where('name', $permissionName)
+                ->wherePivot('granted', true)
+                ->where(function($query) {
+                    $query->whereNull('user_permissions.expires_at')
+                          ->orWhere('user_permissions.expires_at', '>', now());
+                })
+                ->exists();
+}
+
+public static function getRoleOptions(): array
+{
+    return [
+        1 => 'Super Admin (Chủ hệ thống)',
+        2 => 'Org Admin (Quản trị hệ thống)', 
+        3 => 'Academic Manager (Giáo vụ)',
+        4 => 'Assessment & Curriculum Planning (Chấm & giáo trình)',
+        5 => 'Teaching (Giáo viên)',
+        6 => 'Student (Học viên)',
+        7 => 'Parent/Guardian (Phụ huynh)',
+        8 => 'Content Author (Biên soạn nội dung)',
+        9 => 'Finance (Kế toán)',
+        10 => 'Marketing'
+    ];
+}
+
+public function getRoleInfo(): array
+{
+    $roleColors = [
+        1 => 'danger',    // Super Admin
+        2 => 'warning',   // Org Admin
+        3 => 'primary',   // Academic Manager
+        4 => 'info',      // ACP
+        5 => 'success',   // Teaching
+        6 => 'secondary', // Student
+        7 => 'light',     // Parent
+        8 => 'dark',      // Content Author
+        9 => 'warning',   // Finance
+        10 => 'info'      // Marketing
+    ];
+
+    $roleOptions = self::getRoleOptions();
+    
+    return [
+        'name' => $roleOptions[$this->role_id] ?? 'Unknown',
+        'color' => $roleColors[$this->role_id] ?? 'secondary'
+    ];
+}
 }
