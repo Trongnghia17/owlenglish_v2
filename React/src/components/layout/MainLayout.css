@@ -6,14 +6,26 @@
 }
 
 .main-body {
-  flex: 1;
   display: flex;
+  justify-content: center ;
+  flex: 1;
+}
+.with-sidebar{
+  justify-content: start ;
+  flex: 1;
 }
 
 .main-content {
-  flex: 1;
   padding: 20px;
-  background: #f5f6fa;
+  width: 100%;
+  display: flex;
+  justify-content: center;  
+}
+.full-width-user .main-content__inner{
+  width: 70%; 
+}
+.with-sidebar-user .main-content__inner{
+  width: 50%; 
 }
 
 .main-footer {
