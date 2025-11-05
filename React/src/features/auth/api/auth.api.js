@@ -1,10 +1,10 @@
 import api from '@/lib/axios';
 
 export const requestOtp = (payload) =>
-  api.post('/auth/otp/request', payload); // {channel,destination,purpose}
+  api.post('/auth/otp/request', payload); 
 
 export const verifyOtp = (payload) =>
-  api.post('/auth/otp/verify', payload);   // expect {token, user}
+  api.post('/auth/otp/verify', payload);  
 
 export const passwordLogin = (payload) =>
   api.post('/auth/login', payload);

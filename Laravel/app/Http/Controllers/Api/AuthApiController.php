@@ -4,23 +4,27 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Models\OtpCode;
 use App\Models\User;
 use App\Models\UserContact;
 use App\Models\UserIdentity;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthApiController extends Controller
 {
-   /** Step 1: Redirect sang Google */
+    /** Step 1: Redirect sang Google */
     public function googleRedirect()
     {
         // stateless cho SPA (không dùng session state)
         return Socialite::driver('google')
             ->stateless()
-            ->scopes(['openid','email','profile'])
+            ->scopes(['openid', 'email', 'profile'])
             ->redirect();
     }
 
@@ -40,7 +44,7 @@ class AuthApiController extends Controller
             if (!$googleId) {
                 return redirect()->away($frontend . '/login?error=google_no_id');
             }
-           
+
             /** Tìm/ tạo user + link user_identities */
             $user = DB::transaction(function () use ($googleId, $email, $name, $avatar, $googleUser) {
                 // 1) Tìm theo user_identities (provider=google)
@@ -59,7 +63,7 @@ class AuthApiController extends Controller
                         // Nếu user chưa có, tạo mới
                         if (!$user) {
                             $user = User::create([
-                                'name'  => $name ?: 'User '.Str::random(6),
+                                'name'  => $name ?: 'User ' . Str::random(6),
                                 'email' => $email ? mb_strtolower($email) : null,
                                 'avatar_url' => $avatar,
                                 'email_verified_at' => now(), // OAuth coi như verified
@@ -114,9 +118,7 @@ class AuthApiController extends Controller
             $url = $frontend . '/oauth/callback?provider=google'
                 . '&token=' . urlencode($token);
             return redirect()->away($url);
-
         } catch (\Throwable $e) {
-          dd($e->getMessage(), $e->getTraceAsString());
             return redirect()->away($frontend . '/login?error=google_callback');
         }
     }
@@ -128,7 +130,7 @@ class AuthApiController extends Controller
             ->stateless()
             ->scopes(['email'])
             ->redirect();
-            return 22;
+        return 22;
     }
 
     public function facebookCallback()
@@ -162,7 +164,7 @@ class AuthApiController extends Controller
                         $user = User::where('email', mb_strtolower($email))->first();
                         if (!$user) {
                             $user = User::create([
-                                'name'  => $name ?: 'FB User '.Str::random(6),
+                                'name'  => $name ?: 'FB User ' . Str::random(6),
                                 'email' => mb_strtolower($email),
                                 'avatar_url' => $avatar,
                                 'email_verified_at' => now(),
@@ -209,10 +211,111 @@ class AuthApiController extends Controller
 
             $url = $frontend . '/oauth/callback?provider=facebook&token=' . urlencode($token);
             return redirect()->away($url);
-
         } catch (\Throwable $e) {
-             dd($e->getMessage(), $e->getTraceAsString());
+            dd($e->getMessage(), $e->getTraceAsString());
             return redirect()->away($frontend . '/login?error=facebook_callback');
         }
+    }
+
+    // Gửi OTP
+    public function sendOtp(Request $request)
+    {
+        $request->validate([
+            'channel' => 'required|in:email,zalo_oa',
+            'destination' => 'required|string',
+            'purpose' => 'required|in:register,link_contact,reset_password',
+        ]);
+
+        $email = $request->email;
+        $otp = rand(100000, 999999);
+        OtpCode::create([
+            'channel' => 'email',
+            'destination' => $email,
+            'code_hash' => Hash::make($otp),
+            'purpose' => $request->purpose,
+            'expires_at' => now()->addMinutes(5),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        Mail::send('emails.otp', ['otp' => $otp], function ($message) use ($email) {
+            $message->to($email)
+                ->subject('Mã xác thực OTP');
+        });
+
+        return response()->json(['message' => 'OTP đã được gửi'], 200);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|string',
+            'password' => 'required|min:6',
+            'purpose' => 'required|in:register,link_contact,reset_password',
+        ]);
+
+        $otpRecord = OtpCode::where('destination', $request->email)
+            ->where('purpose', $request->purpose)
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        if (!$otpRecord || !Hash::check($request->otp, $otpRecord->code_hash)) {
+            return response()->json(['message' => 'OTP không hợp lệ hoặc đã hết hạn'], 400);
+        }
+        $otpRecord->update(['used_at' => now()]);
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            $user = User::create([
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'email_verified_at' => now(),
+            ]);
+        } else {
+            $user->update([
+                'password' => Hash::make($request->password),
+                'email_verified_at' => $user->email_verified_at ?? now(),
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Xác thực thành công',
+            'user' => $user,
+        ]);
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $username = $request->username;
+        $password = $request->password;
+
+        $user = User::where('email', $username)
+            ->orWhere('phone', $username)
+            ->first();
+
+        if (!$user || !Hash::check($password, $user->password)) {
+            return response()->json(['message' => 'Thông tin đăng nhập không chính xác'], 401);
+        }
+
+        // Nếu muốn check xác thực email/phone
+        if (!$user->email_verified_at && !$user->phone_verified_at) {
+            return response()->json(['message' => 'Tài khoản chưa được xác thực'], 403);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Đăng nhập thành công',
+            'user'    => $user,
+            'token'   => $token,
+        ]);
     }
 }

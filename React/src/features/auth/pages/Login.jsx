@@ -1,119 +1,141 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from "react-toastify";
 import useAuth from '@/features/auth/store/auth.store';
 import api from '@/lib/axios';
+import logo from "../../../assets/images/logo.png";
+import imgleftlogin from "../../../assets/images/imgleftlogin.png";
+import emailimg from "../../../assets/images/email.svg";
+import passwordimg from "../../../assets/images/password.svg";
+import logofacebook from "../../../assets/images/facebook.svg";
+import logogoogle from "../../../assets/images/google.svg";
+import nextright from "../../../assets/images/nextright.svg";
+import eye from "../../../assets/images/nextright.svg";
+import eyeSlash from "../../../assets/images/eye-slash.svg";
+import { getMe } from '@/features/users/api/users.api';
+import './Login.css';
 
 export default function Login() {
   const nav = useNavigate();
   const { setToken, setUser } = useAuth();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false);
   const socialRedirect = (provider) => {
-  const map = {
-    google: `${import.meta.env.VITE_API_BASE_URL}/oauth/google/redirect`,
-    facebook: `${import.meta.env.VITE_API_BASE_URL}/oauth/facebook/redirect`,
+    const map = {
+      google: `${import.meta.env.VITE_API_BASE_URL}/oauth/google/redirect`,
+      facebook: `${import.meta.env.VITE_API_BASE_URL}/oauth/facebook/redirect`,
+    };
+    window.location.href = map[provider];
   };
-  window.location.href = map[provider];
-};
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // gọi API đăng nhập tài khoản (backend trả { token, user })
-      const res = await api.post('/auth/login', { email, password });
-      setToken(res.data.token);
-      setUser(res.data.user);
-      nav('/');
-    } catch (err) {
-      alert(err?.response?.data?.message || 'Đăng nhập thất bại');
+      const res = await api.post("api/login", {
+        username: email,
+        password: password,
+      });
+      const token = res.data.token;
+      localStorage.setItem("token", token);
+      setToken(token);
+      const me = await getMe();
+      setUser(me.data);
+      toast.success("Đăng nhập thành công");
+      nav("/dashboard");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Đăng nhập thất bại");
     }
   };
 
+
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.card}>
-        <h2 style={{ marginBottom: 8 }}>Đăng nhập OWL</h2>
-        <p style={{ color: '#666', marginBottom: 16 }}>Chọn một phương thức bên dưới</p>
+    <div className="login-wrapper">
+      <div className="login-imgleftmain">
+       
+      </div>
+      <div className="login-cardmain">
+        <div className='login-card'>
+          <div className='logo-div'>
+            <img className='logo' src={logo} alt="logo-phi-dang" />
+          </div>
+          <h2 className='title-login'>Đăng nhập</h2>
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 8 }}>
+            <div className='login-input-container'>
+              <input
+                className="login-input"
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <img className='key-logo-input' src={emailimg} alt="email-img" />
+            </div>
+            <div className='login-input-container'>
+              <input
+                className="login-input"
+                type={showPassword ? "text" : "password"}
+                placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <img className='key-logo-input' src={passwordimg} alt="passwordimg-img" />
+              <img
+                src={showPassword ? eyeSlash : passwordimg}
+                alt="toggle-password"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ cursor: "pointer" }}
+              />
+            </div>
+            <button className="login-primaryBtn" type="submit">Đăng nhập</button>
+          </form>
 
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 8 }}>
-          <input
-            style={styles.input}
-            type="email"
-            placeholder="Email của bạn"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            style={styles.input}
-            type="password"
-            placeholder="Mật khẩu"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button style={styles.primaryBtn} type="submit">Đăng nhập</button>
-        </form>
+          <div className='login-option'>
+            <div className='login-remember'>
+              <input type="checkbox" name="" id="" />
+              <p className='save-password-text'>Lưu mật khẩu</p>
+            </div>
+            <div className='login-forgot'>
+              <a href="">Quên mật khẩu?</a>
+            </div>
+          </div>
 
-        <div style={{ margin: '12px 0', textAlign: 'center', color: '#888' }}>— hoặc —</div>
+          <div className='login-register'>
+            Bạn chưa có tài khoản? <Link className='login-register-link' to="/register">Tạo tài khoản</Link>
+          </div>
 
-        <div style={{ display: 'grid', gap: 8 }}>
-          <button style={styles.socialBtn} onClick={() => socialRedirect('google')}>
-            Đăng nhập với Google
-          </button>
-          <button style={styles.socialBtn} onClick={() => socialRedirect('facebook')}>
-            Đăng nhập với Facebook
-          </button>
-        </div>
+          <div className='login-social'>
+            <p className='login-social-title'>Hoặc tiếp tục với</p>
+            <button className="login-socialBtn" onClick={() => socialRedirect('google')}>
+              <div className='login-socialBtn-google'>
+                <div className='login-socialBtn-google-content'>
+                  <img src={logogoogle} alt="logogoogle" />
+                  Đăng nhập với Google
+                </div>
 
-        <div style={{ marginTop: 16, fontSize: 14 }}>
-          Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+                <div className='login-socialBtn-google-icon'>
+                  <img src={nextright} alt="nextright" />
+                </div>
+              </div>
+            </button>
+            <button className="login-socialBtn" onClick={() => socialRedirect('facebook')}>
+              <div className='login-socialBtn-google'>
+                <div className='login-socialBtn-google-content'>
+                  <img src={logofacebook} alt="logofacebook" />
+                  Đăng nhập với Facebook
+                </div>
+
+                <div className='login-socialBtn-google-icon'>
+                  <img src={nextright} alt="nextright" />
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  wrapper: {
-    minHeight: '70vh',
-    display: 'grid',
-    placeItems: 'center',
-  },
-  card: {
-    width: 380,
-    maxWidth: '92vw',
-    border: '1px solid #eee',
-    borderRadius: 12,
-    padding: 20,
-    boxShadow: '0 6px 20px rgba(0,0,0,0.06)',
-    background: '#fff',
-  },
-  input: {
-    height: 40,
-    padding: '0 12px',
-    borderRadius: 8,
-    border: '1px solid #ddd',
-    outline: 'none',
-  },
-  primaryBtn: {
-    height: 42,
-    border: 'none',
-    borderRadius: 8,
-    background: '#1677ff',
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-  socialBtn: {
-    height: 42,
-    border: '1px solid #ddd',
-    borderRadius: 8,
-    background: '#fff',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-};

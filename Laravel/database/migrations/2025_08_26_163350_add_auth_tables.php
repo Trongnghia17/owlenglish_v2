@@ -92,7 +92,6 @@ return new class extends Migration
             $table->string('user_agent', 255)->nullable();
             $table->boolean('succeeded')->default(true);
             $table->timestamps();
-
             $table->index(['user_id', 'provider']);
         });
     }

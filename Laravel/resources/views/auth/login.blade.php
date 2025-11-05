@@ -61,7 +61,7 @@
                 <!-- Card body -->
                 <div class="card-body p-6">
                     <div class="mb-4 text-center">
-                        <a href="{{ url('/') }}"><img src="{{ asset('assets/images/brand/logo/novateen-logo.png') }}" class="mb-2 text-inverse img-fluid" style="max-width: 180px; height: auto;" alt="Novateen Logo"></a>
+                        <a href="{{ url('http://localhost:5173/') }}"><img src="{{ asset('assets/images/brand/logo/logo.png') }}" class="mb-2 text-inverse img-fluid" style="max-width: 180px; height: auto;" alt="Novateen Logo"></a>
                         <p class="mb-6">Vui lòng nhập thông tin đăng nhập của bạn.</p>
                     </div>
 
