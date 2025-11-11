@@ -7,19 +7,12 @@
         <div class="col-lg-12 col-md-12 col-12">
             <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="mb-1 h2 fw-bold">Quản lý Exam</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-                            </li>
-                            <li class="breadcrumb-item active" aria-current="page">Exams</li>
-                        </ol>
-                    </nav>
+                    <h1 class="mb-1 h2 fw-bold">Quản lý bộ đề thi</h1>
+                 
                 </div>
                 <div>
                     <a href="{{ route('admin.exams.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Thêm Exam Mới
+                        <i class="bi bi-plus-circle me-2"></i>Thêm bộ đề thi mới
                     </a>
                 </div>
             </div>
@@ -35,7 +28,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Tìm kiếm</label>
                             <input type="text" name="search" class="form-control" 
-                                   placeholder="Tên exam..." value="{{ request('search') }}">
+                                   placeholder="Tên bộ đề thi..." value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Loại</label>
@@ -65,7 +58,7 @@
         </div>
     </div>
 
-    <!-- Exams Table -->
+    <!-- bộ đề this Table -->
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -74,11 +67,11 @@
                         <table class="table table-hover table-lg">
                             <thead class="table-light">
                                 <tr>
-                                    <th width="80">Hình ảnh</th>
-                                    <th>Tên Exam</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Tên bộ đề thi</th>
                                     <th>Loại</th>
-                                    <th width="100">Trạng thái</th>
-                                    <th width="120">Số Test</th>
+                                    <th>Trạng thái</th>
+                                    <th>Số Test</th>
                                     <th width="180">Thao tác</th>
                                 </tr>
                             </thead>
@@ -150,7 +143,7 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-5">
                                         <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
-                                        <p class="text-muted">Không có exam nào</p>
+                                        <p class="text-muted">Không có bộ đề thi nào</p>
                                     </td>
                                 </tr>
                                 @endforelse

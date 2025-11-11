@@ -85,11 +85,18 @@
                         @if($exam->image)
                         <div class="mb-3">
                             <label class="form-label">Hình ảnh hiện tại</label>
-                            <div>
+                            <div class="position-relative" style="max-width: 300px;">
                                 <img src="{{ Storage::url($exam->image) }}" 
                                      alt="{{ $exam->name }}" 
-                                     class="img-thumbnail" 
-                                     style="max-width: 300px;">
+                                     class="img-thumbnail w-100"
+                                     id="currentImage">
+                                <button type="button" 
+                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
+                                        onclick="removeCurrentImage()"
+                                        style="z-index: 10;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <input type="hidden" name="remove_image" id="removeImageFlag" value="0">
                             </div>
                         </div>
                         @endif
@@ -113,9 +120,15 @@
                             @enderror
                             
                             <!-- Image Preview -->
-                            <div id="imagePreview" class="mt-3" style="display: none;">
+                            <div id="imagePreview" class="mt-3 position-relative" style="display: none; max-width: 300px;">
                                 <label class="form-label">Xem trước:</label>
-                                <img id="preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
+                                <img id="preview" src="" alt="Preview" class="img-thumbnail w-100">
+                                <button type="button" 
+                                        class="btn btn-danger btn-sm position-absolute" 
+                                        onclick="removeImage()"
+                                        style="top: 30px; right: 0; z-index: 10; margin: 0.5rem;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -207,6 +220,29 @@ function previewImage(event) {
         reader.readAsDataURL(event.target.files[0]);
     } else {
         imagePreview.style.display = 'none';
+    }
+}
+
+function removeImage() {
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const preview = document.getElementById('preview');
+    
+    // Reset file input
+    imageInput.value = '';
+    
+    // Hide preview
+    imagePreview.style.display = 'none';
+    preview.src = '';
+}
+
+function removeCurrentImage() {
+    const currentImageDiv = document.getElementById('currentImage').parentElement;
+    const removeFlag = document.getElementById('removeImageFlag');
+    
+    if (confirm('Bạn có chắc muốn xóa hình ảnh hiện tại?')) {
+        currentImageDiv.style.display = 'none';
+        removeFlag.value = '1';
     }
 }
 </script>

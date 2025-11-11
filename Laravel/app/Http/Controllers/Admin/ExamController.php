@@ -73,7 +73,7 @@ class ExamController extends Controller
     public function show(Exam $exam)
     {
         $exam->load('tests.skills.sections.questionGroups.questions');
-        
+
         return view('admin.exams.show', compact('exam'));
     }
 
@@ -96,9 +96,18 @@ class ExamController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB
             'is_active' => 'boolean',
+            'remove_image' => 'nullable|in:0,1',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
+
+        // Handle image removal
+        if ($request->input('remove_image') == '1') {
+            if ($exam->image && Storage::disk('public')->exists($exam->image)) {
+                Storage::disk('public')->delete($exam->image);
+            }
+            $validated['image'] = null;
+        }
 
         // Handle image upload
         if ($request->hasFile('image')) {

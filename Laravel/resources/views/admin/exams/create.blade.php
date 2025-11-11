@@ -7,18 +7,7 @@
         <div class="col-lg-12 col-md-12 col-12">
             <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="mb-1 h2 fw-bold">Thêm Exam Mới</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.exams.index') }}">Exams</a>
-                            </li>
-                            <li class="breadcrumb-item active" aria-current="page">Thêm mới</li>
-                        </ol>
-                    </nav>
+                    <h1 class="mb-1 h2 fw-bold">Thêm bộ đề thi mới</h1>
                 </div>
                 <div>
                     <a href="{{ route('admin.exams.index') }}" class="btn btn-secondary">
@@ -39,7 +28,7 @@
                         
                         <!-- Name -->
                         <div class="mb-3">
-                            <label for="name" class="form-label">Tên Exam <span class="text-danger">*</span></label>
+                            <label for="name" class="form-label">Tên bộ đề thi <span class="text-danger">*</span></label>
                             <input type="text" 
                                    class="form-control @error('name') is-invalid @enderror" 
                                    id="name" 
@@ -97,8 +86,14 @@
                             @enderror
                             
                             <!-- Image Preview -->
-                            <div id="imagePreview" class="mt-3" style="display: none;">
-                                <img id="preview" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
+                            <div id="imagePreview" class="mt-3 position-relative" style="display: none; max-width: 300px;">
+                                <img id="preview" src="" alt="Preview" class="img-thumbnail w-100">
+                                <button type="button" 
+                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
+                                        onclick="removeImage()"
+                                        style="z-index: 10;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -139,7 +134,7 @@
                     <ul class="list-unstyled">
                         <li class="mb-2">
                             <i class="bi bi-info-circle text-primary me-2"></i>
-                            <strong>Tên Exam:</strong> Tên hiển thị của exam
+                            <strong>Tên bộ đề thi:</strong> Tên hiển thị của bộ đề thi
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-info-circle text-primary me-2"></i>
@@ -173,6 +168,19 @@ function previewImage(event) {
     } else {
         imagePreview.style.display = 'none';
     }
+}
+
+function removeImage() {
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const preview = document.getElementById('preview');
+    
+    // Reset file input
+    imageInput.value = '';
+    
+    // Hide preview
+    imagePreview.style.display = 'none';
+    preview.src = '';
 }
 </script>
 @endpush

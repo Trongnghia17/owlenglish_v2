@@ -58,7 +58,7 @@
                        aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}"
                        aria-controls="navExams">
                         <i data-feather="file-text" class="nav-icon me-2 icon-xxs"></i>
-                        Quản lý Exam
+                        Quản lý bộ đề thi
                     </a>
                     <div id="navExams" class="collapse {{ request()->routeIs('admin.exams.*') ? 'show' : '' }}"
                          data-bs-parent="#sideNavbar">
@@ -66,15 +66,15 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.exams.index') ? 'active' : '' }}"
                                    href="{{ route('admin.exams.index') }}">
-                                    Danh sách Exam
+                                    Danh sách bộ đề thi
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <!-- <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.exams.create') ? 'active' : '' }}"
                                    href="{{ route('admin.exams.create') }}">
                                     Thêm Exam mới
                                 </a>
-                            </li>
+                            </li> -->
                         </ul>
                     </div>
                 </li>
