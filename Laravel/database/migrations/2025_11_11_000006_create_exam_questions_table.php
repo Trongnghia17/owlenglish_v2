@@ -28,7 +28,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(['exam_question_group_id', 'is_active', 'order']);
+            $table->index(['exam_question_group_id', 'is_active', 'order'], 'idx_questions_group_active_order');
         });
     }
 

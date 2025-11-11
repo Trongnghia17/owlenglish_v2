@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ExamController as AdminExamController;
+use App\Http\Controllers\Admin\ExamTestController;
+use App\Http\Controllers\Admin\ExamSkillController;
+use App\Http\Controllers\Admin\ExamSectionController;
+use App\Http\Controllers\Admin\ExamQuestionController;
 
 
 /*
@@ -37,11 +42,39 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // User management routes - only for Super Admin and Org Admin
- Route::middleware('role:1,2')->group(function () {
-    Route::resource('users', UserController::class);
-    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
-    Route::put('users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
-});
+    Route::middleware('role:1,2')->group(function () {
+        Route::resource('users', UserController::class);
+        Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
+        Route::put('users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
+    });
+
+    // Exam Management Routes
+    Route::resource('exams', AdminExamController::class);
+    Route::patch('exams/{exam}/toggle-active', [AdminExamController::class, 'toggleActive'])->name('exams.toggle-active');
+    
+    // Exam Test Management Routes (Nested Resource)
+    Route::prefix('exams/{exam}')->name('exams.')->group(function () {
+        Route::resource('tests', ExamTestController::class);
+        Route::post('tests/{test}/duplicate', [ExamTestController::class, 'duplicate'])->name('tests.duplicate');
+        Route::post('tests/reorder', [ExamTestController::class, 'reorder'])->name('tests.reorder');
+        
+        // Exam Skill Management Routes (Nested under Test)
+        Route::prefix('tests/{test}')->name('tests.')->group(function () {
+            Route::resource('skills', ExamSkillController::class);
+            Route::post('skills/reorder', [ExamSkillController::class, 'reorder'])->name('skills.reorder');
+            
+            // Exam Section Management Routes (Nested under Skill)
+            Route::prefix('skills/{skill}')->name('skills.')->group(function () {
+                Route::resource('sections', ExamSectionController::class);
+                Route::post('sections/reorder', [ExamSectionController::class, 'reorder'])->name('sections.reorder');
+                
+                // Exam Question Management Routes (Nested under Section)
+                Route::prefix('sections/{section}')->name('sections.')->group(function () {
+                    Route::resource('questions', ExamQuestionController::class);
+                });
+            });
+        });
+    });
 
     // Admin Settings (placeholder)
     Route::get('/settings', function() {
