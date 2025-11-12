@@ -36,7 +36,6 @@ return new class extends Migration
             
             $table->text('instructions')->nullable(); // Hướng dẫn làm bài cho nhóm câu hỏi
             $table->json('options')->nullable(); // Cấu hình đặc biệt (danh sách đáp án cho drag-drop, etc.)
-            $table->integer('order')->default(0); // Thứ tự hiển thị
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();

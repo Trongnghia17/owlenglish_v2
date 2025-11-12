@@ -17,12 +17,11 @@ return new class extends Migration
             $table->string('name'); // Test 1, Test 2, Test 3, Mock Test
             $table->text('description')->nullable();
             $table->string('image')->nullable();
-            $table->integer('order')->default(0); // Thứ tự hiển thị
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(['exam_id', 'is_active', 'order']);
+            $table->index(['exam_id', 'is_active']);
         });
     }
 

@@ -28,7 +28,6 @@ class ExamSeeder extends Seeder
             $test1 = $ieltsExam->tests()->create([
                 'name' => 'IELTS Academic Test 1',
                 'description' => 'Đề thi mẫu số 1 - Full test',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -38,7 +37,6 @@ class ExamSeeder extends Seeder
                 'name' => 'Reading',
                 'description' => 'Academic Reading Test - 3 passages',
                 'time_limit' => 60,
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -52,7 +50,6 @@ Burning fossil fuels generates greenhouse gas emissions that act like a blanket 
 Clearing land and cutting down forests can also release carbon dioxide. Agriculture, oil and gas operations are major sources of methane emissions. Energy, industry, transport, buildings, agriculture and land use are among the main sectors causing greenhouse gases.',
                 'feedback' => 'Đọc kỹ toàn bộ đoạn văn trước khi trả lời câu hỏi',
                 'content_format' => 'text',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -62,7 +59,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'question_type' => 'multiple_choice',
                 'answer_layout' => 'standard',
                 'instructions' => 'Choose the correct letter A, B, C or D.',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -71,7 +67,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => 'A. Natural weather patterns',
                 'is_correct' => false,
                 'point' => 1.0,
-                'order' => 1,
             ]);
 
             $qGroup1->questions()->create([
@@ -80,7 +75,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'is_correct' => true,
                 'point' => 1.0,
                 'feedback' => 'Correct! The passage states that human activities have been the main driver since the 1800s.',
-                'order' => 2,
             ]);
 
             $qGroup1->questions()->create([
@@ -88,7 +82,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => 'C. Deforestation only',
                 'is_correct' => false,
                 'point' => 1.0,
-                'order' => 3,
             ]);
 
             $qGroup1->questions()->create([
@@ -96,7 +89,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => 'D. Agricultural practices',
                 'is_correct' => false,
                 'point' => 1.0,
-                'order' => 4,
             ]);
 
             // Question Group 2: True/False/Not Given
@@ -105,7 +97,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'question_type' => 'true_false_not_given',
                 'answer_layout' => 'standard',
                 'instructions' => 'Do the following statements agree with the information given in the passage? Write TRUE, FALSE or NOT GIVEN.',
-                'order' => 2,
                 'is_active' => true,
             ]);
 
@@ -114,7 +105,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => 'TRUE',
                 'is_correct' => true,
                 'point' => 1.0,
-                'order' => 1,
             ]);
 
             $qGroup2->questions()->create([
@@ -123,7 +113,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'is_correct' => true,
                 'point' => 1.0,
                 'feedback' => 'The passage mentions both CO2 and methane.',
-                'order' => 2,
             ]);
 
             $qGroup2->questions()->create([
@@ -132,7 +121,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'is_correct' => true,
                 'point' => 1.0,
                 'feedback' => 'This information is not mentioned in the passage.',
-                'order' => 3,
             ]);
 
             // ===== LISTENING SKILL =====
@@ -141,7 +129,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'name' => 'Listening',
                 'description' => 'Academic Listening Test - 4 sections',
                 'time_limit' => 40,
-                'order' => 2,
                 'is_active' => true,
             ]);
 
@@ -152,7 +139,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'feedback' => 'Lắng nghe cẩn thận các chi tiết về tên, số điện thoại và địa chỉ',
                 'content_format' => 'audio',
                 'audio_file' => 'exam-audio/ielts-test1-section1.mp3', // Placeholder
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -162,7 +148,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'question_type' => 'fill_in_blank',
                 'answer_layout' => 'inline',
                 'instructions' => 'Listen and complete the booking form.',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -171,7 +156,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => 'Smith',
                 'is_correct' => true,
                 'point' => 1.0,
-                'order' => 1,
             ]);
 
             $listeningQGroup1->questions()->create([
@@ -179,7 +163,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => '0412345678',
                 'is_correct' => true,
                 'point' => 1.0,
-                'order' => 2,
             ]);
 
             $listeningQGroup1->questions()->create([
@@ -187,7 +170,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'answer_content' => '15',
                 'is_correct' => true,
                 'point' => 1.0,
-                'order' => 3,
             ]);
 
             // ===== WRITING SKILL =====
@@ -196,7 +178,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'name' => 'Writing',
                 'description' => 'Academic Writing - 2 tasks',
                 'time_limit' => 60,
-                'order' => 3,
                 'is_active' => true,
             ]);
 
@@ -206,7 +187,6 @@ Clearing land and cutting down forests can also release carbon dioxide. Agricult
                 'content' => 'You should spend about 20 minutes on this task.',
                 'feedback' => 'Write at least 150 words. Describe the main features and make comparisons.',
                 'content_format' => 'text',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -217,7 +197,6 @@ Summarise the information by selecting and reporting the main features, and make
                 'question_type' => 'essay',
                 'answer_layout' => 'standard',
                 'instructions' => 'Write at least 150 words.',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -227,7 +206,6 @@ Summarise the information by selecting and reporting the main features, and make
                 'is_correct' => true,
                 'point' => 33.33,
                 'feedback' => 'Ensure you describe trends, make comparisons, and write in academic style.',
-                'order' => 1,
             ]);
 
             // Writing Task 2
@@ -236,7 +214,6 @@ Summarise the information by selecting and reporting the main features, and make
                 'content' => 'You should spend about 40 minutes on this task.',
                 'feedback' => 'Write at least 250 words. Give your opinion and support it with examples.',
                 'content_format' => 'text',
-                'order' => 2,
                 'is_active' => true,
             ]);
 
@@ -247,7 +224,6 @@ What, in your opinion, should be the main function of a university?',
                 'question_type' => 'essay',
                 'answer_layout' => 'standard',
                 'instructions' => 'Give reasons for your answer and include any relevant examples from your own knowledge or experience. Write at least 250 words.',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -257,7 +233,6 @@ What, in your opinion, should be the main function of a university?',
                 'is_correct' => true,
                 'point' => 66.67,
                 'feedback' => 'Present a clear position, develop your arguments, and use appropriate examples.',
-                'order' => 1,
             ]);
 
             // ===== SPEAKING SKILL =====
@@ -266,7 +241,6 @@ What, in your opinion, should be the main function of a university?',
                 'name' => 'Speaking',
                 'description' => 'Speaking Test - 3 parts',
                 'time_limit' => 15,
-                'order' => 4,
                 'is_active' => true,
             ]);
 
@@ -276,7 +250,6 @@ What, in your opinion, should be the main function of a university?',
                 'content' => 'The examiner will ask you general questions about yourself and familiar topics.',
                 'feedback' => 'Answer naturally and give extended responses.',
                 'content_format' => 'text',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -285,7 +258,6 @@ What, in your opinion, should be the main function of a university?',
                 'question_type' => 'speaking',
                 'answer_layout' => 'standard',
                 'instructions' => 'Answer the following questions (4-5 minutes)',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -293,22 +265,18 @@ What, in your opinion, should be the main function of a university?',
                 [
                     'content' => 'Can you tell me about your hometown?',
                     'point' => 10.0,
-                    'order' => 1,
                 ],
                 [
                     'content' => 'What do you like most about living there?',
                     'point' => 10.0,
-                    'order' => 2,
                 ],
                 [
                     'content' => 'Do you work or are you a student?',
                     'point' => 10.0,
-                    'order' => 3,
                 ],
                 [
                     'content' => 'What do you enjoy about your job/studies?',
                     'point' => 10.0,
-                    'order' => 4,
                 ],
             ]);
 
@@ -323,7 +291,6 @@ What, in your opinion, should be the main function of a university?',
             $toeicTest1 = $toeicExam->tests()->create([
                 'name' => 'TOEIC Practice Test 1',
                 'description' => 'Full TOEIC L&R practice test',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -333,7 +300,6 @@ What, in your opinion, should be the main function of a university?',
                 'name' => 'Listening',
                 'description' => 'TOEIC Listening - 100 questions',
                 'time_limit' => 45,
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -342,7 +308,6 @@ What, in your opinion, should be the main function of a university?',
                 'content' => 'For each question, you will see a photograph and hear four statements. Choose the statement that best describes what you see.',
                 'content_format' => 'audio',
                 'audio_file' => 'exam-audio/toeic-part1.mp3',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -352,7 +317,6 @@ What, in your opinion, should be the main function of a university?',
                 'name' => 'Reading',
                 'description' => 'TOEIC Reading - 100 questions',
                 'time_limit' => 75,
-                'order' => 2,
                 'is_active' => true,
             ]);
 
@@ -360,7 +324,6 @@ What, in your opinion, should be the main function of a university?',
                 'title' => 'Part 5: Incomplete Sentences',
                 'content' => 'Choose the best answer to complete each sentence.',
                 'content_format' => 'text',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -369,7 +332,6 @@ What, in your opinion, should be the main function of a university?',
                 'question_type' => 'multiple_choice',
                 'answer_layout' => 'standard',
                 'instructions' => 'Select the correct answer (A, B, C, or D)',
-                'order' => 1,
                 'is_active' => true,
             ]);
 
@@ -378,7 +340,6 @@ What, in your opinion, should be the main function of a university?',
                 'answer_content' => 'A. postponed',
                 'is_correct' => true,
                 'point' => 1.0,
-                'order' => 1,
             ]);
 
             $toeicQGroup->questions()->create([
@@ -386,7 +347,6 @@ What, in your opinion, should be the main function of a university?',
                 'answer_content' => 'B. postpone',
                 'is_correct' => false,
                 'point' => 1.0,
-                'order' => 2,
             ]);
 
             $toeicQGroup->questions()->create([
@@ -394,7 +354,6 @@ What, in your opinion, should be the main function of a university?',
                 'answer_content' => 'C. postponing',
                 'is_correct' => false,
                 'point' => 1.0,
-                'order' => 3,
             ]);
 
             $toeicQGroup->questions()->create([
@@ -402,7 +361,6 @@ What, in your opinion, should be the main function of a university?',
                 'answer_content' => 'D. postpones',
                 'is_correct' => false,
                 'point' => 1.0,
-                'order' => 4,
             ]);
 
             echo "✅ Exam seeder completed!\n";

@@ -17,14 +17,12 @@ class ExamSkill extends Model
         'name',
         'description',
         'time_limit',
-        'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'time_limit' => 'integer',
-        'order' => 'integer',
     ];
 
     /**
@@ -40,7 +38,7 @@ class ExamSkill extends Model
      */
     public function sections(): HasMany
     {
-        return $this->hasMany(ExamSection::class)->orderBy('order');
+        return $this->hasMany(ExamSection::class);
     }
 
     /**
@@ -48,7 +46,7 @@ class ExamSkill extends Model
      */
     public function activeSections(): HasMany
     {
-        return $this->hasMany(ExamSection::class)->where('is_active', true)->orderBy('order');
+        return $this->hasMany(ExamSection::class)->where('is_active', true);
     }
 
     /**

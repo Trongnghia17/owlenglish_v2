@@ -58,7 +58,6 @@ class ExamQuestionController extends Controller
         }
 
         $questions = ExamQuestion::where('exam_question_group_id', $groupId)
-            ->orderBy('order')
             ->get();
 
         return response()->json([

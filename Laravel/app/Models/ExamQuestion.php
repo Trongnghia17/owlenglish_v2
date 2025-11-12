@@ -21,14 +21,12 @@ class ExamQuestion extends Model
         'image',
         'audio_file',
         'metadata',
-        'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_correct' => 'boolean',
-        'order' => 'integer',
         'point' => 'decimal:2',
         'metadata' => 'array',
     ];

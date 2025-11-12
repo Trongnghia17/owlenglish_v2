@@ -60,12 +60,12 @@
                         <!-- Description -->
                         <div class="mb-3">
                             <label for="description" class="form-label">Mô tả</label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
+                            <div id="description-editor"></div>
+                            <textarea class="form-control d-none @error('description') is-invalid @enderror" 
                                       id="description" 
-                                      name="description" 
-                                      rows="4">{{ old('description') }}</textarea>
+                                      name="description">{{ old('description') }}</textarea>
                             @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -77,7 +77,7 @@
                                    id="image" 
                                    name="image"
                                    accept="image/*"
-                                   onchange="previewImage(event)">
+                                   onchange="ImagePreview.show(this)">
                             <small class="form-text text-muted">
                                 Định dạng: JPG, PNG, GIF, WEBP. Tối đa 10MB.
                             </small>
@@ -90,7 +90,7 @@
                                 <img id="preview" src="" alt="Preview" class="img-thumbnail w-100">
                                 <button type="button" 
                                         class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
-                                        onclick="removeImage()"
+                                        onclick="ImagePreview.remove()"
                                         style="z-index: 10;">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
@@ -151,37 +151,13 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-function previewImage(event) {
-    const reader = new FileReader();
-    const imagePreview = document.getElementById('imagePreview');
-    const preview = document.getElementById('preview');
-    
-    reader.onload = function() {
-        preview.src = reader.result;
-        imagePreview.style.display = 'block';
-    }
-    
-    if (event.target.files[0]) {
-        reader.readAsDataURL(event.target.files[0]);
-    } else {
-        imagePreview.style.display = 'none';
-    }
-}
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<style>.ql-container, .ql-editor { min-height: 300px; font-size: 14px; }</style>
+@endpush
 
-function removeImage() {
-    const imageInput = document.getElementById('image');
-    const imagePreview = document.getElementById('imagePreview');
-    const preview = document.getElementById('preview');
-    
-    // Reset file input
-    imageInput.value = '';
-    
-    // Hide preview
-    imagePreview.style.display = 'none';
-    preview.src = '';
-}
-</script>
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script src="{{ asset('assets/js/admin-editor.js') }}"></script>
 @endpush
 @endsection

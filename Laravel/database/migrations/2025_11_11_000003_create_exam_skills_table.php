@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('name'); // Reading, Writing, Speaking, Listening
             $table->text('description')->nullable();
             $table->integer('time_limit')->nullable(); // Thời gian làm bài (phút)
-            $table->integer('order')->default(0); // Thứ tự hiển thị
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();

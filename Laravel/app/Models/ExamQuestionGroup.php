@@ -18,13 +18,11 @@ class ExamQuestionGroup extends Model
         'answer_layout',
         'instructions',
         'options',
-        'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'order' => 'integer',
         'options' => 'array',
     ];
 
@@ -41,7 +39,7 @@ class ExamQuestionGroup extends Model
      */
     public function questions(): HasMany
     {
-        return $this->hasMany(ExamQuestion::class)->orderBy('order');
+        return $this->hasMany(ExamQuestion::class);
     }
 
     /**
@@ -49,7 +47,7 @@ class ExamQuestionGroup extends Model
      */
     public function activeQuestions(): HasMany
     {
-        return $this->hasMany(ExamQuestion::class)->where('is_active', true)->orderBy('order');
+        return $this->hasMany(ExamQuestion::class)->where('is_active', true);
     }
 
     /**

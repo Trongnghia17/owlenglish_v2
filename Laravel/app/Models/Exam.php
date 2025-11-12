@@ -27,7 +27,7 @@ class Exam extends Model
      */
     public function tests(): HasMany
     {
-        return $this->hasMany(ExamTest::class)->orderBy('order');
+        return $this->hasMany(ExamTest::class);
     }
 
     /**
@@ -35,7 +35,7 @@ class Exam extends Model
      */
     public function activeTests(): HasMany
     {
-        return $this->hasMany(ExamTest::class)->where('is_active', true)->orderBy('order');
+        return $this->hasMany(ExamTest::class)->where('is_active', true);
     }
 
     /**

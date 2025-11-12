@@ -16,13 +16,11 @@ class ExamTest extends Model
         'name',
         'description',
         'image',
-        'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'order' => 'integer',
     ];
 
     /**
@@ -38,7 +36,7 @@ class ExamTest extends Model
      */
     public function skills(): HasMany
     {
-        return $this->hasMany(ExamSkill::class)->orderBy('order');
+        return $this->hasMany(ExamSkill::class);
     }
 
     /**
@@ -46,7 +44,7 @@ class ExamTest extends Model
      */
     public function activeSkills(): HasMany
     {
-        return $this->hasMany(ExamSkill::class)->where('is_active', true)->orderBy('order');
+        return $this->hasMany(ExamSkill::class)->where('is_active', true);
     }
 
     /**

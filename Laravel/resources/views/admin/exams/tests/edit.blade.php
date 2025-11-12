@@ -8,23 +8,7 @@
             <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="mb-1 h2 fw-bold">Chỉnh sửa Test</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.dashboard') }}">Dashboard</a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.exams.index') }}">Exams</a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.exams.show', $exam) }}">{{ $exam->name }}</a>
-                            </li>
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('admin.exams.tests.show', [$exam, $test]) }}">{{ $test->name }}</a>
-                            </li>
-                            <li class="breadcrumb-item active" aria-current="page">Chỉnh sửa</li>
-                        </ol>
-                    </nav>
+                
                 </div>
                 <div>
                     <a href="{{ route('admin.exams.tests.show', [$exam, $test]) }}" class="btn btn-secondary">

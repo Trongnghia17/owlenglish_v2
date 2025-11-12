@@ -17,7 +17,7 @@ class ExamSkillController extends Controller
     {
         $this->validateTestBelongsToExam($exam, $test);
         
-        $skills = $test->skills()->with('sections')->orderBy('order')->get();
+        $skills = $test->skills()->with('sections')->get();
         
         return view('admin.exams.tests.skills.index', compact('exam', 'test', 'skills'));
     }
@@ -43,13 +43,7 @@ class ExamSkillController extends Controller
             'name' => 'required|string|max:255',
             'skill_type' => 'required|in:reading,writing,listening,speaking',
             'time_limit' => 'required|integer|min:1',
-            'order' => 'nullable|integer|min:0',
         ]);
-
-        // Auto-increment order if not provided
-        if (!isset($validated['order'])) {
-            $validated['order'] = $test->skills()->max('order') + 1;
-        }
 
         $skill = $test->skills()->create($validated);
 
@@ -93,7 +87,6 @@ class ExamSkillController extends Controller
             'name' => 'required|string|max:255',
             'skill_type' => 'required|in:reading,writing,listening,speaking',
             'time_limit' => 'required|integer|min:1',
-            'order' => 'nullable|integer|min:0',
         ]);
 
         $skill->update($validated);
@@ -114,30 +107,6 @@ class ExamSkillController extends Controller
 
         return redirect()->route('admin.exams.tests.show', [$exam, $test])
             ->with('success', 'Skill đã được xóa thành công!');
-    }
-
-    /**
-     * Reorder skills.
-     */
-    public function reorder(Request $request, Exam $exam, ExamTest $test)
-    {
-        $this->validateTestBelongsToExam($exam, $test);
-        
-        $validated = $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'required|integer|exists:exam_skills,id',
-        ]);
-
-        foreach ($validated['order'] as $index => $skillId) {
-            ExamSkill::where('id', $skillId)
-                ->where('exam_test_id', $test->id)
-                ->update(['order' => $index]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Thứ tự skill đã được cập nhật!',
-        ]);
     }
 
     /**

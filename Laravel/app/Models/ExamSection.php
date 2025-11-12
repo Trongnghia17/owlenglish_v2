@@ -20,13 +20,11 @@ class ExamSection extends Model
         'audio_file',
         'video_file',
         'metadata',
-        'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'order' => 'integer',
         'metadata' => 'array',
     ];
 
@@ -43,7 +41,7 @@ class ExamSection extends Model
      */
     public function questionGroups(): HasMany
     {
-        return $this->hasMany(ExamQuestionGroup::class)->orderBy('order');
+        return $this->hasMany(ExamQuestionGroup::class);
     }
 
     /**
@@ -51,7 +49,7 @@ class ExamSection extends Model
      */
     public function activeQuestionGroups(): HasMany
     {
-        return $this->hasMany(ExamQuestionGroup::class)->where('is_active', true)->orderBy('order');
+        return $this->hasMany(ExamQuestionGroup::class)->where('is_active', true);
     }
 
     /**

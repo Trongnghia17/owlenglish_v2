@@ -23,12 +23,11 @@ return new class extends Migration
             $table->string('image')->nullable(); // Hình ảnh đi kèm câu hỏi
             $table->string('audio_file')->nullable(); // File audio cho câu hỏi (nếu có)
             $table->json('metadata')->nullable(); // Thông tin bổ sung
-            $table->integer('order')->default(0); // Thứ tự hiển thị
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(['exam_question_group_id', 'is_active', 'order'], 'idx_questions_group_active_order');
+            $table->index(['exam_question_group_id', 'is_active'], 'idx_questions_group_active');
         });
     }
 

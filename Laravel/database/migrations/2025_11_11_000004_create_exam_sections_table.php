@@ -21,12 +21,11 @@ return new class extends Migration
             $table->string('audio_file')->nullable(); // File audio cho Listening
             $table->string('video_file')->nullable(); // File video nếu có
             $table->json('metadata')->nullable(); // Thông tin bổ sung (cấu hình đặc biệt)
-            $table->integer('order')->default(0); // Thứ tự hiển thị
             $table->boolean('is_active')->default(true);
             $table->softDeletes();
             $table->timestamps();
 
-            $table->index(['exam_skill_id', 'is_active', 'order']);
+            $table->index(['exam_skill_id', 'is_active']);
         });
     }
 

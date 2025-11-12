@@ -15,7 +15,7 @@ class ExamTestController extends Controller
      */
     public function index(Exam $exam)
     {
-        $tests = $exam->tests()->with('skills')->orderBy('order')->get();
+        $tests = $exam->tests()->with('skills')->get();
         
         return view('admin.exams.tests.index', compact('exam', 'tests'));
     }
@@ -37,13 +37,7 @@ class ExamTestController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'order' => 'nullable|integer|min:0',
         ]);
-
-        // Auto-increment order if not provided
-        if (!isset($validated['order'])) {
-            $validated['order'] = $exam->tests()->max('order') + 1;
-        }
 
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -98,7 +92,6 @@ class ExamTestController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
-            'order' => 'nullable|integer|min:0',
         ]);
 
         // Handle image upload
@@ -151,27 +144,5 @@ class ExamTestController extends Controller
 
         return redirect()->route('admin.exams.tests.show', [$exam, $newTest])
             ->with('success', 'Test đã được sao chép thành công!');
-    }
-
-    /**
-     * Reorder tests.
-     */
-    public function reorder(Request $request, Exam $exam)
-    {
-        $validated = $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'required|integer|exists:exam_tests,id',
-        ]);
-
-        foreach ($validated['order'] as $index => $testId) {
-            ExamTest::where('id', $testId)
-                ->where('exam_id', $exam->id)
-                ->update(['order' => $index]);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Thứ tự test đã được cập nhật!',
-        ]);
     }
 }
