@@ -8,7 +8,7 @@
             <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="mb-1 h2 fw-bold">Quản lý bộ đề thi</h1>
-                 
+
                 </div>
                 <div>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createExamModal">
@@ -27,7 +27,7 @@
                     <form method="GET" action="{{ route('admin.exams.index') }}" class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Tìm kiếm</label>
-                            <input type="text" name="search" class="form-control" 
+                            <input type="text" name="search" class="form-control"
                                    placeholder="Tên bộ đề thi..." value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3">
@@ -80,12 +80,12 @@
                                 <tr>
                                     <td>
                                         @if($exam->image)
-                                            <img src="{{ Storage::url($exam->image) }}" 
-                                                 alt="{{ $exam->name }}" 
+                                            <img src="{{ Storage::url($exam->image) }}"
+                                                 alt="{{ $exam->name }}"
                                                  class="rounded"
                                                  style="width: 60px; height: 60px; object-fit: cover;">
                                         @else
-                                            <div class="bg-light rounded d-flex align-items-center justify-content-center" 
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
                                                  style="width: 60px; height: 60px;">
                                                 <i class="bi bi-image text-muted fs-3"></i>
                                             </div>
@@ -93,10 +93,10 @@
                                     </td>
                                     <td>
                                         <div class="fw-bold">{{ $exam->name }}</div>
-                                        <small class="text-muted">{{ Str::limit($exam->description, 50) }}</small>
+                                      
                                     </td>
                                     <td>
-                                        <span class="badge 
+                                        <span class="badge
                                             @if($exam->type == 'ielts') bg-primary
                                             @elseif($exam->type == 'toeic') bg-success
                                             @else bg-info
@@ -118,12 +118,12 @@
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.exams.edit', $exam) }}" 
+                                            <a href="{{ route('admin.exams.edit', $exam) }}"
                                                class="btn btn-sm btn-warning" title="Sửa">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('admin.exams.destroy', $exam) }}" 
-                                                  method="POST" 
+                                            <form action="{{ route('admin.exams.destroy', $exam) }}"
+                                                  method="POST"
                                                   class="d-inline"
                                                   onsubmit="return confirm('Bạn có chắc muốn xóa?')">
                                                 @csrf
@@ -174,7 +174,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Quill editor for modal
     const modalEditor = QuillEditor.init('#modal-description', 'Nhập mô tả...');
-    
+
     // Re-open modal if there are validation errors
     @if($errors->any())
         var createExamModal = new bootstrap.Modal(document.getElementById('createExamModal'));

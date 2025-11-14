@@ -92,7 +92,16 @@ class ExamTestController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'remove_image' => 'nullable|in:0,1',
         ]);
+
+        // Handle image removal
+        if ($request->input('remove_image') == '1' && $test->image) {
+            if (Storage::disk('public')->exists($test->image)) {
+                Storage::disk('public')->delete($test->image);
+            }
+            $validated['image'] = null;
+        }
 
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -105,7 +114,7 @@ class ExamTestController extends Controller
 
         $test->update($validated);
 
-        return redirect()->route('admin.exams.tests.show', [$exam, $test])
+        return redirect()->route('admin.exams.edit', $exam)
             ->with('success', 'Test đã được cập nhật thành công!');
     }
 
@@ -126,7 +135,7 @@ class ExamTestController extends Controller
 
         $test->delete();
 
-        return redirect()->route('admin.exams.show', $exam)
+        return redirect()->route('admin.exams.edit', $exam)
             ->with('success', 'Test đã được xóa thành công!');
     }
 

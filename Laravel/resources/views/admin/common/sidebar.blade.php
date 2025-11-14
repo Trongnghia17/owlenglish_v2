@@ -79,6 +79,34 @@
                     </div>
                 </li>
 
+                <!-- Quản lý Skills -->
+                <li class="nav-item">
+                    <a class="nav-link has-arrow {{ request()->routeIs('admin.skills.*') ? '' : 'collapsed' }}"
+                       href="#!" data-bs-toggle="collapse" data-bs-target="#navSkills"
+                       aria-expanded="{{ request()->routeIs('admin.skills.*') ? 'true' : 'false' }}"
+                       aria-controls="navSkills">
+                        <i data-feather="book-open" class="nav-icon me-2 icon-xxs"></i>
+                        Quản lý Skills
+                    </a>
+                    <div id="navSkills" class="collapse {{ request()->routeIs('admin.skills.*') ? 'show' : '' }}"
+                         data-bs-parent="#sideNavbar">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.skills.index') ? 'active' : '' }}"
+                                   href="{{ route('admin.skills.index') }}">
+                                    Danh sách Skills
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.skills.create') ? 'active' : '' }}"
+                                   href="{{ route('admin.skills.create') }}">
+                                    Thêm Skill mới
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 <!-- Quản lý người dùng -->
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.users.*') ? '' : 'collapsed' }}"
