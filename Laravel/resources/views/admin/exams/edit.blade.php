@@ -21,7 +21,7 @@
 
     <!-- Form -->
     <div class="row">
-        <div class="col-lg-8 col-12">
+        <div class=" col-12">
             <div class="card">
                 <div class="card-body">
                     <form action="{{ route('admin.exams.update', $exam) }}" method="POST" enctype="multipart/form-data">
@@ -149,48 +149,7 @@
             </div>
         </div>
 
-        <!-- Helper Card -->
-        <div class="col-lg-4 col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Thông tin</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-2">
-                            <i class="bi bi-clock text-muted me-2"></i>
-                            <strong>Tạo:</strong> {{ $exam->created_at->format('d/m/Y H:i') }}
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-clock-history text-muted me-2"></i>
-                            <strong>Cập nhật:</strong> {{ $exam->updated_at->format('d/m/Y H:i') }}
-                        </li>
-                        <li class="mb-2">
-                            <i class="bi bi-file-earmark-text text-muted me-2"></i>
-                            <strong>Số Test:</strong> {{ $exam->tests->count() }}
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="mb-0">Khu vực nguy hiểm</h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Xóa bộ đề thi sẽ xóa tất cả test, skill, section và câu hỏi liên quan.</p>
-                    <form action="{{ route('admin.exams.destroy', $exam) }}" 
-                          method="POST" 
-                          onsubmit="return confirm('Bạn có chắc muốn xóa? Hành động này không thể hoàn tác!')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
-                            <i class="bi bi-trash me-2"></i>Xóa bộ đề thi
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+       
     </div>
     <!-- Tests List -->
     <div class="row">

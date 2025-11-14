@@ -63,8 +63,8 @@ class ExamController extends Controller
 
         $exam = Exam::create($validated);
 
-        return redirect()->route('admin.exams.show', $exam)
-            ->with('success', 'Exam created successfully!');
+        return redirect()->route('admin.exams.index')
+            ->with('success', 'Tạo bộ đề thi thành công!');
     }
 
     /**
@@ -120,8 +120,8 @@ class ExamController extends Controller
 
         $exam->update($validated);
 
-        return redirect()->route('admin.exams.show', $exam)
-            ->with('success', 'Exam updated successfully!');
+        return redirect()->route('admin.exams.index')
+            ->with('success', 'Cập nhật bộ đề thi thành công!');
     }
 
     /**
@@ -137,7 +137,7 @@ class ExamController extends Controller
         $exam->delete();
 
         return redirect()->route('admin.exams.index')
-            ->with('success', 'Exam deleted successfully!');
+            ->with('success', 'Xóa bộ đề thi thành công!');
     }
 
     /**
@@ -148,6 +148,6 @@ class ExamController extends Controller
         $exam->update(['is_active' => !$exam->is_active]);
 
         return redirect()->back()
-            ->with('success', 'Exam status updated successfully!');
+            ->with('success', 'Cập nhật trạng thái thành công!');
     }
 }
