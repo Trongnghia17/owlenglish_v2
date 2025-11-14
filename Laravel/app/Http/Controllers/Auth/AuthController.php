@@ -29,7 +29,7 @@ class AuthController extends Controller
         ]);
 
         $credentials = $request->only('phone', 'password');
-
+       
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::user();
 

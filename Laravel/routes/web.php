@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
 | Admin Routes (Role 0)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
