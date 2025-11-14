@@ -33,9 +33,9 @@ Route::middleware('auth')->group(function () {
 | Admin Routes (Role 0)
 |--------------------------------------------------------------------------
 */
+
 Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-
     // User management routes - only for Super Admin and Org Admin
  Route::middleware('role:1,2')->group(function () {
     Route::resource('users', UserController::class);
