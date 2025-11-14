@@ -160,7 +160,7 @@
                     testSelect.disabled = true;
 
                     if (!examId) {
-                        testSelect.innerHTML = '<option value="">-- Vui lòng chọn Exam trước --</option>';
+                        testSelect.innerHTML = '<option value="">-- Vui lòng chọn Quiz Collection trước --</option>';
                         return;
                     }
 
