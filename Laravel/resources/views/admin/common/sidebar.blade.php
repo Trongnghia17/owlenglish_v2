@@ -49,7 +49,37 @@
             <li class="nav-item">
                 <div class="navbar-heading">QUẢN LÝ</div>
             </li>
- @if(Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
+
+            @if(Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
+                <!-- Quản lý Exam -->
+                <li class="nav-item">
+                    <a class="nav-link has-arrow {{ request()->routeIs('admin.exams.*') ? '' : 'collapsed' }}"
+                       href="#!" data-bs-toggle="collapse" data-bs-target="#navExams"
+                       aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}"
+                       aria-controls="navExams">
+                        <i data-feather="file-text" class="nav-icon me-2 icon-xxs"></i>
+                        Quản lý bộ đề thi
+                    </a>
+                    <div id="navExams" class="collapse {{ request()->routeIs('admin.exams.*') ? 'show' : '' }}"
+                         data-bs-parent="#sideNavbar">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.exams.index') ? 'active' : '' }}"
+                                   href="{{ route('admin.exams.index') }}">
+                                    Danh sách bộ đề thi
+                                </a>
+                            </li>
+                            <!-- <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.exams.create') ? 'active' : '' }}"
+                                   href="{{ route('admin.exams.create') }}">
+                                    Thêm Exam mới
+                                </a>
+                            </li> -->
+                        </ul>
+                    </div>
+                </li>
+
+                <!-- Quản lý người dùng -->
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.users.*') ? '' : 'collapsed' }}"
                        href="#!" data-bs-toggle="collapse" data-bs-target="#navUsers"
@@ -67,7 +97,6 @@
                                     Tất cả người dùng
                                 </a>
                             </li>
-
                         </ul>
                     </div>
                 </li>
