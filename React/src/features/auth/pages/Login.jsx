@@ -10,7 +10,7 @@ import passwordimg from "../../../assets/images/password.svg";
 import logofacebook from "../../../assets/images/facebook.svg";
 import logogoogle from "../../../assets/images/google.svg";
 import nextright from "../../../assets/images/nextright.svg";
-import eye from "../../../assets/images/nextright.svg";
+import eye from "../../../assets/images/eye.svg";
 import eyeSlash from "../../../assets/images/eye-slash.svg";
 import { getMe } from '@/features/users/api/users.api';
 import './Login.css';
@@ -83,7 +83,7 @@ export default function Login() {
               />
               <img className='key-logo-input' src={passwordimg} alt="passwordimg-img" />
               <img
-                src={showPassword ? eyeSlash : passwordimg}
+                src={showPassword ? eyeSlash : eye}
                 alt="toggle-password"
                 className="toggle-password"
                 onClick={() => setShowPassword(!showPassword)}
