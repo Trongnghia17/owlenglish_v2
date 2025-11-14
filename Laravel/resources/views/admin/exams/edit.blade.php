@@ -85,13 +85,13 @@
 
                         <!-- Name -->
                         <div class="mb-4">
-                            <label for="name" class="form-label fw-semibold">Tên bộ đề thi</label>
+                            <label for="name" class="form-label fw-semibold">Tiêu đề</label>
                             <input type="text"
                                    class="form-control @error('name') is-invalid @enderror"
                                    id="name"
                                    name="name"
                                    value="{{ old('name', $exam->name) }}"
-                                   placeholder="Nhập tên bộ đề thi"
+                                   placeholder="Nhập tiêu đề ..."
                                    required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -100,7 +100,7 @@
 
                         <!-- Description -->
                         <div class="mb-4">
-                            <label for="description" class="form-label fw-semibold">Mô tả đề thi</label>
+                            <label for="description" class="form-label fw-semibold">Mô tả</label>
                             <div id="description-editor"></div>
                             <textarea class="form-control d-none @error('description') is-invalid @enderror"
                                       id="description"
@@ -257,7 +257,7 @@ function removeCurrentImage() {
     const currentImageDiv = document.getElementById('currentImage').parentElement;
     const removeFlag = document.getElementById('removeImageFlag');
 
-    if (confirm('Bạn có chắc muốn xóa hình ảnh hiện tại?')) {
+    if (confirm('Bạn có chắc muốn xóa ảnh bìa hiện tại?')) {
         currentImageDiv.style.display = 'none';
         removeFlag.value = '1';
     }
@@ -267,7 +267,7 @@ function removeEditCurrentImage() {
     const wrapper = document.getElementById('edit-current-image-wrapper');
     const removeFlag = document.getElementById('edit-remove-image-flag');
     
-    if (confirm('Bạn có chắc muốn xóa hình ảnh hiện tại?')) {
+    if (confirm('Bạn có chắc muốn xóa ảnh bìa hiện tại?')) {
         wrapper.style.display = 'none';
         removeFlag.value = '1';
         document.getElementById('edit-image-label').textContent = 'Ảnh bìa';

@@ -20,13 +20,6 @@ class ExamTestController extends Controller
         return view('admin.exams.tests.index', compact('exam', 'tests'));
     }
 
-    /**
-     * Show the form for creating a new test.
-     */
-    public function create(Exam $exam)
-    {
-        return view('admin.exams.tests.create', compact('exam'));
-    }
 
     /**
      * Store a newly created test.
@@ -46,36 +39,8 @@ class ExamTestController extends Controller
 
         $test = $exam->tests()->create($validated);
 
-        return redirect()->route('admin.exams.tests.show', [$exam, $test])
-            ->with('success', 'Test đã được tạo thành công!');
-    }
-
-    /**
-     * Display the specified test.
-     */
-    public function show(Exam $exam, ExamTest $test)
-    {
-        // Ensure the test belongs to the exam
-        if ($test->exam_id !== $exam->id) {
-            abort(404);
-        }
-
-        $test->load(['skills.sections.questionGroups.questions']);
-        
-        return view('admin.exams.tests.show', compact('exam', 'test'));
-    }
-
-    /**
-     * Show the form for editing the specified test.
-     */
-    public function edit(Exam $exam, ExamTest $test)
-    {
-        // Ensure the test belongs to the exam
-        if ($test->exam_id !== $exam->id) {
-            abort(404);
-        }
-
-        return view('admin.exams.tests.edit', compact('exam', 'test'));
+        return redirect()->route('admin.exams.edit', [$exam, $test])
+            ->with('success', 'Nhóm đề thi đã được tạo thành công!');
     }
 
     /**
@@ -115,7 +80,7 @@ class ExamTestController extends Controller
         $test->update($validated);
 
         return redirect()->route('admin.exams.edit', $exam)
-            ->with('success', 'Test đã được cập nhật thành công!');
+            ->with('success', 'Nhóm đề thi đã được cập nhật thành công!');
     }
 
     /**
@@ -139,19 +104,19 @@ class ExamTestController extends Controller
             ->with('success', 'Test đã được xóa thành công!');
     }
 
-    /**
-     * Duplicate a test with all its nested data.
-     */
-    public function duplicate(Exam $exam, ExamTest $test)
-    {
-        // Ensure the test belongs to the exam
-        if ($test->exam_id !== $exam->id) {
-            abort(404);
-        }
+    // /**
+    //  * Duplicate a test with all its nested data.
+    //  */
+    // public function duplicate(Exam $exam, ExamTest $test)
+    // {
+    //     // Ensure the test belongs to the exam
+    //     if ($test->exam_id !== $exam->id) {
+    //         abort(404);
+    //     }
 
-        $newTest = $test->duplicate();
+    //     $newTest = $test->duplicate();
 
-        return redirect()->route('admin.exams.tests.show', [$exam, $newTest])
-            ->with('success', 'Test đã được sao chép thành công!');
-    }
+    //     return redirect()->route('admin.exams.tests.edit', [$exam, $newTest])
+    //         ->with('success', 'Test đã được sao chép thành công!');
+    // }
 }

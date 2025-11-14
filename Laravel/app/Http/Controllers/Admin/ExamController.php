@@ -21,6 +21,11 @@ class ExamController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Filter by active status
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->is_active);
+        }
+
         // Search
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -28,17 +33,10 @@ class ExamController extends Controller
 
         $exams = $query->withCount('tests')
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->appends($request->except('page'));
 
         return view('admin.exams.index', compact('exams'));
-    }
-
-    /**
-     * Show the form for creating a new exam.
-     */
-    public function create()
-    {
-        return view('admin.exams.create');
     }
 
     /**
@@ -67,15 +65,6 @@ class ExamController extends Controller
             ->with('success', 'Tạo bộ đề thi thành công!');
     }
 
-    /**
-     * Display the specified exam.
-     */
-    public function show(Exam $exam)
-    {
-        $exam->load('tests.skills.sections.questionGroups.questions');
-
-        return view('admin.exams.show', compact('exam'));
-    }
 
     /**
      * Show the form for editing the specified exam.

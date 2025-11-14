@@ -54,7 +54,7 @@
                     <!-- Name -->
                     <div class="mb-3">
                         <label for="edit-test-name" class="form-label fw-semibold">
-                            Tên Test <span class="text-danger">*</span>
+                            Tên nhóm đề thi <span class="text-danger">*</span>
                         </label>
                         <input type="text" class="form-control" id="edit-test-name"
                             name="name" placeholder="Ví dụ: Test 1, Mini Test, Full Test..." required>

@@ -15,7 +15,7 @@
                     <!-- Image Upload -->
                     <div class="mb-3">
                         <label for="modal-image" class="form-label fw-semibold">
-                            Hình ảnh
+                            Ảnh bìa
                         </label>
                         <input type="file" class="form-control @error('image') is-invalid @enderror" id="modal-image"
                             name="image" accept="image/*" onchange="ImagePreview.show(this, 'modalImagePreview')">
@@ -39,10 +39,10 @@
                     <!-- Name -->
                     <div class="mb-3">
                         <label for="name" class="form-label fw-semibold">
-                            Tên bộ đề thi <span class="text-danger">*</span>
+                            Tiêu đề <span class="text-danger">*</span>
                         </label>
                         <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                            name="name" value="{{ old('name') }}" placeholder="Nhập tên bộ đề thi..." required>
+                            name="name" value="{{ old('name') }}" placeholder="Nhập tiêu đề ..." required>
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
