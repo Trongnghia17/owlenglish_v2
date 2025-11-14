@@ -105,6 +105,7 @@ class SkillController extends Controller
     public function edit(ExamSkill $skill)
     {
         $exams = Exam::with('tests')->orderBy('name')->get();
+        $skill->load(['sections.questionGroups.questions', 'examTest.exam']);
         
         return view('admin.skills.edit', compact('skill', 'exams'));
     }
@@ -121,6 +122,18 @@ class SkillController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'time_limit' => 'required|integer|min:1',
+            'sections' => 'nullable|array',
+            'sections.*.title' => 'nullable|string|max:255',
+            'sections.*.content' => 'nullable|string',
+            'sections.*.feedback' => 'nullable|string',
+            'sections.*.content_format' => 'nullable|in:text,audio,video',
+            'sections.*.groups' => 'nullable|array',
+            'sections.*.groups.*.content' => 'nullable|string',
+            'sections.*.groups.*.question_type' => 'nullable|in:cloze,multiple_choice,true_false,essay,speaking',
+            'sections.*.groups.*.questions' => 'nullable|array',
+            'sections.*.groups.*.questions.*.content' => 'nullable|string',
+            'sections.*.groups.*.questions.*.answer_content' => 'nullable|string',
+            'sections.*.groups.*.questions.*.point' => 'nullable|numeric|min:0',
         ]);
 
         // Verify that exam_test_id belongs to the selected exam_id
@@ -134,10 +147,135 @@ class SkillController extends Controller
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
+        // Extract sections data before updating skill
+        $sectionsData = $validated['sections'] ?? [];
+        unset($validated['sections']);
+
+        // Update skill basic info
         $skill->update($validated);
+
+        // Process sections
+        $this->processSections($skill, $sectionsData);
 
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill đã được cập nhật thành công!');
+    }
+
+    /**
+     * Process sections, question groups, and questions
+     */
+    private function processSections(ExamSkill $skill, array $sectionsData)
+    {
+        $existingSectionIds = [];
+
+        foreach ($sectionsData as $sectionData) {
+            $sectionId = $sectionData['id'] ?? null;
+            
+            // Prepare section data
+            $sectionInfo = [
+                'exam_skill_id' => $skill->id,
+                'title' => $sectionData['title'] ?? '',
+                'content' => $sectionData['content'] ?? '',
+                'feedback' => $sectionData['feedback'] ?? '',
+                'content_format' => $sectionData['content_format'] ?? 'text',
+                'metadata' => [
+                    'answer_inputs_inside_content' => isset($sectionData['answer_inputs_inside_content']),
+                ],
+                'is_active' => true,
+            ];
+
+            // Update or create section
+            if ($sectionId) {
+                $section = $skill->sections()->findOrFail($sectionId);
+                $section->update($sectionInfo);
+                $existingSectionIds[] = $sectionId;
+            } else {
+                $section = $skill->sections()->create($sectionInfo);
+                $existingSectionIds[] = $section->id;
+            }
+
+            // Process question groups
+            $groupsData = $sectionData['groups'] ?? [];
+            $this->processQuestionGroups($section, $groupsData);
+        }
+
+        // Delete sections that are not in the request
+        $skill->sections()->whereNotIn('id', $existingSectionIds)->delete();
+    }
+
+    /**
+     * Process question groups
+     */
+    private function processQuestionGroups($section, array $groupsData)
+    {
+        $existingGroupIds = [];
+
+        foreach ($groupsData as $groupData) {
+            $groupId = $groupData['id'] ?? null;
+            
+            $groupInfo = [
+                'exam_section_id' => $section->id,
+                'content' => $groupData['content'] ?? '',
+                'question_type' => $groupData['question_type'] ?? 'multiple_choice',
+                'options' => [
+                    'answer_inputs_inside_content' => isset($groupData['answer_inputs_inside_content']),
+                    'split_questions_side_by_side' => isset($groupData['split_questions_side_by_side']),
+                    'allow_drag_drop' => isset($groupData['allow_drag_drop']),
+                ],
+                'is_active' => true,
+            ];
+
+            if ($groupId) {
+                $group = $section->questionGroups()->findOrFail($groupId);
+                $group->update($groupInfo);
+                $existingGroupIds[] = $groupId;
+            } else {
+                $group = $section->questionGroups()->create($groupInfo);
+                $existingGroupIds[] = $group->id;
+            }
+
+            // Process questions
+            $questionsData = $groupData['questions'] ?? [];
+            $this->processQuestions($group, $questionsData);
+        }
+
+        // Delete groups that are not in the request
+        $section->questionGroups()->whereNotIn('id', $existingGroupIds)->delete();
+    }
+
+    /**
+     * Process questions
+     */
+    private function processQuestions($group, array $questionsData)
+    {
+        $existingQuestionIds = [];
+
+        foreach ($questionsData as $questionData) {
+            $questionId = $questionData['id'] ?? null;
+            
+            $questionInfo = [
+                'exam_question_group_id' => $group->id,
+                'content' => $questionData['content'] ?? '',
+                'answer_content' => $questionData['answer_content'] ?? '',
+                'point' => $questionData['point'] ?? 1,
+                'metadata' => [
+                    'question_type' => $questionData['question_type'] ?? 'multiple_choice',
+                ],
+                'is_active' => true,
+            ];
+
+            if ($questionId) {
+                $question = $group->questions()->findOrFail($questionId);
+                $question->update($questionInfo);
+                $existingQuestionIds[] = $questionId;
+            } else {
+                $question = $group->questions()->create($questionInfo);
+                $existingQuestionIds[] = $question->id;
+            }
+        }
+
+        // Delete questions that are not in the request
+        $group->questions()->whereNotIn('id', $existingQuestionIds)->delete();
     }
 
     /**
