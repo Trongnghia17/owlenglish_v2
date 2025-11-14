@@ -16,6 +16,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         DB::transaction(function () {
+            
             // 1) Tạo user mẫu với role Super Admin
             $user = User::firstOrCreate(
                 ['email' => 'demo@owl.edu.vn'],
