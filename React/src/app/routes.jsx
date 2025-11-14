@@ -12,6 +12,8 @@ import Home from '../features/home/pages/Home';
 import PagesTest from '../features/exams/pages/PagesTest';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
+import PaymentHistory from '../features/users/pages/PaymentHistory';
+import LoginHistory from '../features/users/pages/LoginHistory';
 const PublicShell = (
   <MainLayout />
 );
@@ -44,9 +46,9 @@ export const router = createBrowserRouter([
       // trang cá nhân
       { path: '/trang-ca-nhan', element: <Profile /> },
       { path: '/lich-su-lam-bai', element: <ExamHistory /> },
-      { path: '/lich-su-thanh-toan', element: <ExamHistory /> },
+      { path: '/lich-su-thanh-toan', element: <PaymentHistory /> },
       { path: '/lich-su-giao-dich-owl', element: <ExamHistory /> },
-      { path: '/lich-su-dang-nhap', element: <ExamHistory /> },
+      { path: '/lich-su-dang-nhap', element: <LoginHistory /> },
     ],
   },
 
