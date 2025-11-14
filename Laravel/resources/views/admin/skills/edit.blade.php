@@ -168,20 +168,28 @@
                     <div class="card-body p-0">
                         <div id="sectionNavigation" class="list-group list-group-flush">
 
-                            <a href="#sections-builder" class="list-group-item list-group-item-action" onclick="scrollToElement(event, 'sections-builder')">
-                                <i class="bi bi-collection me-2"></i>Sections & Questions
-                            </a>
                             @foreach($skill->sections as $index => $section)
-                            <div class="section-nav-item ps-3">
-                                <a href="#section-{{ $index }}" class="list-group-item list-group-item-action small" onclick="scrollToSection(event, {{ $index }})">
+                            <div class="section-nav-item">
+                                <a href="#section-{{ $index }}" class="list-group-item list-group-item-action" onclick="scrollToSection(event, {{ $index }})">
                                     <i class="bi bi-file-text me-2"></i>Section {{ $index + 1 }}
                                 </a>
                                 @if($section->questionGroups->count() > 0)
                                 <div class="ps-3">
                                     @foreach($section->questionGroups as $gIndex => $group)
-                                    <a href="#group-{{ $index }}-{{ $gIndex }}" class="list-group-item list-group-item-action small text-muted" onclick="scrollToGroup(event, {{ $index }}, {{ $gIndex }})">
-                                        <i class="bi bi-diagram-3 me-2"></i>Group {{ $gIndex + 1 }}
-                                    </a>
+                                    <div>
+                                        <a href="#group-{{ $index }}-{{ $gIndex }}" class="list-group-item list-group-item-action small" onclick="scrollToGroup(event, {{ $index }}, {{ $gIndex }})">
+                                            <i class="bi bi-diagram-3 me-2"></i>Group {{ $gIndex + 1 }}
+                                        </a>
+                                        @if($group->questions->count() > 0)
+                                        <div class="ps-3">
+                                            @foreach($group->questions as $qIndex => $question)
+                                            <a href="#question-{{ $index }}-{{ $gIndex }}-{{ $qIndex }}" class="list-group-item list-group-item-action small text-muted py-1" onclick="scrollToQuestion(event, {{ $index }}, {{ $gIndex }}, {{ $qIndex }})">
+                                                <i class="bi bi-question-circle me-2"></i>Question {{ $qIndex + 1 }}
+                                            </a>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                    </div>
                                     @endforeach
                                 </div>
                                 @endif
@@ -364,7 +372,7 @@
 
                                                             <div class="questions-list">
                                                                 @foreach($group->questions as $qIndex => $question)
-                                                                <div class="question-item bg-light p-3 rounded mb-2" data-question-index="{{ $qIndex }}">
+                                                                <div id="question-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}" class="question-item bg-light p-3 rounded mb-2" data-question-index="{{ $qIndex }}">
                                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                                         <div class="d-flex align-items-center gap-2">
                                                                             <button type="button" class="btn btn-sm btn-link text-dark p-0" onclick="toggleQuestion(this)">
@@ -724,6 +732,7 @@ function addQuestion(btn) {
     `;
     questionsList.insertAdjacentHTML('beforeend', questionHtml);
     updateQuestionNumbers(groupItem);
+    updateNavigation();
 }
 
 function deleteQuestion(btn) {
@@ -731,6 +740,7 @@ function deleteQuestion(btn) {
         const groupItem = btn.closest('.question-group-item');
         btn.closest('.question-item').remove();
         updateQuestionNumbers(groupItem);
+        updateNavigation();
     }
 }
 
@@ -777,25 +787,27 @@ function scrollToGroup(e, sectionIndex, groupIndex) {
     }
 }
 
+function scrollToQuestion(e, sectionIndex, groupIndex, questionIndex) {
+    e.preventDefault();
+    const question = document.getElementById(`question-${sectionIndex}-${groupIndex}-${questionIndex}`);
+    if (question) {
+        question.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
 // Update navigation when sections are added/removed
 function updateNavigation() {
     const navContainer = document.getElementById('sectionNavigation');
     const sections = document.querySelectorAll('.section-item');
 
-    // Keep the Quiz Info and Sections Builder links
-    let navHtml = `
-
-        <a href="#sections-builder" class="list-group-item list-group-item-action" onclick="scrollToElement(event, 'sections-builder')">
-            <i class="bi bi-collection me-2"></i>Sections & Questions
-        </a>
-    `;
+    let navHtml = ``;
 
     sections.forEach((section, sIndex) => {
         const sectionId = `section-${sIndex}`;
         section.id = sectionId;
 
-        navHtml += `<div class="section-nav-item ps-3">
-            <a href="#${sectionId}" class="list-group-item list-group-item-action small" onclick="scrollToSection(event, ${sIndex})">
+        navHtml += `<div class="section-nav-item">
+            <a href="#${sectionId}" class="list-group-item list-group-item-action" onclick="scrollToSection(event, ${sIndex})">
                 <i class="bi bi-file-text me-2"></i>Section ${sIndex + 1}
             </a>`;
 
@@ -805,9 +817,25 @@ function updateNavigation() {
             groups.forEach((group, gIndex) => {
                 const groupId = `group-${sIndex}-${gIndex}`;
                 group.id = groupId;
-                navHtml += `<a href="#${groupId}" class="list-group-item list-group-item-action small text-muted" onclick="scrollToGroup(event, ${sIndex}, ${gIndex})">
-                    <i class="bi bi-diagram-3 me-2"></i>Group ${gIndex + 1}
-                </a>`;
+                navHtml += `<div>
+                    <a href="#${groupId}" class="list-group-item list-group-item-action small" onclick="scrollToGroup(event, ${sIndex}, ${gIndex})">
+                        <i class="bi bi-diagram-3 me-2"></i>Group ${gIndex + 1}
+                    </a>`;
+                
+                const questions = group.querySelectorAll('.question-item');
+                if (questions.length > 0) {
+                    navHtml += `<div class="ps-3">`;
+                    questions.forEach((question, qIndex) => {
+                        const questionId = `question-${sIndex}-${gIndex}-${qIndex}`;
+                        question.id = questionId;
+                        navHtml += `<a href="#${questionId}" class="list-group-item list-group-item-action small text-muted py-1" onclick="scrollToQuestion(event, ${sIndex}, ${gIndex}, ${qIndex})">
+                            <i class="bi bi-question-circle me-2"></i>Question ${qIndex + 1}
+                        </a>`;
+                    });
+                    navHtml += `</div>`;
+                }
+                
+                navHtml += `</div>`;
             });
             navHtml += `</div>`;
         }
