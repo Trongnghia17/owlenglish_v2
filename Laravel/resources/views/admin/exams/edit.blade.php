@@ -3,21 +3,21 @@
 @section('content')
 <div class="container-fluid p-4">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-lg-12 col-md-12 col-12">
-            <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="mb-1 h2 fw-bold">Chỉnh sửa bộ đề thi</h1>
-                  
-                </div>
-                <div>
-                    <a href="{{ route('admin.exams.show', $exam) }}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Quay lại
-                    </a>
+   <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0 fw-bold">Bộ đề thi</h3>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('admin.exams.show', $exam) }}" class="btn btn-outline-secondary">
+                            Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            Lưu
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Form -->
     <div class="row">
@@ -27,7 +27,55 @@
                     <form action="{{ route('admin.exams.update', $exam) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
-                        
+                        @if($exam->image)
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh bìa hiện tại</label>
+                            <div class="position-relative" style="max-width: 300px;">
+                                <img src="{{ Storage::url($exam->image) }}" 
+                                     alt="{{ $exam->name }}" 
+                                     class="img-thumbnail w-100"
+                                     id="currentImage">
+                                <button type="button" 
+                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
+                                        onclick="removeCurrentImage()"
+                                        style="z-index: 10;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                <input type="hidden" name="remove_image" id="removeImageFlag" value="0">
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Image Upload -->
+                        <div class="mb-3">
+                            <label for="image" class="form-label">
+                                {{ $exam->image ? 'Thay đổi ảnh bìa' : 'Ảnh bìa' }}
+                            </label>
+                            <input type="file" 
+                                   class="form-control @error('image') is-invalid @enderror" 
+                                   id="image" 
+                                   name="image"
+                                   accept="image/*"
+                                   onchange="ImagePreview.show(this)">
+                            <small class="form-text text-muted">
+                                Định dạng: JPG, PNG, GIF, WEBP. Tối đa 10MB.
+                            </small>
+                            @error('image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            
+                            <!-- Image Preview -->
+                            <div id="imagePreview" class="mt-3 position-relative" style="display: none; max-width: 300px;">
+                                <label class="form-label">Xem trước:</label>
+                                <img id="preview" src="" alt="Preview" class="img-thumbnail w-100">
+                                <button type="button" 
+                                        class="btn btn-danger btn-sm position-absolute" 
+                                        onclick="ImagePreview.remove()"
+                                        style="top: 30px; right: 0; z-index: 10; margin: 0.5rem;">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
                         <!-- Name -->
                         <div class="mb-3">
                             <label for="name" class="form-label">Tên bộ đề thi <span class="text-danger">*</span></label>
@@ -72,57 +120,9 @@
                         </div>
 
                         <!-- Current Image -->
-                        @if($exam->image)
-                        <div class="mb-3">
-                            <label class="form-label">Hình ảnh hiện tại</label>
-                            <div class="position-relative" style="max-width: 300px;">
-                                <img src="{{ Storage::url($exam->image) }}" 
-                                     alt="{{ $exam->name }}" 
-                                     class="img-thumbnail w-100"
-                                     id="currentImage">
-                                <button type="button" 
-                                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" 
-                                        onclick="removeCurrentImage()"
-                                        style="z-index: 10;">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                                <input type="hidden" name="remove_image" id="removeImageFlag" value="0">
-                            </div>
-                        </div>
-                        @endif
+                        
 
-                        <!-- Image Upload -->
-                        <div class="mb-3">
-                            <label for="image" class="form-label">
-                                {{ $exam->image ? 'Thay đổi hình ảnh' : 'Hình ảnh' }}
-                            </label>
-                            <input type="file" 
-                                   class="form-control @error('image') is-invalid @enderror" 
-                                   id="image" 
-                                   name="image"
-                                   accept="image/*"
-                                   onchange="ImagePreview.show(this)">
-                            <small class="form-text text-muted">
-                                Định dạng: JPG, PNG, GIF, WEBP. Tối đa 10MB.
-                            </small>
-                            @error('image')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            
-                            <!-- Image Preview -->
-                            <div id="imagePreview" class="mt-3 position-relative" style="display: none; max-width: 300px;">
-                                <label class="form-label">Xem trước:</label>
-                                <img id="preview" src="" alt="Preview" class="img-thumbnail w-100">
-                                <button type="button" 
-                                        class="btn btn-danger btn-sm position-absolute" 
-                                        onclick="ImagePreview.remove()"
-                                        style="top: 30px; right: 0; z-index: 10; margin: 0.5rem;">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Is Active -->
+                        Is Active
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" 
@@ -157,9 +157,9 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Nhóm đề thi</h5>
-                    <a href="{{ route('admin.exams.tests.create', $exam) }}" class="btn btn-sm btn-primary">
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createTestModal">
                         <i class="bi bi-plus-circle me-1"></i>Thêm nhóm đề thi
-                    </a>
+                    </button>
                 </div>
                 <div class="card-body">
                     @forelse($exam->tests as $test)
@@ -235,6 +235,9 @@
     </div>
 </div>
 
+<!-- Include Create Test Modal -->
+@include('admin.exams.tests._create_modal')
+
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <style>.ql-container, .ql-editor { min-height: 300px; font-size: 14px; }</style>
@@ -253,6 +256,11 @@ function removeCurrentImage() {
         removeFlag.value = '1';
     }
 }
+
+// Initialize modal test description editor
+document.addEventListener('DOMContentLoaded', function() {
+    QuillEditor.init('#modal-test-description', 'Nhập mô tả về test này...');
+});
 </script>
 @endpush
 @endsection

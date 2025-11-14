@@ -58,21 +58,7 @@
                             @enderror
                         </div>
 
-                        <!-- Order -->
-                        <div class="mb-3">
-                            <label for="order" class="form-label">Thứ tự</label>
-                            <input type="number" 
-                                   class="form-control @error('order') is-invalid @enderror" 
-                                   id="order" 
-                                   name="order" 
-                                   value="{{ old('order') }}"
-                                   min="0"
-                                   placeholder="Để trống để tự động">
-                            <small class="form-text text-muted">Thứ tự hiển thị của test (để trống để tự động)</small>
-                            @error('order')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    
 
                         <!-- Image Upload -->
                         <div class="mb-3">

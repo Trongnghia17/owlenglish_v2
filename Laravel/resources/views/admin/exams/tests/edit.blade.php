@@ -54,19 +54,6 @@
                             @enderror
                         </div>
 
-                        <!-- Order -->
-                        <div class="mb-3">
-                            <label for="order" class="form-label">Thứ tự</label>
-                            <input type="number" 
-                                   class="form-control @error('order') is-invalid @enderror" 
-                                   id="order" 
-                                   name="order" 
-                                   value="{{ old('order', $test->order) }}"
-                                   min="0">
-                            @error('order')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
 
                         <!-- Current Image -->
                         @if($test->image)
