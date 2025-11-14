@@ -8,7 +8,6 @@
             <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
                     <h1 class="mb-1 h2 fw-bold">Sửa Skill</h1>
-                    <p class="text-muted mb-0">{{ $skill->name }}</p>
                 </div>
                 <div>
                     <a href="{{ route('admin.skills.index') }}" class="btn btn-secondary">
@@ -143,6 +142,7 @@
                                        type="checkbox" 
                                        id="is_active" 
                                        name="is_active" 
+                                       value="1"
                                        {{ old('is_active', $skill->is_active) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_active">
                                     Kích hoạt

@@ -64,15 +64,24 @@ class SkillController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'exam_id' => 'required|exists:exams,id',
             'exam_test_id' => 'required|exists:exam_tests,id',
             'skill_type' => 'required|in:reading,writing,listening,speaking',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'time_limit' => 'required|integer|min:1',
-            'is_active' => 'boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
+        // Verify that exam_test_id belongs to the selected exam_id
+        $examTest = ExamTest::where('id', $validated['exam_test_id'])
+            ->where('exam_id', $validated['exam_id'])
+            ->firstOrFail();
+
+        // Remove exam_id from validated data as it's not in the database table
+        unset($validated['exam_id']);
+        
+        // Ensure is_active is always boolean (true or false)
+        $validated['is_active'] = $request->has('is_active') ? true : false;
 
         $skill = ExamSkill::create($validated);
 
@@ -106,15 +115,24 @@ class SkillController extends Controller
     public function update(Request $request, ExamSkill $skill)
     {
         $validated = $request->validate([
+            'exam_id' => 'required|exists:exams,id',
             'exam_test_id' => 'required|exists:exam_tests,id',
             'skill_type' => 'required|in:reading,writing,listening,speaking',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'time_limit' => 'required|integer|min:1',
-            'is_active' => 'boolean',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
+        // Verify that exam_test_id belongs to the selected exam_id
+        $examTest = ExamTest::where('id', $validated['exam_test_id'])
+            ->where('exam_id', $validated['exam_id'])
+            ->firstOrFail();
+
+        // Remove exam_id from validated data as it's not in the database table
+        unset($validated['exam_id']);
+        
+        // Ensure is_active is always boolean (true or false)
+        $validated['is_active'] = $request->has('is_active') ? true : false;
 
         $skill->update($validated);
 

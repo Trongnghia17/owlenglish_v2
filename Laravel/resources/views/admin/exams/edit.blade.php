@@ -177,10 +177,7 @@
                                             <p class="text-muted small mb-0">Không tồn tại đề kiểm tra</p>
                                         @endif
                                     </div>
-                                    <a href="{{ route('admin.exams.tests.show', [$exam, $test]) }}"
-                                       class="btn btn-link text-decoration-none">
-                                        Sao chép link <i class="bi bi-box-arrow-up-right ms-1"></i>
-                                    </a>
+                                    
                                 </div>
 
                                 <!-- Skills List -->
@@ -201,7 +198,7 @@
                                             <span class="fw-semibold">{{ $skill->name }}</span>
                                             <span class="text-muted small">- {{ $skill->time_limit }} phút</span>
                                         </div>
-                                        <a href="{{ route('admin.exams.tests.show', [$exam, $test]) }}"
+                                        <a href="{{ route('admin.skills.edit', $skill) }}"
                                            class="btn btn-sm btn-outline-primary">
                                             Chỉnh sửa <i class="bi bi-pencil ms-1"></i>
                                         </a>

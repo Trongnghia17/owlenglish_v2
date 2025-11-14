@@ -68,12 +68,14 @@
                             <table class="table table-hover table-lg">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="20%">Tiêu đề</th>
-                                        <th class="text-center" width="22%">Ảnh bìa</th>
-                                        <th class="text-center" width="10%">Loại</th>
-                                        <th class="text-center" width="10%">Số Test</th>
-                                        <th class="text-center" width="18%">Hiển thị trên website</th>
-                                        <th class="text-center" width="20%">Thao tác</th>
+                                        <th>Tiêu đề</th>
+                                        <th class="text-center">Ảnh bìa</th>
+                                        <th class="text-center">Loại</th>
+                                        <th class="text-center">Số Test</th>
+                                        <th class="text-center">Ngày tạo</th>
+                                        <th class="text-center">Ngày cập nhật</th>
+                                        <th class="text-center">Hiển thị</th>
+                                        <th class="text-center">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -97,10 +99,10 @@
 
                                             <td class="text-center">
                                                 <span class="badge
-                                                            @if($exam->type == 'ielts') bg-primary
-                                                            @elseif($exam->type == 'toeic') bg-success
-                                                            @else bg-info
-                                                            @endif">
+                                                                                    @if($exam->type == 'ielts') bg-primary
+                                                                                    @elseif($exam->type == 'toeic') bg-success
+                                                                                    @else bg-info
+                                                                                    @endif">
                                                     {{ strtoupper($exam->type) }}
                                                 </span>
                                             </td>
@@ -108,6 +110,15 @@
                                             <td class="text-center">
                                                 <span class="badge bg-secondary">{{ $exam->tests->count() }} Test</span>
                                             </td>
+
+                                            <td class="text-center">
+                                                {{ $exam->created_at->format('d/m/Y') }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $exam->updated_at->format('d/m/Y') }}
+                                            </td>
+
                                             <td class="text-center">
                                                 <form action="{{ route('admin.exams.toggle-active', $exam) }}" method="POST"
                                                     class="d-inline">
@@ -138,7 +149,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-5">
+                                            <td colspan="8" class="text-center py-5">
                                                 <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                                                 <p class="text-muted">Không có bộ đề thi nào</p>
                                             </td>
@@ -187,7 +198,7 @@
                     var createExamModal = new bootstrap.Modal(document.getElementById('createExamModal'));
                     createExamModal.show();
                 @endif
-                });
+                                        });
         </script>
     @endpush
 @endsection
