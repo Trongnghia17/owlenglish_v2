@@ -24,6 +24,7 @@
     <link href="{{ asset('assets/libs/simplebar/dist/simplebar.min.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/main.css') }}">
+    @stack('styles')
     <title>Admin Trung Tâm</title>
 
 

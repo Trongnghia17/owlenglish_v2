@@ -129,7 +129,7 @@ class SkillController extends Controller
             'sections.*.content_format' => 'nullable|in:text,audio,video',
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.content' => 'nullable|string',
-            'sections.*.groups.*.question_type' => 'nullable|in:cloze,multiple_choice,true_false,essay,speaking',
+            'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,fill_in_blank,matching,table_selection,essay,speaking',
             'sections.*.groups.*.questions' => 'nullable|array',
             'sections.*.groups.*.questions.*.content' => 'nullable|string',
             'sections.*.groups.*.questions.*.answer_content' => 'nullable|string',

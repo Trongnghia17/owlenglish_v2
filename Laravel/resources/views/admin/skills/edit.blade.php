@@ -1,7 +1,15 @@
 @extends('layouts.app')
 
 @push('styles')
-
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+    <style>
+        .quill-container {
+            height: auto;
+        }
+        .ql-editor {
+            min-height: 100px;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -246,15 +254,15 @@
                                         <!-- Section Content -->
                                         <div class="mb-3">
                                             <label class="form-label">Section Content</label>
-                                            <textarea class="form-control section-editor" name="sections[{{ $sectionIndex }}][content]"
-                                                      rows="4">{{ old('sections.'.$sectionIndex.'.content', $section->content) }}</textarea>
+                                            <input type="hidden" id="section-content-{{ $sectionIndex }}" name="sections[{{ $sectionIndex }}][content]" value="{{ old('sections.'.$sectionIndex.'.content', $section->content) }}">
+                                            <div id="section-content-{{ $sectionIndex }}-editor"></div>
                                         </div>
 
                                         <!-- Section Feedback -->
                                         <div class="mb-3">
                                             <label class="form-label">Section Feedback</label>
-                                            <textarea class="form-control section-feedback-editor" name="sections[{{ $sectionIndex }}][feedback]"
-                                                      rows="3">{{ old('sections.'.$sectionIndex.'.feedback', $section->feedback) }}</textarea>
+                                            <input type="hidden" id="section-feedback-{{ $sectionIndex }}" name="sections[{{ $sectionIndex }}][feedback]" value="{{ old('sections.'.$sectionIndex.'.feedback', $section->feedback) }}">
+                                            <div id="section-feedback-{{ $sectionIndex }}-editor"></div>
                                         </div>
 
                                         <!-- Content Format -->
@@ -310,20 +318,20 @@
                                                         <!-- Question Group Content -->
                                                         <div class="mb-3">
                                                             <label class="form-label">Question Group Content</label>
-                                                            <textarea class="form-control group-editor"
-                                                                      name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][content]"
-                                                                      rows="3">{{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.content', $group->content) }}</textarea>
+                                                            <input type="hidden" id="group-content-{{ $sectionIndex }}-{{ $groupIndex }}" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][content]" value="{{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.content', $group->content) }}">
+                                                            <div id="group-content-{{ $sectionIndex }}-{{ $groupIndex }}-editor"></div>
                                                         </div>
 
                                                         <!-- Question Type -->
                                                         <div class="mb-3">
                                                             <label class="form-label">Question Type</label>
                                                             <select class="form-select" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][question_type]">
-                                                                <option value="cloze" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'cloze' ? 'selected' : '' }}>Cloze</option>
                                                                 <option value="multiple_choice" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
-                                                                <option value="true_false" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'true_false' ? 'selected' : '' }}>True/False</option>
-                                                                <option value="essay" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'essay' ? 'selected' : '' }}>Essay</option>
-                                                                <option value="speaking" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'speaking' ? 'selected' : '' }}>Speaking</option>
+                                                                <option value="yes_no_not_given" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'yes_no_not_given' ? 'selected' : '' }}>Yes/No/Not Given</option>
+                                                                <option value="true_false_not_given" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'true_false_not_given' ? 'selected' : '' }}>True/False/Not Given</option>
+                                                                <option value="short_text" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'short_text' ? 'selected' : '' }}>Short Text</option>
+                                                                <option value="table_selection" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.question_type', $group->question_type) == 'table_selection' ? 'selected' : '' }}>Table Selection</option>
+
                                                             </select>
                                                         </div>
 
@@ -391,9 +399,8 @@
                                                                         <!-- Question Content -->
                                                                         <div class="mb-2">
                                                                             <label class="form-label small">Question Content</label>
-                                                                            <textarea class="form-control form-control-sm question-editor"
-                                                                                      name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][content]"
-                                                                                      rows="2">{{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.content', $question->content) }}</textarea>
+                                                                            <input type="hidden" id="question-content-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][content]" value="{{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.content', $question->content) }}">
+                                                                            <div id="question-content-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}-editor"></div>
                                                                         </div>
 
                                                                         <!-- Points -->
@@ -408,9 +415,13 @@
                                                                                 <label class="form-label small">Question Type</label>
                                                                                 <select class="form-select form-select-sm"
                                                                                         name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][question_type]">
-                                                                                    <option value="multiple_choice" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? 'multiple_choice') == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
-                                                                                    <option value="text" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'text' ? 'selected' : '' }}>Text Input</option>
-                                                                                    <option value="essay" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'essay' ? 'selected' : '' }}>Essay</option>
+                                                                                    <option value="">Chọn</option>
+                                                                                    <option value="multiple_choice" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
+                                                                                    <option value="yes_no_not_given" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'yes_no_not_given' ? 'selected' : '' }}>Yes/No/Not Given</option>
+                                                                                    <option value="true_false_not_given" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'true_false_not_given' ? 'selected' : '' }}>True/False/Not Given</option>
+                                                                                    <option value="short_text" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'short_text' ? 'selected' : '' }}>Short Text</option>
+                                                                                    <option value="table_selection" {{ old('sections.'.$sectionIndex.'.groups.'.$groupIndex.'.questions.'.$qIndex.'.question_type', $question->metadata['question_type'] ?? '') == 'table_selection' ? 'selected' : '' }}>Table Selection</option>
+
                                                                                 </select>
                                                                             </div>
                                                                         </div>
@@ -446,6 +457,8 @@
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<script src="{{ asset('assets/js/admin-editor.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const examSelect = document.getElementById('exam_id');
@@ -517,11 +530,13 @@ function addSection() {
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Section Content</label>
-                    <textarea class="form-control section-editor" name="sections[${sectionIndex}][content]" rows="4"></textarea>
+                    <input type="hidden" id="section-content-new-${sectionIndex}" name="sections[${sectionIndex}][content]">
+                    <div id="section-content-new-${sectionIndex}-editor"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Section Feedback</label>
-                    <textarea class="form-control section-feedback-editor" name="sections[${sectionIndex}][feedback]" rows="3"></textarea>
+                    <input type="hidden" id="section-feedback-new-${sectionIndex}" name="sections[${sectionIndex}][feedback]">
+                    <div id="section-feedback-new-${sectionIndex}-editor"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Content Format</label>
@@ -550,6 +565,11 @@ function addSection() {
         </div>
     `;
     container.insertAdjacentHTML('beforeend', sectionHtml);
+
+    // Initialize Quill editors for new section
+    initQuillEditor(`section-content-new-${sectionIndex}`);
+    initQuillEditor(`section-feedback-new-${sectionIndex}`);
+
     sectionIndex++;
     updateSectionNumbers();
     updateNavigation();
@@ -604,16 +624,17 @@ function addQuestionGroup(btn) {
             <div class="group-content">
                 <div class="mb-3">
                     <label class="form-label">Question Group Content</label>
-                    <textarea class="form-control group-editor" name="sections[${sectionIdx}][groups][${groupIndex}][content]" rows="3"></textarea>
+                    <input type="hidden" id="group-content-new-${sectionIdx}-${groupIndex}" name="sections[${sectionIdx}][groups][${groupIndex}][content]">
+                    <div id="group-content-new-${sectionIdx}-${groupIndex}-editor"></div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Question Type</label>
                     <select class="form-select" name="sections[${sectionIdx}][groups][${groupIndex}][question_type]">
-                        <option value="cloze">Cloze</option>
                         <option value="multiple_choice">Multiple Choice</option>
-                        <option value="true_false">True/False</option>
-                        <option value="essay">Essay</option>
-                        <option value="speaking">Speaking</option>
+                        <option value="yes_no_not_given">Yes/No/Not Given</option>
+                        <option value="true_false_not_given">True/False/Not Given</option>
+                        <option value="short_text">Short Text</option>
+                        <option value="table_selection">Table Selection</option>
                     </select>
                 </div>
                 <div class="row mb-3">
@@ -651,6 +672,10 @@ function addQuestionGroup(btn) {
         </div>
     `;
     groupsList.insertAdjacentHTML('beforeend', groupHtml);
+
+    // Initialize Quill editor for new group
+    initQuillEditor(`group-content-new-${sectionIdx}-${groupIndex}`);
+
     updateGroupNumbers(sectionItem);
     updateNavigation();
 }
@@ -707,7 +732,8 @@ function addQuestion(btn) {
             <div class="question-content">
                 <div class="mb-2">
                     <label class="form-label small">Question Content</label>
-                    <textarea class="form-control form-control-sm question-editor" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][content]" rows="2"></textarea>
+                    <input type="hidden" id="question-content-new-${sectionIdx}-${groupIdx}-${questionIndex}" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][content]">
+                    <div id="question-content-new-${sectionIdx}-${groupIdx}-${questionIndex}-editor"></div>
                 </div>
                 <div class="row mb-2">
                     <div class="col-md-6">
@@ -717,9 +743,12 @@ function addQuestion(btn) {
                     <div class="col-md-6">
                         <label class="form-label small">Question Type</label>
                         <select class="form-select form-select-sm" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][question_type]">
+                            <option value="">Chọn</option>
                             <option value="multiple_choice">Multiple Choice</option>
-                            <option value="text">Text Input</option>
-                            <option value="essay">Essay</option>
+                            <option value="yes_no_not_given">Yes/No/Not Given</option>
+                            <option value="true_false_not_given">True/False/Not Given</option>
+                            <option value="short_text">Short Text</option>
+                            <option value="table_selection">Table Selection</option>
                         </select>
                     </div>
                 </div>
@@ -731,6 +760,10 @@ function addQuestion(btn) {
         </div>
     `;
     questionsList.insertAdjacentHTML('beforeend', questionHtml);
+
+    // Initialize Quill editor for new question
+    initQuillEditor(`question-content-new-${sectionIdx}-${groupIdx}-${questionIndex}`);
+
     updateQuestionNumbers(groupItem);
     updateNavigation();
 }
@@ -821,7 +854,7 @@ function updateNavigation() {
                     <a href="#${groupId}" class="list-group-item list-group-item-action small" onclick="scrollToGroup(event, ${sIndex}, ${gIndex})">
                         <i class="bi bi-diagram-3 me-2"></i>Group ${gIndex + 1}
                     </a>`;
-                
+
                 const questions = group.querySelectorAll('.question-item');
                 if (questions.length > 0) {
                     navHtml += `<div class="ps-3">`;
@@ -834,7 +867,7 @@ function updateNavigation() {
                     });
                     navHtml += `</div>`;
                 }
-                
+
                 navHtml += `</div>`;
             });
             navHtml += `</div>`;
@@ -845,6 +878,77 @@ function updateNavigation() {
 
     navContainer.innerHTML = navHtml;
 }
+
+// Initialize Quill Editors
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAllEditors();
+});
+
+function initializeAllEditors() {
+    // Initialize existing section content editors
+    document.querySelectorAll('[id^="section-content-"][id$="-editor"]').forEach(editorDiv => {
+        const id = editorDiv.id.replace('-editor', '');
+        initQuillEditor(id);
+    });
+
+    // Initialize existing section feedback editors
+    document.querySelectorAll('[id^="section-feedback-"][id$="-editor"]').forEach(editorDiv => {
+        const id = editorDiv.id.replace('-editor', '');
+        initQuillEditor(id);
+    });
+
+    // Initialize existing group content editors
+    document.querySelectorAll('[id^="group-content-"][id$="-editor"]').forEach(editorDiv => {
+        const id = editorDiv.id.replace('-editor', '');
+        initQuillEditor(id);
+    });
+
+    // Initialize existing question content editors
+    document.querySelectorAll('[id^="question-content-"][id$="-editor"]').forEach(editorDiv => {
+        const id = editorDiv.id.replace('-editor', '');
+        initQuillEditor(id);
+    });
+}
+
+function initQuillEditor(elementId) {
+    const hiddenInput = document.getElementById(elementId);
+    const editorDiv = document.getElementById(elementId + '-editor');
+
+    if (!editorDiv || editorDiv.classList.contains('ql-container')) {
+        return; // Already initialized
+    }
+
+    const quill = new Quill('#' + elementId + '-editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'align': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        },
+        placeholder: 'Nhập nội dung...'
+    });
+
+    // Set initial content
+    if (hiddenInput && hiddenInput.value) {
+        quill.root.innerHTML = hiddenInput.value;
+    }
+
+    // Update hidden input on change
+    quill.on('text-change', function() {
+        if (hiddenInput) {
+            hiddenInput.value = quill.root.innerHTML;
+        }
+    });
+
+    return quill;
+}
 </script>
 @endpush
 @endsection
+
