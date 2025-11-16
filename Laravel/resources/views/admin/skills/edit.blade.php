@@ -254,26 +254,24 @@
                                         data-section-index="{{ $sectionIndex }}">
                                         <div class="card-header bg-light">
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <button type="button" class="btn btn-sm btn-link text-dark p-0"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#section-content-{{ $sectionIndex }}">
-                                                        <i class="bi bi-chevron-down"></i>
-                                                    </button>
-                                                    <strong>Section {{ $sectionIndex + 1 }}</strong>
-                                                </div>
-                                                <button type="button" class="btn btn-sm btn-link text-danger"
-                                                    data-action="delete-section">
-                                                    Delete Section
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="card-body section-content collapse show"
-                                            id="section-content-{{ $sectionIndex }}">
-                                            <input type="hidden" name="sections[{{ $sectionIndex }}][id]"
-                                                value="{{ $section->id }}">
-
-                                            <!-- Section Title -->
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-link text-dark p-0"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#section-body-{{ $sectionIndex }}">
+                                        <i class="bi bi-chevron-down"></i>
+                                    </button>
+                                    <strong>Section {{ $sectionIndex + 1 }}</strong>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-link text-danger"
+                                    data-action="delete-section">
+                                    Delete Section
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body section-content collapse show"
+                            id="section-body-{{ $sectionIndex }}">
+                            <input type="hidden" name="sections[{{ $sectionIndex }}][id]"
+                                value="{{ $section->id }}">                                            <!-- Section Title -->
                                             <div class="mb-3">
                                                 <label class="form-label">Section Title</label>
                                                 <input type="text" class="form-control"
@@ -622,16 +620,8 @@
                                                                                         </div>
                                                                                     </div>
 
-                                                                                    <!-- Answer Label (for Short Text) -->
-                                                                                    <div class="mb-2">
-                                                                                        <label class="form-label small">Answer
-                                                                                            Label</label>
-                                                                                        <input type="text"
-                                                                                            class="form-control form-control-sm"
-                                                                                            name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][answer_label]"
-                                                                                            value="{{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.answer_label', $question->metadata['answer_label'] ?? '') }}"
-                                                                                            placeholder="Enter answer label">
-                                                                                    </div>
+
+
 
                                                                                     <!-- Answers List Section -->
                                                                                     <div class="mb-3 answers-list-section">
@@ -1090,8 +1080,34 @@
                 }
 
                 function updateSectionNumbers() {
-                    document.querySelectorAll('.section-item').forEach((section, index) => {
-                        section.querySelector('.card-header strong').textContent = `Section ${index + 1}`;
+                    document.querySelectorAll('.section-item').forEach((section, newIndex) => {
+                        const oldIndex = section.dataset.sectionIndex;
+
+                        // Update section index
+                        section.dataset.sectionIndex = newIndex;
+                        section.id = `section-${newIndex}`;
+
+                        // Update all name attributes within this section
+                        section.querySelectorAll('[name]').forEach(input => {
+                            const name = input.getAttribute('name');
+                            if (name && name.startsWith(`sections[${oldIndex}]`)) {
+                                input.setAttribute('name', name.replace(`sections[${oldIndex}]`, `sections[${newIndex}]`));
+                            }
+                        });
+
+                        // Update all id attributes for Quill editors
+                        section.querySelectorAll('[id]').forEach(element => {
+                            const id = element.getAttribute('id');
+                            if (id && id.includes(`-${oldIndex}-`)) {
+                                element.setAttribute('id', id.replace(`-${oldIndex}-`, `-${newIndex}-`));
+                            }
+                        });
+
+                        // Update header text
+                        const headerText = section.querySelector('.card-header strong');
+                        if (headerText) {
+                            headerText.textContent = `Section ${newIndex + 1}`;
+                        }
                     });
                 }
 
@@ -1219,17 +1235,13 @@
                                 </div>
                             </div>
 
-                            <!-- Answer Label (for Short Text) -->
-                            <div class="mb-2">
-                                <label class="form-label small">Answer Label</label>
-                                <input type="text" class="form-control form-control-sm" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][answer_label]" placeholder="Enter answer label">
-                            </div>
+
 
                             <div class="mb-3 answers-list-section">
                                 <div class="answers-list" data-question-id="${sectionIdx}-${groupIdx}-${questionIndex}">
                                     <!-- Answers will be added here -->
                                 </div>
-                                
+
                                 <!-- Answer to create Section -->
                                 <div class="mt-3 p-3" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
                                     <label class="form-label small fw-semibold">Answer to create</label>
@@ -1241,7 +1253,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-2 question-options-section" style="display: none;">
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][allow_multiple_selection]" value="1">
@@ -1252,7 +1264,7 @@
                                     <label class="form-check-label small">Count each correct answer as separate question</label>
                                 </div>
                             </div>
-                        
+
                         </div>
                     </div>
                 `);
@@ -1406,6 +1418,8 @@
 
                     if (!editorDiv || editorDiv.classList.contains('ql-container')) return;
 
+                    console.log('Initializing Quill for:', elementId, 'Value:', hiddenInput?.value?.substring(0, 100));
+
                     const quill = new Quill(`#${elementId}-editor`, {
                         theme: 'snow',
                         modules: {
@@ -1422,7 +1436,25 @@
                         placeholder: 'Nhập nội dung...'
                     });
 
-                    if (hiddenInput?.value) quill.root.innerHTML = hiddenInput.value;
+                    if (hiddenInput?.value) {
+                        // Decode HTML entities if the value contains escaped HTML
+                        let decodedHtml = hiddenInput.value;
+                        if (decodedHtml.includes('&lt;') || decodedHtml.includes('&gt;')) {
+                            const tempDiv = document.createElement('textarea');
+                            tempDiv.innerHTML = decodedHtml;
+                            decodedHtml = tempDiv.value;
+                            console.log('Decoded HTML entities for:', elementId);
+                        }
+
+                        // Set content with a small delay to prevent browser lag
+                        setTimeout(() => {
+                            quill.root.innerHTML = decodedHtml;
+                            console.log('Set content for:', elementId, 'Length:', decodedHtml.length);
+                        }, 10);
+                    } else {
+                        console.log('No value for:', elementId);
+                    }
+
                     quill.on('text-change', () => {
                         if (hiddenInput) hiddenInput.value = quill.root.innerHTML;
                     });

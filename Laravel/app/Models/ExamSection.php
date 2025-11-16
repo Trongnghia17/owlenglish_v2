@@ -41,7 +41,7 @@ class ExamSection extends Model
      */
     public function questionGroups(): HasMany
     {
-        return $this->hasMany(ExamQuestionGroup::class);
+        return $this->hasMany(ExamQuestionGroup::class)->orderBy('id');
     }
 
     /**
@@ -49,7 +49,7 @@ class ExamSection extends Model
      */
     public function questions(): HasMany
     {
-        return $this->hasMany(ExamQuestion::class);
+        return $this->hasMany(ExamQuestion::class)->orderBy('id');
     }
 
     /**

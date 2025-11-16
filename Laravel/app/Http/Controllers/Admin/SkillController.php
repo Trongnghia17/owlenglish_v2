@@ -7,6 +7,7 @@ use App\Models\ExamSkill;
 use App\Models\Exam;
 use App\Models\ExamTest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class SkillController extends Controller
 {
@@ -127,19 +128,31 @@ class SkillController extends Controller
             'description' => 'nullable|string',
             'time_limit' => 'required|integer|min:1',
             'sections' => 'nullable|array',
+            'sections.*.id' => 'nullable|integer',
             'sections.*.title' => 'nullable|string|max:255',
             'sections.*.content' => 'nullable|string',
             'sections.*.feedback' => 'nullable|string',
             'sections.*.content_format' => 'nullable|in:text,audio,video',
             'sections.*.groups' => 'nullable|array',
+            'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
             'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,fill_in_blank,matching,table_selection,essay,speaking',
             'sections.*.groups.*.questions' => 'nullable|array',
+            'sections.*.groups.*.questions.*.id' => 'nullable|integer',
             'sections.*.groups.*.questions.*.content' => 'nullable|string',
             'sections.*.groups.*.questions.*.answer_content' => 'nullable|string',
+            'sections.*.groups.*.questions.*.answer_label' => 'nullable|string',
+            'sections.*.groups.*.questions.*.feedback' => 'nullable|string',
             'sections.*.groups.*.questions.*.point' => 'nullable|numeric|min:0',
+            'sections.*.groups.*.questions.*.question_type' => 'nullable|string',
+            // Answers for questions
+            'sections.*.groups.*.questions.*.answers' => 'nullable|array',
+            'sections.*.groups.*.questions.*.answers.*.content' => 'nullable|string',
+            'sections.*.groups.*.questions.*.answers.*.feedback' => 'nullable|string',
+            'sections.*.groups.*.questions.*.answers.*.is_correct' => 'nullable|boolean',
             // Direct questions (for speaking/writing)
             'sections.*.direct_questions' => 'nullable|array',
+            'sections.*.direct_questions.*.id' => 'nullable|integer',
             'sections.*.direct_questions.*.content' => 'nullable|string',
             'sections.*.direct_questions.*.answer_content' => 'nullable|string',
             'sections.*.direct_questions.*.point' => 'nullable|numeric|min:0',
@@ -179,8 +192,17 @@ class SkillController extends Controller
     {
         $existingSectionIds = [];
 
-        foreach ($sectionsData as $sectionData) {
+        foreach ($sectionsData as $index => $sectionData) {
             $sectionId = $sectionData['id'] ?? null;
+            
+            // Log để debug
+            Log::info("Processing Section #{$index}", [
+                'id' => $sectionId,
+                'title' => $sectionData['title'] ?? 'NO TITLE',
+                'content_length' => strlen($sectionData['content'] ?? ''),
+                'content_preview' => substr($sectionData['content'] ?? '', 0, 100),
+                'feedback_length' => strlen($sectionData['feedback'] ?? ''),
+            ]);
             
             // Prepare section data
             $sectionInfo = [
@@ -268,15 +290,25 @@ class SkillController extends Controller
         foreach ($questionsData as $questionData) {
             $questionId = $questionData['id'] ?? null;
             
+            // Prepare metadata with answers array and other question-specific data
+            $metadata = [
+                'question_type' => $questionData['question_type'] ?? 'multiple_choice',
+                'answer_label' => $questionData['answer_label'] ?? null,
+            ];
+            
+            // Store answers in metadata if provided
+            if (isset($questionData['answers']) && is_array($questionData['answers'])) {
+                $metadata['answers'] = $questionData['answers'];
+            }
+            
             $questionInfo = [
                 'exam_question_group_id' => $group->id,
                 'exam_section_id' => null, // Belongs to group, not section
                 'content' => $questionData['content'] ?? '',
-                'answer_content' => $questionData['answer_content'] ?? '',
+                'answer_content' => $questionData['answer_content'] ?? '', // Keep for backward compatibility
+                'feedback' => $questionData['feedback'] ?? null,
                 'point' => $questionData['point'] ?? 1,
-                'metadata' => [
-                    'question_type' => $questionData['question_type'] ?? 'multiple_choice',
-                ],
+                'metadata' => $metadata,
                 'is_active' => true,
             ];
 

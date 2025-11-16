@@ -38,7 +38,7 @@ class ExamSkill extends Model
      */
     public function sections(): HasMany
     {
-        return $this->hasMany(ExamSection::class);
+        return $this->hasMany(ExamSection::class)->orderBy('id');
     }
 
     /**
