@@ -133,10 +133,14 @@ class SkillController extends Controller
             'sections.*.content' => 'nullable|string',
             'sections.*.feedback' => 'nullable|string',
             'sections.*.content_format' => 'nullable|in:text,audio,video',
+            'sections.*.answer_inputs_inside_content' => 'nullable|string',
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
             'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,fill_in_blank,matching,table_selection,essay,speaking',
+            'sections.*.groups.*.answer_inputs_inside_content' => 'nullable|string',
+            'sections.*.groups.*.split_questions_side_by_side' => 'nullable|string',
+            'sections.*.groups.*.allow_drag_drop' => 'nullable|string',
             'sections.*.groups.*.questions' => 'nullable|array',
             'sections.*.groups.*.questions.*.id' => 'nullable|integer',
             'sections.*.groups.*.questions.*.content' => 'nullable|string',
@@ -195,15 +199,6 @@ class SkillController extends Controller
         foreach ($sectionsData as $index => $sectionData) {
             $sectionId = $sectionData['id'] ?? null;
             
-            // Log để debug
-            Log::info("Processing Section #{$index}", [
-                'id' => $sectionId,
-                'title' => $sectionData['title'] ?? 'NO TITLE',
-                'content_length' => strlen($sectionData['content'] ?? ''),
-                'content_preview' => substr($sectionData['content'] ?? '', 0, 100),
-                'feedback_length' => strlen($sectionData['feedback'] ?? ''),
-            ]);
-            
             // Prepare section data
             $sectionInfo = [
                 'exam_skill_id' => $skill->id,
@@ -212,7 +207,7 @@ class SkillController extends Controller
                 'feedback' => $sectionData['feedback'] ?? '',
                 'content_format' => $sectionData['content_format'] ?? 'text',
                 'metadata' => [
-                    'answer_inputs_inside_content' => isset($sectionData['answer_inputs_inside_content']),
+                    'answer_inputs_inside_content' => ($sectionData['answer_inputs_inside_content'] ?? '0') === '1',
                 ],
                 'is_active' => true,
             ];
@@ -247,7 +242,7 @@ class SkillController extends Controller
     {
         $existingGroupIds = [];
 
-        foreach ($groupsData as $groupData) {
+        foreach ($groupsData as $index => $groupData) {
             $groupId = $groupData['id'] ?? null;
             
             $groupInfo = [
@@ -255,9 +250,9 @@ class SkillController extends Controller
                 'content' => $groupData['content'] ?? '',
                 'question_type' => $groupData['question_type'] ?? 'multiple_choice',
                 'options' => [
-                    'answer_inputs_inside_content' => isset($groupData['answer_inputs_inside_content']),
-                    'split_questions_side_by_side' => isset($groupData['split_questions_side_by_side']),
-                    'allow_drag_drop' => isset($groupData['allow_drag_drop']),
+                    'answer_inputs_inside_content' => ($groupData['answer_inputs_inside_content'] ?? '0') === '1',
+                    'split_questions_side_by_side' => ($groupData['split_questions_side_by_side'] ?? '0') === '1',
+                    'allow_drag_drop' => ($groupData['allow_drag_drop'] ?? '0') === '1',
                 ],
                 'is_active' => true,
             ];

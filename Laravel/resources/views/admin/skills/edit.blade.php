@@ -335,6 +335,7 @@
                                             <!-- Answer Inputs Inside Content -->
                                             <div class="mb-3">
                                                 <div class="form-check">
+                                                    <input type="hidden" name="sections[{{ $sectionIndex }}][answer_inputs_inside_content]" value="0">
                                                     <input class="form-check-input" type="checkbox"
                                                         name="sections[{{ $sectionIndex }}][answer_inputs_inside_content]"
                                                         value="1" {{ old('sections.' . $sectionIndex . '.answer_inputs_inside_content', $section->metadata['answer_inputs_inside_content'] ?? false) ? 'checked' : '' }}>
@@ -506,6 +507,7 @@
                                                                 <div class="row mb-3">
                                                                     <div class="col-md-6">
                                                                         <div class="form-check">
+                                                                            <input type="hidden" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][answer_inputs_inside_content]" value="0">
                                                                             <input class="form-check-input" type="checkbox"
                                                                                 name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][answer_inputs_inside_content]"
                                                                                 value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.answer_inputs_inside_content', $group->options['answer_inputs_inside_content'] ?? false) ? 'checked' : '' }}>
@@ -515,6 +517,7 @@
                                                                     </div>
                                                                     <div class="col-md-6">
                                                                         <div class="form-check">
+                                                                            <input type="hidden" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][split_questions_side_by_side]" value="0">
                                                                             <input class="form-check-input" type="checkbox"
                                                                                 name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][split_questions_side_by_side]"
                                                                                 value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.split_questions_side_by_side', $group->options['split_questions_side_by_side'] ?? false) ? 'checked' : '' }}>
@@ -527,6 +530,7 @@
                                                                 <div class="row mb-3">
                                                                     <div class="col-md-6">
                                                                         <div class="form-check">
+                                                                            <input type="hidden" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][allow_drag_drop]" value="0">
                                                                             <input class="form-check-input" type="checkbox"
                                                                                 name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][allow_drag_drop]"
                                                                                 value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.allow_drag_drop', $group->options['allow_drag_drop'] ?? false) ? 'checked' : '' }}>
@@ -1063,6 +1067,7 @@
 
                             <div class="mb-3">
                                 <div class="form-check">
+                                    <input type="hidden" name="sections[${sectionIndex}][answer_inputs_inside_content]" value="0">
                                     <input class="form-check-input" type="checkbox" name="sections[${sectionIndex}][answer_inputs_inside_content]" value="1">
                                     <label class="form-check-label">Answer inputs inside content</label>
                                 </div>
@@ -1148,12 +1153,14 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="form-check">
+                                        <input type="hidden" name="sections[${sectionIdx}][groups][${groupIndex}][answer_inputs_inside_content]" value="0">
                                         <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIndex}][answer_inputs_inside_content]" value="1">
                                         <label class="form-check-label">Answer inputs inside content</label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-check">
+                                        <input type="hidden" name="sections[${sectionIdx}][groups][${groupIndex}][split_questions_side_by_side]" value="0">
                                         <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIndex}][split_questions_side_by_side]" value="1">
                                         <label class="form-check-label">Split content and questions side by side</label>
                                     </div>
@@ -1162,6 +1169,7 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="form-check">
+                                        <input type="hidden" name="sections[${sectionIdx}][groups][${groupIndex}][allow_drag_drop]" value="0">
                                         <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIndex}][allow_drag_drop]" value="1">
                                         <label class="form-check-label">Allow drag and drop answers</label>
                                     </div>
