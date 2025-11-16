@@ -174,8 +174,8 @@
                     </div>
                 </div>
                 <!-- Sidebar Navigation -->
-                <div class="col-lg-3 col-12">
-                    <div class="card sticky-top" style="top: 20px;">
+                <div class="col-lg-3 col-12" style="position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto;">
+                    <div class="card">
                         <div class="card-header bg-primary text-white">
                             <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Navigation</h6>
                         </div>
@@ -187,7 +187,7 @@
                                         <a href="#section-{{ $index }}" class="list-group-item list-group-item-action">
                                             <i class="bi bi-file-text me-2"></i>Section {{ $index + 1 }}
                                         </a>
-                                        
+
                                         @if($skill->isSpeaking() || $skill->isWriting())
                                             {{-- Speaking/Writing: Direct questions without groups --}}
                                             @if($section->questions->count() > 0)
@@ -330,19 +330,6 @@
                                                             <source src="{{ asset('storage/' . $section->metadata['video_file']) }}"
                                                                 type="video/mp4">
                                                         </video>
-                                                    </div>
-                                                @endif
-                                            </div>
-
-                                            <!-- Image Upload (for Reading/Writing) -->
-                                            <div class="mb-3 skill-specific-field reading-field writing-field">
-                                                <label class="form-label">Image (Optional)</label>
-                                                <input type="file" class="form-control"
-                                                    name="sections[{{ $sectionIndex }}][image_file]" accept="image/*">
-                                                @if($section->metadata['image_file'] ?? false)
-                                                    <div class="mt-2">
-                                                        <img src="{{ asset('storage/' . $section->metadata['image_file']) }}"
-                                                            alt="Section image" class="img-fluid" style="max-height: 200px;">
                                                     </div>
                                                 @endif
                                             </div>
@@ -662,18 +649,34 @@
                                                                                             @foreach($answers as $ansIndex => $answer)
                                                                                                 <div class="answer-item mb-3 p-3"
                                                                                                     style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem; position: relative;">
-                                                                                                    <!-- Answer Content with Rich Text Editor -->
+                                                                                                    <!-- Answer Content: dropdown for Yes/No/Not Given and True/False/Not Given; otherwise rich text -->
+                                                                                                    @php
+                                                                                                        $qType = old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '');
+                                                                                                        $isYN = $qType === 'yes_no_not_given';
+                                                                                                        $isTF = $qType === 'true_false_not_given';
+                                                                                                    @endphp
                                                                                                     <div class="mb-3">
-                                                                                                        <label
-                                                                                                            class="form-label small fw-semibold">Answer
-                                                                                                            Content</label>
-                                                                                                        <input type="hidden"
-                                                                                                            id="answer-content-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}-{{ $ansIndex }}"
-                                                                                                            name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][answers][{{ $ansIndex }}][content]"
-                                                                                                            value="{{ $answer['content'] ?? '' }}">
-                                                                                                        <div id="answer-content-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}-{{ $ansIndex }}-editor"
-                                                                                                            style="background: white;">
-                                                                                                        </div>
+                                                                                                        <label class="form-label small fw-semibold">Answer Content</label>
+                                                                                                        @if($isYN || $isTF)
+                                                                                                            @php
+                                                                                                                $options = $isYN ? ['Yes','No','Not Given'] : ['True','False','Not Given'];
+                                                                                                                $defaultVal = $isYN ? 'Yes' : 'True';
+                                                                                                                $selectedVal = old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.answers.' . $ansIndex . '.content', $answer['content'] ?? $defaultVal);
+                                                                                                            @endphp
+                                                                                                            <select class="form-select form-select-sm"
+                                                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][answers][{{ $ansIndex }}][content]">
+                                                                                                                @foreach($options as $opt)
+                                                                                                                    <option value="{{ $opt }}" {{ $selectedVal === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                                                                                                @endforeach
+                                                                                                            </select>
+                                                                                                        @else
+                                                                                                            <input type="hidden"
+                                                                                                                id="answer-content-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}-{{ $ansIndex }}"
+                                                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][answers][{{ $ansIndex }}][content]"
+                                                                                                                value="{{ $answer['content'] ?? '' }}">
+                                                                                                            <div id="answer-content-{{ $sectionIndex }}-{{ $groupIndex }}-{{ $qIndex }}-{{ $ansIndex }}-editor"
+                                                                                                                style="background: white;"></div>
+                                                                                                        @endif
                                                                                                     </div>
 
                                                                                                     <!-- Feedback with Rich Text Editor -->
@@ -759,64 +762,7 @@
                                                                                         </div>
                                                                                     </div>
 
-                                                                                    <!-- Feedback -->
-                                                                                    <div class="mb-2">
-                                                                                        <label class="form-label small">Feedback</label>
-                                                                                        <textarea class="form-control form-control-sm"
-                                                                                            name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][feedback]"
-                                                                                            rows="2"
-                                                                                            placeholder="Enter feedback for this question">{{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.feedback', $question->metadata['feedback'] ?? '') }}</textarea>
-                                                                                    </div>
 
-                                                                                    <!-- Multiple Choice Options -->
-                                                                                    <div class="mb-2 question-options-section"
-                                                                                        style="display: {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'multiple_choice' ? 'block' : 'none' }};">
-                                                                                        <div class="form-check mb-2">
-                                                                                            <input class="form-check-input"
-                                                                                                type="checkbox"
-                                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][allow_multiple_selection]"
-                                                                                                value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.allow_multiple_selection', $question->metadata['allow_multiple_selection'] ?? false) ? 'checked' : '' }}>
-                                                                                            <label class="form-check-label small">
-                                                                                                Allow multiple selection
-                                                                                                <div class="text-muted"
-                                                                                                    style="font-size: 0.85em;">When
-                                                                                                    enabled, students can select
-                                                                                                    multiple answers for this question
-                                                                                                </div>
-                                                                                            </label>
-                                                                                        </div>
-                                                                                        <div class="form-check mb-2">
-                                                                                            <input class="form-check-input"
-                                                                                                type="checkbox"
-                                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][count_each_correct]"
-                                                                                                value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.count_each_correct', $question->metadata['count_each_correct'] ?? false) ? 'checked' : '' }}>
-                                                                                            <label class="form-check-label small">
-                                                                                                Count each correct answer as separate
-                                                                                                question
-                                                                                                <div class="text-muted"
-                                                                                                    style="font-size: 0.85em;">Count
-                                                                                                    each correct answer as separate
-                                                                                                    question. When enabled, this
-                                                                                                    question will be counted as multiple
-                                                                                                    questions (e.g., Question 1-3) based
-                                                                                                    on the number of correct answers.
-                                                                                                    Requires "Allow multiple selection"
-                                                                                                    to be enabled.</div>
-                                                                                            </label>
-                                                                                        </div>
-                                                                                    </div>
-
-                                                                                    <!-- Is Correct (for single answer) -->
-                                                                                    <div class="mb-2">
-                                                                                        <div class="form-check">
-                                                                                            <input class="form-check-input"
-                                                                                                type="checkbox"
-                                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][is_correct]"
-                                                                                                value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.is_correct', $question->metadata['is_correct'] ?? false) ? 'checked' : '' }}>
-                                                                                            <label class="form-check-label small">Is
-                                                                                                correct</label>
-                                                                                        </div>
-                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         @endforeach
@@ -850,6 +796,7 @@
                 let sectionIndex = {{ count($skill->sections) }};
                 const exams = @json($exams);
                 const currentTestId = {{ $skill->exam_test_id }};
+                const skillType = '{{ $skill->skill_type }}'; // Get current skill type
 
                 // Event delegation for all button clicks
                 document.addEventListener('click', function (e) {
@@ -864,6 +811,8 @@
                         'delete-group': () => deleteItem(btn, '.question-group-item', 'group'),
                         'add-question': () => addQuestion(btn),
                         'delete-question': () => deleteItem(btn, '.question-item', 'question'),
+                        'add-direct-question': () => addDirectQuestion(btn),
+                        'delete-direct-question': () => deleteItem(btn, '.direct-question-item', 'direct question'),
                         'delete-answer': () => deleteItem(btn, '.answer-item', 'answer'),
                         'move-answer-up': () => moveAnswer(btn, -1),
                         'move-answer-down': () => moveAnswer(btn, 1),
@@ -956,9 +905,15 @@
                     item.remove();
 
                     // Update numbering based on type
-                    if (selector === '.section-item') updateSectionNumbers();
-                    else if (selector === '.question-group-item') updateGroupNumbers(parent.closest('.section-item'));
-                    else if (selector === '.question-item') updateQuestionNumbers(parent.closest('.question-group-item'));
+                    if (selector === '.section-item') {
+                        updateSectionNumbers();
+                    } else if (selector === '.question-group-item') {
+                        updateGroupNumbers(parent.closest('.section-item'));
+                    } else if (selector === '.question-item') {
+                        updateQuestionNumbers(parent.closest('.question-group-item'));
+                    } else if (selector === '.direct-question-item') {
+                        updateDirectQuestionNumbers(parent.closest('.section-item'));
+                    }
 
                     updateNavigation();
                 }
@@ -993,13 +948,35 @@
                     const answersList = btn.closest('.answers-list-section').querySelector('.answers-list');
                     const answerIndex = answersList.querySelectorAll('.answer-item').length;
 
+                    // Detect question type to decide between dropdown or rich text for answer content
+                    const questionItem = btn.closest('.question-item');
+                    const qType = questionItem?.querySelector('.question-type-select')?.value || '';
+                    const isYN = qType === 'yes_no_not_given';
+                    const isTF = qType === 'true_false_not_given';
+
+                    const dropdownHtml = () => {
+                        const opts = isYN ? ['Yes','No','Not Given'] : ['True','False','Not Given'];
+                        const optionsHTML = opts.map(opt => `<option value="${opt}" ${opt === (isYN ? 'Yes' : 'True') ? 'selected' : ''}>${opt}</option>`).join('');
+                        return `
+                            <select class="form-select form-select-sm" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIdx}][answers][${answerIndex}][content]">
+                                ${optionsHTML}
+                            </select>
+                        `;
+                    };
+
+                    const answerContentHtml = (isYN || isTF)
+                        ? dropdownHtml()
+                        : `
+                            <input type="hidden" id="answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}"
+                                   name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIdx}][answers][${answerIndex}][content]">
+                            <div id="answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}-editor" style="background: white;"></div>
+                        `;
+
                     answersList.insertAdjacentHTML('beforeend', `
                     <div class="answer-item mb-3 p-3" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem; position: relative;">
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Answer Content</label>
-                            <input type="hidden" id="answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}"
-                                   name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIdx}][answers][${answerIndex}][content]">
-                            <div id="answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}-editor" style="background: white;"></div>
+                            ${answerContentHtml}
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold">Feedback</label>
@@ -1022,13 +999,41 @@
                     </div>
                 `);
 
-                    initQuillEditor(`answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
+                    // Initialize editors only when using rich text mode
+                    if (!(isYN || isTF)) {
+                        initQuillEditor(`answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
+                    }
                     initQuillEditor(`answer-feedback-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
                 }
 
                 // Add section
                 function addSection() {
                     const container = document.getElementById('sectionsContainer');
+                    const isSpeakingOrWriting = (skillType === 'speaking' || skillType === 'writing');
+
+                    // Determine which questions container to show
+                    const questionsContainerHTML = isSpeakingOrWriting ? `
+                        <div class="direct-questions-container mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6>Questions</h6>
+                                <button type="button" class="btn btn-sm btn-outline-success" data-action="add-direct-question">
+                                    <i class="bi bi-plus me-1"></i>Add Question
+                                </button>
+                            </div>
+                            <div class="direct-questions-list"></div>
+                        </div>
+                    ` : `
+                        <div class="question-groups-container mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6>Question Groups</h6>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" data-action="add-group">
+                                    <i class="bi bi-plus me-1"></i>Add Question Group
+                                </button>
+                            </div>
+                            <div class="groups-list"></div>
+                        </div>
+                    `;
+
                     container.insertAdjacentHTML('beforeend', `
                     <div class="section-item card mb-3" data-section-index="${sectionIndex}">
                         <div class="card-header bg-light">
@@ -1065,25 +1070,14 @@
                                 <label class="form-label">Video File (Optional)</label>
                                 <input type="file" class="form-control" name="sections[${sectionIndex}][video_file]" accept="video/*">
                             </div>
-                            <div class="mb-3 skill-specific-field reading-field writing-field">
-                                <label class="form-label">Image (Optional)</label>
-                                <input type="file" class="form-control" name="sections[${sectionIndex}][image_file]" accept="image/*">
-                            </div>
+
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="sections[${sectionIndex}][answer_inputs_inside_content]" value="1">
                                     <label class="form-check-label">Answer inputs inside content</label>
                                 </div>
                             </div>
-                            <div class="question-groups-container mt-4">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6>Question Groups</h6>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-action="add-group">
-                                        <i class="bi bi-plus me-1"></i>Add Question Group
-                                    </button>
-                                </div>
-                                <div class="groups-list"></div>
-                            </div>
+                            ${questionsContainerHTML}
                         </div>
                     </div>
                 `);
@@ -1225,21 +1219,29 @@
                                 </div>
                             </div>
 
-                            <div class="mb-3 answers-list-section" style="border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 1rem; background-color: #f8f9fa;">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0"><i class="bi bi-list-check me-1"></i>Answers</h6>
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-action="add-multiple-answers" data-section="${sectionIdx}" data-group="${groupIdx}" data-question="${questionIndex}">
-                                        <i class="bi bi-plus me-1"></i>Add Answer
-                                    </button>
-                                </div>
-                                <div class="answers-list">
-                                    <div class="text-muted small text-center py-2"><i class="bi bi-info-circle me-1"></i>No answers yet. Click "Add Answer" to create answer options.</div>
-                                </div>
-                            </div>
+                            <!-- Answer Label (for Short Text) -->
                             <div class="mb-2">
-                                <label class="form-label small">Feedback</label>
-                                <textarea class="form-control form-control-sm" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][feedback]" rows="2" placeholder="Enter feedback for this question"></textarea>
+                                <label class="form-label small">Answer Label</label>
+                                <input type="text" class="form-control form-control-sm" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][answer_label]" placeholder="Enter answer label">
                             </div>
+
+                            <div class="mb-3 answers-list-section">
+                                <div class="answers-list" data-question-id="${sectionIdx}-${groupIdx}-${questionIndex}">
+                                    <!-- Answers will be added here -->
+                                </div>
+                                
+                                <!-- Answer to create Section -->
+                                <div class="mt-3 p-3" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                    <label class="form-label small fw-semibold">Answer to create</label>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="number" class="form-control form-control-sm answer-count-input" min="1" max="10" value="1" placeholder="Enter number of answer to create" style="max-width: 300px;">
+                                        <button type="button" class="btn btn-sm btn-primary" data-action="add-multiple-answers" data-section="${sectionIdx}" data-group="${groupIdx}" data-question="${questionIndex}">
+                                            <i class="bi bi-plus-lg me-1"></i>Add Answer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="mb-2 question-options-section" style="display: none;">
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][allow_multiple_selection]" value="1">
@@ -1250,12 +1252,7 @@
                                     <label class="form-check-label small">Count each correct answer as separate question</label>
                                 </div>
                             </div>
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][is_correct]" value="1">
-                                    <label class="form-check-label small">Is correct</label>
-                                </div>
-                            </div>
+                        
                         </div>
                     </div>
                 `);
@@ -1271,6 +1268,65 @@
                     });
                 }
 
+                // Add direct question (for speaking/writing)
+                function addDirectQuestion(btn) {
+                    const sectionItem = btn.closest('.section-item');
+                    const sectionIdx = sectionItem.dataset.sectionIndex;
+                    const questionsList = sectionItem.querySelector('.direct-questions-list');
+                    const questionIndex = questionsList.querySelectorAll('.direct-question-item').length;
+
+                    questionsList.insertAdjacentHTML('beforeend', `
+                    <div class="direct-question-item bg-light p-3 rounded mb-3" data-question-index="${questionIndex}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-link text-dark p-0" data-bs-toggle="collapse" data-bs-target="#direct-question-new-${sectionIdx}-${questionIndex}">
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                                <strong>Question ${questionIndex + 1}</strong>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-link text-danger" data-action="delete-direct-question">Delete Question</button>
+                        </div>
+                        <div class="collapse show" id="direct-question-new-${sectionIdx}-${questionIndex}">
+                            <div class="mb-3">
+                                <label class="form-label">Question Content</label>
+                                <input type="hidden" id="direct-question-content-new-${sectionIdx}-${questionIndex}" name="sections[${sectionIdx}][direct_questions][${questionIndex}][content]">
+                                <div id="direct-question-content-new-${sectionIdx}-${questionIndex}-editor"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Points</label>
+                                <input type="number" step="0.01" class="form-control" name="sections[${sectionIdx}][direct_questions][${questionIndex}][point]" value="1">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Sample Answer / Marking Criteria</label>
+                                <input type="hidden" id="direct-answer-new-${sectionIdx}-${questionIndex}" name="sections[${sectionIdx}][direct_questions][${questionIndex}][answer_content]">
+                                <div id="direct-answer-new-${sectionIdx}-${questionIndex}-editor"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Feedback</label>
+                                <input type="hidden" id="direct-feedback-new-${sectionIdx}-${questionIndex}" name="sections[${sectionIdx}][direct_questions][${questionIndex}][feedback]">
+                                <div id="direct-feedback-new-${sectionIdx}-${questionIndex}-editor"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Hint (Optional)</label>
+                                <input type="text" class="form-control" name="sections[${sectionIdx}][direct_questions][${questionIndex}][hint]" placeholder="Enter hint for this question">
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                    initQuillEditor(`direct-question-content-new-${sectionIdx}-${questionIndex}`);
+                    initQuillEditor(`direct-answer-new-${sectionIdx}-${questionIndex}`);
+                    initQuillEditor(`direct-feedback-new-${sectionIdx}-${questionIndex}`);
+                    updateDirectQuestionNumbers(sectionItem);
+                    updateNavigation();
+                }
+
+                function updateDirectQuestionNumbers(sectionItem) {
+                    sectionItem.querySelectorAll('.direct-question-item').forEach((question, index) => {
+                        question.querySelector('strong').textContent = `Question ${index + 1}`;
+                    });
+                }
+
                 // Update navigation
                 function updateNavigation() {
                     const navContainer = document.getElementById('sectionNavigation');
@@ -1278,8 +1334,26 @@
 
                     navContainer.innerHTML = Array.from(sections).map((section, sIndex) => {
                         section.id = `section-${sIndex}`;
-                        const groups = section.querySelectorAll('.question-group-item');
 
+                        // Check if section has direct questions (Speaking/Writing)
+                        const directQuestions = section.querySelectorAll('.direct-question-item');
+                        if (directQuestions.length > 0) {
+                            const directQuestionsHtml = `<div class="ps-3">${Array.from(directQuestions).map((question, qIndex) => {
+                                question.id = `direct-question-${sIndex}-${qIndex}`;
+                                return `<a href="#direct-question-${sIndex}-${qIndex}" class="list-group-item list-group-item-action small text-muted py-1">
+                                    <i class="bi bi-question-circle me-2"></i>Question ${qIndex + 1}
+                                </a>`;
+                            }).join('')}</div>`;
+
+                            return `<div class="section-nav-item">
+                                <a href="#section-${sIndex}" class="list-group-item list-group-item-action">
+                                    <i class="bi bi-file-text me-2"></i>Section ${sIndex + 1}
+                                </a>${directQuestionsHtml}
+                            </div>`;
+                        }
+
+                        // Otherwise check for question groups (Listening/Reading)
+                        const groups = section.querySelectorAll('.question-group-item');
                         const groupsHtml = groups.length > 0 ? `<div class="ps-3">${Array.from(groups).map((group, gIndex) => {
                             group.id = `group-${sIndex}-${gIndex}`;
                             const questions = group.querySelectorAll('.question-item');
@@ -1308,7 +1382,17 @@
 
                 // Initialize Quill editors
                 function initializeAllEditors() {
-                    const patterns = ['section-content-', 'section-feedback-', 'group-content-', 'question-content-', 'answer-content-', 'answer-feedback-'];
+                    const patterns = [
+                        'section-content-',
+                        'section-feedback-',
+                        'group-content-',
+                        'question-content-',
+                        'answer-content-',
+                        'answer-feedback-',
+                        'direct-question-content-',
+                        'direct-answer-',
+                        'direct-feedback-'
+                    ];
                     patterns.forEach(pattern => {
                         document.querySelectorAll(`[id^="${pattern}"][id$="-editor"]`).forEach(editorDiv => {
                             initQuillEditor(editorDiv.id.replace('-editor', ''));
