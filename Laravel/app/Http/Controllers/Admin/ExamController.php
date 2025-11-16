@@ -21,6 +21,11 @@ class ExamController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Filter by active status
+        if ($request->filled('is_active')) {
+            $query->where('is_active', $request->is_active);
+        }
+
         // Search
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -28,17 +33,10 @@ class ExamController extends Controller
 
         $exams = $query->withCount('tests')
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->appends($request->except('page'));
 
         return view('admin.exams.index', compact('exams'));
-    }
-
-    /**
-     * Show the form for creating a new exam.
-     */
-    public function create()
-    {
-        return view('admin.exams.create');
     }
 
     /**
@@ -63,19 +61,10 @@ class ExamController extends Controller
 
         $exam = Exam::create($validated);
 
-        return redirect()->route('admin.exams.show', $exam)
-            ->with('success', 'Exam created successfully!');
+        return redirect()->route('admin.exams.index')
+            ->with('success', 'Tạo bộ đề thi thành công!');
     }
 
-    /**
-     * Display the specified exam.
-     */
-    public function show(Exam $exam)
-    {
-        $exam->load('tests.skills.sections.questionGroups.questions');
-
-        return view('admin.exams.show', compact('exam'));
-    }
 
     /**
      * Show the form for editing the specified exam.
@@ -120,8 +109,8 @@ class ExamController extends Controller
 
         $exam->update($validated);
 
-        return redirect()->route('admin.exams.show', $exam)
-            ->with('success', 'Exam updated successfully!');
+        return redirect()->route('admin.exams.index')
+            ->with('success', 'Cập nhật bộ đề thi thành công!');
     }
 
     /**
@@ -137,7 +126,7 @@ class ExamController extends Controller
         $exam->delete();
 
         return redirect()->route('admin.exams.index')
-            ->with('success', 'Exam deleted successfully!');
+            ->with('success', 'Xóa bộ đề thi thành công!');
     }
 
     /**
@@ -148,6 +137,6 @@ class ExamController extends Controller
         $exam->update(['is_active' => !$exam->is_active]);
 
         return redirect()->back()
-            ->with('success', 'Exam status updated successfully!');
+            ->with('success', 'Cập nhật trạng thái thành công!');
     }
 }

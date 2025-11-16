@@ -39,7 +39,7 @@ class ExamQuestionGroup extends Model
      */
     public function questions(): HasMany
     {
-        return $this->hasMany(ExamQuestion::class);
+        return $this->hasMany(ExamQuestion::class)->orderBy('id');
     }
 
     /**
