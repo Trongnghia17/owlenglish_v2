@@ -37,11 +37,19 @@ class ExamSection extends Model
     }
 
     /**
-     * Một section có nhiều question groups
+     * Một section có nhiều question groups (cho listening và reading)
      */
     public function questionGroups(): HasMany
     {
         return $this->hasMany(ExamQuestionGroup::class);
+    }
+
+    /**
+     * Một section có nhiều questions trực tiếp (cho speaking và writing)
+     */
+    public function questions(): HasMany
+    {
+        return $this->hasMany(ExamQuestion::class);
     }
 
     /**
@@ -50,6 +58,14 @@ class ExamSection extends Model
     public function activeQuestionGroups(): HasMany
     {
         return $this->hasMany(ExamQuestionGroup::class)->where('is_active', true);
+    }
+
+    /**
+     * Lấy các questions đang active (trực tiếp từ section)
+     */
+    public function activeQuestions(): HasMany
+    {
+        return $this->hasMany(ExamQuestion::class)->where('is_active', true);
     }
 
     /**
@@ -74,5 +90,25 @@ class ExamSection extends Model
     public function hasVideo(): bool
     {
         return $this->content_format === 'video' && !empty($this->video_file);
+    }
+
+    /**
+     * Check if this section belongs to a speaking or writing skill
+     * (which uses direct questions without question groups)
+     */
+    public function useDirectQuestions(): bool
+    {
+        return $this->examSkill && 
+               ($this->examSkill->isSpeaking() || $this->examSkill->isWriting());
+    }
+
+    /**
+     * Check if this section uses question groups
+     * (listening and reading skills)
+     */
+    public function useQuestionGroups(): bool
+    {
+        return $this->examSkill && 
+               ($this->examSkill->isListening() || $this->examSkill->isReading());
     }
 }

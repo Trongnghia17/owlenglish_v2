@@ -7,12 +7,11 @@
         <div class="col-lg-12">
             <div class="border-bottom pb-3 mb-3 d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="mb-1 h2 fw-bold">Quản lý Skills</h1>
-                    <p class="text-muted mb-0">Quản lý tất cả các kỹ năng (Reading, Writing, Listening, Speaking)</p>
+                    <h1 class="mb-1 h2 fw-bold">Quản lý dề thi</h1>
                 </div>
                 <div>
                     <a href="{{ route('admin.skills.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Thêm Skill Mới
+                        <i class="bi bi-plus-circle me-2"></i>Thêm đê thi mới
                     </a>
                 </div>
             </div>
@@ -26,16 +25,16 @@
                 <!-- Search -->
                 <div class="col-md-3">
                     <label class="form-label">Tìm kiếm</label>
-                    <input type="text" 
-                           class="form-control" 
-                           name="search" 
+                    <input type="text"
+                           class="form-control"
+                           name="search"
                            value="{{ request('search') }}"
-                           placeholder="Tên skill...">
+                           placeholder="Tên đê thi...">
                 </div>
 
                 <!-- Skill Type -->
                 <div class="col-md-2">
-                    <label class="form-label">Loại Skill</label>
+                    <label class="form-label">Loại đề thi</label>
                     <select class="form-select" name="skill_type">
                         <option value="">Tất cả</option>
                         <option value="reading" {{ request('skill_type') == 'reading' ? 'selected' : '' }}>Reading</option>
@@ -47,7 +46,7 @@
 
                 <!-- Exam -->
                 <div class="col-md-3">
-                    <label class="form-label">Exam</label>
+                    <label class="form-label">Bộ đề thi</label>
                     <select class="form-select" name="exam_id">
                         <option value="">Tất cả</option>
                         @foreach($exams as $exam)
@@ -60,7 +59,7 @@
 
                 <!-- Test -->
                 <div class="col-md-3">
-                    <label class="form-label">Test</label>
+                    <label class="form-label">Nhóm đề thi</label>
                     <select class="form-select" name="test_id">
                         <option value="">Tất cả</option>
                         @foreach($tests as $test)
@@ -90,7 +89,7 @@
     <!-- Skills List -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Danh sách Skills ({{ $skills->total() }})</h5>
+            <h5 class="mb-0">Danh sách đè thi ({{ $skills->total() }})</h5>
         </div>
         <div class="card-body p-0">
             @if($skills->count() > 0)
@@ -98,13 +97,11 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
-                                <th>Tên Skill</th>
+                                <th>Tiêu đè</th>
                                 <th>Loại</th>
-                                <th>Exam</th>
-                                <th>Test</th>
+                                <th>Bộ đê thi</th>
+                                <th>Nhóm đê thi</th>
                                 <th>Thời gian</th>
-                                <th>Sections</th>
                                 <th>Trạng thái</th>
                                 <th>Hành động</th>
                             </tr>
@@ -112,13 +109,9 @@
                         <tbody>
                             @foreach($skills as $skill)
                                 <tr>
-                                    <td>{{ $skill->id }}</td>
+
                                     <td>
                                         <strong>{{ $skill->name }}</strong>
-                                        @if($skill->description)
-                                            <br>
-                                            <small class="text-muted">{{ Str::limit($skill->description, 50) }}</small>
-                                        @endif
                                     </td>
                                     <td>
                                         @php
@@ -153,34 +146,31 @@
                                         <i class="bi bi-clock me-1"></i>{{ $skill->time_limit }} phút
                                     </td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ $skill->sections->count() }} sections</span>
-                                    </td>
-                                    <td>
-                                        <form action="{{ route('admin.skills.toggle-active', $skill) }}" 
-                                              method="POST" 
+                                        <form action="{{ route('admin.skills.toggle-active', $skill) }}"
+                                              method="POST"
                                               class="d-inline">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" 
+                                            <button type="submit"
                                                     class="btn btn-sm {{ $skill->is_active ? 'btn-success' : 'btn-secondary' }}">
-                                                {{ $skill->is_active ? 'Active' : 'Inactive' }}
+                                                {{ $skill->is_active ? 'Hiển thị' : 'Ẩn' }}
                                             </button>
                                         </form>
                                     </td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.skills.edit', $skill) }}" 
+                                            <a href="{{ route('admin.skills.edit', $skill) }}"
                                                class="btn btn-sm btn-outline-primary"
                                                title="Sửa">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form action="{{ route('admin.skills.destroy', $skill) }}" 
-                                                  method="POST" 
+                                            <form action="{{ route('admin.skills.destroy', $skill) }}"
+                                                  method="POST"
                                                   class="d-inline"
-                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa skill này?')">
+                                                  onsubmit="return confirm('Bạn có chắc chắn muốn xóa đê thi này?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" 
+                                                <button type="submit"
                                                         class="btn btn-sm btn-outline-danger"
                                                         title="Xóa">
                                                     <i class="bi bi-trash"></i>
@@ -196,14 +186,14 @@
             @else
                 <div class="text-center py-5">
                     <i class="bi bi-inbox display-1 text-muted"></i>
-                    <p class="text-muted mt-3">Chưa có skill nào</p>
+                    <p class="text-muted mt-3">Chưa có đê thi nào</p>
                     <a href="{{ route('admin.skills.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Thêm Skill Đầu Tiên
+                        <i class="bi bi-plus-circle me-2"></i>Thêm đê thi đầu tiên
                     </a>
                 </div>
             @endif
         </div>
-        
+
         @if($skills->hasPages())
             <div class="card-footer">
                 {{ $skills->links() }}

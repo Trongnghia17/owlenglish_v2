@@ -86,7 +86,7 @@
                        aria-expanded="{{ request()->routeIs('admin.skills.*') ? 'true' : 'false' }}"
                        aria-controls="navSkills">
                         <i data-feather="book-open" class="nav-icon me-2 icon-xxs"></i>
-                        Quản lý Skills
+                        Quản lý đề thi
                     </a>
                     <div id="navSkills" class="collapse {{ request()->routeIs('admin.skills.*') ? 'show' : '' }}"
                          data-bs-parent="#sideNavbar">
@@ -94,13 +94,13 @@
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.skills.index') ? 'active' : '' }}"
                                    href="{{ route('admin.skills.index') }}">
-                                    Danh sách Skills
+                                    Danh sách đề thi
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.skills.create') ? 'active' : '' }}"
                                    href="{{ route('admin.skills.create') }}">
-                                    Thêm Skill mới
+                                    Thêm đề thi mới
                                 </a>
                             </li>
                         </ul>

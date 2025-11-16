@@ -105,7 +105,11 @@ class SkillController extends Controller
     public function edit(ExamSkill $skill)
     {
         $exams = Exam::with('tests')->orderBy('name')->get();
-        $skill->load(['sections.questionGroups.questions', 'examTest.exam']);
+        $skill->load([
+            'sections.questionGroups.questions', 
+            'sections.questions', // Load direct questions
+            'examTest.exam'
+        ]);
         
         return view('admin.skills.edit', compact('skill', 'exams'));
     }
@@ -134,6 +138,13 @@ class SkillController extends Controller
             'sections.*.groups.*.questions.*.content' => 'nullable|string',
             'sections.*.groups.*.questions.*.answer_content' => 'nullable|string',
             'sections.*.groups.*.questions.*.point' => 'nullable|numeric|min:0',
+            // Direct questions (for speaking/writing)
+            'sections.*.direct_questions' => 'nullable|array',
+            'sections.*.direct_questions.*.content' => 'nullable|string',
+            'sections.*.direct_questions.*.answer_content' => 'nullable|string',
+            'sections.*.direct_questions.*.point' => 'nullable|numeric|min:0',
+            'sections.*.direct_questions.*.feedback' => 'nullable|string',
+            'sections.*.direct_questions.*.hint' => 'nullable|string',
         ]);
 
         // Verify that exam_test_id belongs to the selected exam_id
@@ -197,6 +208,10 @@ class SkillController extends Controller
             // Process question groups
             $groupsData = $sectionData['groups'] ?? [];
             $this->processQuestionGroups($section, $groupsData);
+            
+            // Process direct questions (for speaking/writing)
+            $directQuestionsData = $sectionData['direct_questions'] ?? [];
+            $this->processDirectQuestions($section, $directQuestionsData);
         }
 
         // Delete sections that are not in the request
@@ -255,6 +270,7 @@ class SkillController extends Controller
             
             $questionInfo = [
                 'exam_question_group_id' => $group->id,
+                'exam_section_id' => null, // Belongs to group, not section
                 'content' => $questionData['content'] ?? '',
                 'answer_content' => $questionData['answer_content'] ?? '',
                 'point' => $questionData['point'] ?? 1,
@@ -276,6 +292,42 @@ class SkillController extends Controller
 
         // Delete questions that are not in the request
         $group->questions()->whereNotIn('id', $existingQuestionIds)->delete();
+    }
+
+    /**
+     * Process direct questions (for speaking/writing)
+     */
+    private function processDirectQuestions($section, array $questionsData)
+    {
+        $existingQuestionIds = [];
+
+        foreach ($questionsData as $questionData) {
+            $questionId = $questionData['id'] ?? null;
+            
+            $questionInfo = [
+                'exam_section_id' => $section->id,
+                'exam_question_group_id' => null, // Direct to section, not group
+                'content' => $questionData['content'] ?? '',
+                'answer_content' => $questionData['answer_content'] ?? '',
+                'point' => $questionData['point'] ?? 1,
+                'feedback' => $questionData['feedback'] ?? null,
+                'hint' => $questionData['hint'] ?? null,
+                'metadata' => [],
+                'is_active' => true,
+            ];
+
+            if ($questionId) {
+                $question = $section->questions()->findOrFail($questionId);
+                $question->update($questionInfo);
+                $existingQuestionIds[] = $questionId;
+            } else {
+                $question = $section->questions()->create($questionInfo);
+                $existingQuestionIds[] = $question->id;
+            }
+        }
+
+        // Delete direct questions that are not in the request
+        $section->questions()->whereNotIn('id', $existingQuestionIds)->delete();
     }
 
     /**

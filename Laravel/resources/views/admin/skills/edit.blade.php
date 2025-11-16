@@ -108,7 +108,7 @@
                                 <label for="skill_type" class="form-label">Quiz Preset <span
                                         class="text-danger">*</span></label>
                                 <select class="form-select @error('skill_type') is-invalid @enderror" id="skill_type"
-                                    name="skill_type" required>
+                                    name="skill_type" required disabled>
                                     <option value="">Quiz Preset</option>
                                     <option value="reading" {{ old('skill_type', $skill->skill_type) == 'reading' ? 'selected' : '' }}>
                                         Reading (Đọc)
@@ -123,6 +123,7 @@
                                         Speaking (Nói)
                                     </option>
                                 </select>
+                                <input type="hidden" name="skill_type" value="{{ $skill->skill_type }}">
                                 @error('skill_type')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -186,27 +187,43 @@
                                         <a href="#section-{{ $index }}" class="list-group-item list-group-item-action">
                                             <i class="bi bi-file-text me-2"></i>Section {{ $index + 1 }}
                                         </a>
-                                        @if($section->questionGroups->count() > 0)
-                                            <div class="ps-3">
-                                                @foreach($section->questionGroups as $gIndex => $group)
-                                                    <div>
-                                                        <a href="#group-{{ $index }}-{{ $gIndex }}"
-                                                            class="list-group-item list-group-item-action small">
-                                                            <i class="bi bi-diagram-3 me-2"></i>Group {{ $gIndex + 1 }}
+                                        
+                                        @if($skill->isSpeaking() || $skill->isWriting())
+                                            {{-- Speaking/Writing: Direct questions without groups --}}
+                                            @if($section->questions->count() > 0)
+                                                <div class="ps-3">
+                                                    @foreach($section->questions as $qIndex => $question)
+                                                        <a href="#direct-question-{{ $index }}-{{ $qIndex }}"
+                                                            class="list-group-item list-group-item-action small text-muted py-1">
+                                                            <i class="bi bi-question-circle me-2"></i>Question {{ $qIndex + 1 }}
                                                         </a>
-                                                        @if($group->questions->count() > 0)
-                                                            <div class="ps-3">
-                                                                @foreach($group->questions as $qIndex => $question)
-                                                                    <a href="#question-{{ $index }}-{{ $gIndex }}-{{ $qIndex }}"
-                                                                        class="list-group-item list-group-item-action small text-muted py-1">
-                                                                        <i class="bi bi-question-circle me-2"></i>Question {{ $qIndex + 1 }}
-                                                                    </a>
-                                                                @endforeach
-                                                            </div>
-                                                        @endif
-                                                    </div>
-                                                @endforeach
-                                            </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        @else
+                                            {{-- Listening/Reading: Questions grouped --}}
+                                            @if($section->questionGroups->count() > 0)
+                                                <div class="ps-3">
+                                                    @foreach($section->questionGroups as $gIndex => $group)
+                                                        <div>
+                                                            <a href="#group-{{ $index }}-{{ $gIndex }}"
+                                                                class="list-group-item list-group-item-action small">
+                                                                <i class="bi bi-diagram-3 me-2"></i>Group {{ $gIndex + 1 }}
+                                                            </a>
+                                                            @if($group->questions->count() > 0)
+                                                                <div class="ps-3">
+                                                                    @foreach($group->questions as $qIndex => $question)
+                                                                        <a href="#question-{{ $index }}-{{ $gIndex }}-{{ $qIndex }}"
+                                                                            class="list-group-item list-group-item-action small text-muted py-1">
+                                                                            <i class="bi bi-question-circle me-2"></i>Question {{ $qIndex + 1 }}
+                                                                        </a>
+                                                                    @endforeach
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         @endif
                                     </div>
                                 @endforeach
@@ -231,27 +248,6 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <!-- Skill Type Info -->
-                            <div class="alert alert-info mb-3">
-                                <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Skill-Specific Fields</h6>
-                                <div class="skill-info-content">
-                                    <div class="listening-info" style="display: none;">
-                                        <strong>Listening:</strong> Audio/Video files are required. Multiple answer options
-                                        are available for each question.
-                                    </div>
-                                    <div class="reading-info" style="display: none;">
-                                        <strong>Reading:</strong> Text content with optional images. Questions can have
-                                        various types (Multiple Choice, True/False, etc.)
-                                    </div>
-                                    <div class="writing-info" style="display: none;">
-                                        <strong>Writing:</strong> Provide writing prompts with optional images. Feedback and
-                                        rubrics can be added.
-                                    </div>
-                                    <div class="speaking-info" style="display: none;">
-                                        <strong>Speaking:</strong> Audio prompts and sample responses can be uploaded.
-                                    </div>
-                                </div>
-                            </div>
                             <div id="sectionsContainer" class="skill-type-{{ $skill->skill_type }}">
                                 @foreach($skill->sections as $sectionIndex => $section)
                                     <div id="section-{{ $sectionIndex }}" class="section-item card mb-3"
@@ -302,17 +298,6 @@
                                                     name="sections[{{ $sectionIndex }}][feedback]"
                                                     value="{{ old('sections.' . $sectionIndex . '.feedback', $section->feedback) }}">
                                                 <div id="section-feedback-{{ $sectionIndex }}-editor"></div>
-                                            </div>
-
-                                            <!-- Content Format -->
-                                            <div class="mb-3">
-                                                <label class="form-label">Content Format</label>
-                                                <select class="form-select"
-                                                    name="sections[{{ $sectionIndex }}][content_format]">
-                                                    <option value="text" {{ old('sections.' . $sectionIndex . '.content_format', $section->content_format) == 'text' ? 'selected' : '' }}>Text</option>
-                                                    <option value="audio" {{ old('sections.' . $sectionIndex . '.content_format', $section->content_format) == 'audio' ? 'selected' : '' }}>Audio</option>
-                                                    <option value="video" {{ old('sections.' . $sectionIndex . '.content_format', $section->content_format) == 'video' ? 'selected' : '' }}>Video</option>
-                                                </select>
                                             </div>
 
                                             <!-- Audio File Upload (for Listening) -->
@@ -374,17 +359,113 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Question Groups -->
-                                            <div class="question-groups-container mt-4">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6>Question Groups</h6>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary"
-                                                        data-action="add-group">
-                                                        <i class="bi bi-plus me-1"></i>Add Question Group
-                                                    </button>
-                                                </div>
+                                            @if($skill->isSpeaking() || $skill->isWriting())
+                                                <!-- Direct Questions (for Speaking/Writing) -->
+                                                <div class="direct-questions-container mt-4">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <h6>Questions</h6>
+                                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                                            data-action="add-direct-question">
+                                                            <i class="bi bi-plus me-1"></i>Add Question
+                                                        </button>
+                                                    </div>
 
-                                                <div class="groups-list">
+                                                    <div class="direct-questions-list">
+                                                        @foreach($section->questions as $qIndex => $question)
+                                                            <div id="direct-question-{{ $sectionIndex }}-{{ $qIndex }}"
+                                                                class="direct-question-item bg-light p-3 rounded mb-3"
+                                                                data-question-index="{{ $qIndex }}">
+                                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                    <div class="d-flex align-items-center gap-2">
+                                                                        <button type="button"
+                                                                            class="btn btn-sm btn-link text-dark p-0"
+                                                                            data-bs-toggle="collapse"
+                                                                            data-bs-target="#direct-question-content-{{ $sectionIndex }}-{{ $qIndex }}">
+                                                                            <i class="bi bi-chevron-down"></i>
+                                                                        </button>
+                                                                        <strong>Question {{ $qIndex + 1 }}</strong>
+                                                                    </div>
+                                                                    <button type="button"
+                                                                        class="btn btn-sm btn-link text-danger"
+                                                                        data-action="delete-direct-question">
+                                                                        Delete Question
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="collapse show"
+                                                                    id="direct-question-content-{{ $sectionIndex }}-{{ $qIndex }}">
+                                                                    <input type="hidden"
+                                                                        name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][id]"
+                                                                        value="{{ $question->id }}">
+
+                                                                    <!-- Question Content -->
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Question Content</label>
+                                                                        <input type="hidden"
+                                                                            id="direct-question-content-{{ $sectionIndex }}-{{ $qIndex }}"
+                                                                            name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][content]"
+                                                                            value="{{ old('sections.' . $sectionIndex . '.direct_questions.' . $qIndex . '.content', $question->content) }}">
+                                                                        <div id="direct-question-content-{{ $sectionIndex }}-{{ $qIndex }}-editor">
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Points -->
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Points</label>
+                                                                        <input type="number" step="0.01"
+                                                                            class="form-control"
+                                                                            name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][point]"
+                                                                            value="{{ old('sections.' . $sectionIndex . '.direct_questions.' . $qIndex . '.point', $question->point ?? 1) }}">
+                                                                    </div>
+
+                                                                    <!-- Answer Content (for Writing/Speaking) -->
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Sample Answer / Marking Criteria</label>
+                                                                        <input type="hidden"
+                                                                            id="direct-answer-{{ $sectionIndex }}-{{ $qIndex }}"
+                                                                            name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][answer_content]"
+                                                                            value="{{ old('sections.' . $sectionIndex . '.direct_questions.' . $qIndex . '.answer_content', $question->answer_content) }}">
+                                                                        <div id="direct-answer-{{ $sectionIndex }}-{{ $qIndex }}-editor">
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Feedback -->
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Feedback</label>
+                                                                        <input type="hidden"
+                                                                            id="direct-feedback-{{ $sectionIndex }}-{{ $qIndex }}"
+                                                                            name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][feedback]"
+                                                                            value="{{ old('sections.' . $sectionIndex . '.direct_questions.' . $qIndex . '.feedback', $question->feedback) }}">
+                                                                        <div id="direct-feedback-{{ $sectionIndex }}-{{ $qIndex }}-editor">
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Hint -->
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Hint (Optional)</label>
+                                                                        <input type="text"
+                                                                            class="form-control"
+                                                                            name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][hint]"
+                                                                            value="{{ old('sections.' . $sectionIndex . '.direct_questions.' . $qIndex . '.hint', $question->hint) }}"
+                                                                            placeholder="Enter hint for this question">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <!-- Question Groups (for Listening/Reading) -->
+                                                <div class="question-groups-container mt-4">
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <h6>Question Groups</h6>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                            data-action="add-group">
+                                                            <i class="bi bi-plus me-1"></i>Add Question Group
+                                                        </button>
+                                                    </div>
+
+                                                    <div class="groups-list">
                                                     @foreach($section->questionGroups as $groupIndex => $group)
                                                         <div id="group-{{ $sectionIndex }}-{{ $groupIndex }}"
                                                             class="question-group-item border rounded p-3 mb-3"
@@ -746,6 +827,7 @@
                                                     @endforeach
                                                 </div>
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -853,22 +935,16 @@
                     examSelect.dispatchEvent(new Event('change'));
                 }
 
-                // Initialize skill type select
+                // Initialize skill type classes (select is disabled in edit mode)
                 function initSkillTypeSelect() {
                     const skillTypeSelect = document.getElementById('skill_type');
-                    const updateClass = () => {
-                        const type = skillTypeSelect.value;
-                        const container = document.getElementById('sectionsContainer');
-                        const infoContent = document.querySelector('.skill-info-content');
+                    const type = skillTypeSelect.value;
+                    const container = document.getElementById('sectionsContainer');
 
-                        ['listening', 'reading', 'writing', 'speaking'].forEach(skill => {
-                            container?.classList.toggle(`skill-type-${skill}`, type === skill);
-                            infoContent?.classList.toggle(`skill-type-${skill}`, type === skill);
-                        });
-                    };
-
-                    skillTypeSelect.addEventListener('change', updateClass);
-                    updateClass();
+                    // Just set container class once, no need for event listener since select is disabled
+                    ['listening', 'reading', 'writing', 'speaking'].forEach(skill => {
+                        container?.classList.toggle(`skill-type-${skill}`, type === skill);
+                    });
                 }
 
                 // Generic delete item function
@@ -980,14 +1056,6 @@
                                 <label class="form-label">Section Feedback</label>
                                 <input type="hidden" id="section-feedback-new-${sectionIndex}" name="sections[${sectionIndex}][feedback]">
                                 <div id="section-feedback-new-${sectionIndex}-editor"></div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Content Format</label>
-                                <select class="form-select" name="sections[${sectionIndex}][content_format]">
-                                    <option value="text">Text</option>
-                                    <option value="audio">Audio</option>
-                                    <option value="video">Video</option>
-                                </select>
                             </div>
                             <div class="mb-3 skill-specific-field listening-field">
                                 <label class="form-label">Audio File <span class="text-danger">*</span></label>
@@ -1156,7 +1224,7 @@
                                     </select>
                                 </div>
                             </div>
-                           
+
                             <div class="mb-3 answers-list-section" style="border: 1px solid #dee2e6; border-radius: 0.25rem; padding: 1rem; background-color: #f8f9fa;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="mb-0"><i class="bi bi-list-check me-1"></i>Answers</h6>

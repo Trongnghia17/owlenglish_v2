@@ -12,6 +12,7 @@ class ExamQuestion extends Model
 
     protected $fillable = [
         'exam_question_group_id',
+        'exam_section_id',
         'content',
         'answer_content',
         'is_correct',
@@ -32,11 +33,19 @@ class ExamQuestion extends Model
     ];
 
     /**
-     * Một question thuộc về một question group
+     * Một question thuộc về một question group (cho listening và reading)
      */
     public function questionGroup(): BelongsTo
     {
         return $this->belongsTo(ExamQuestionGroup::class, 'exam_question_group_id');
+    }
+
+    /**
+     * Một question có thể thuộc trực tiếp về section (cho speaking và writing)
+     */
+    public function examSection(): BelongsTo
+    {
+        return $this->belongsTo(ExamSection::class, 'exam_section_id');
     }
 
     /**
@@ -85,5 +94,23 @@ class ExamQuestion extends Model
     public function hasFeedback(): bool
     {
         return !empty($this->feedback);
+    }
+
+    /**
+     * Check if this question belongs directly to a section
+     * (for speaking and writing)
+     */
+    public function belongsToSection(): bool
+    {
+        return !is_null($this->exam_section_id);
+    }
+
+    /**
+     * Check if this question belongs to a question group
+     * (for listening and reading)
+     */
+    public function belongsToQuestionGroup(): bool
+    {
+        return !is_null($this->exam_question_group_id);
     }
 }
