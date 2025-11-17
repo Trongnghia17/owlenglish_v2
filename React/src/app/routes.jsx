@@ -9,7 +9,8 @@ import Register from '@/features/auth/pages/Register';
 import VerifyOtp from '@/features/auth/pages/VerifyOtp';
 import OAuthCallback from '@/features/auth/pages/OAuthCallback';
 import Home from '../features/home/pages/Home';
-import PagesTest from '../features/exams/pages/PagesTest';
+import OnlineExamLibrary from '../features/exams/pages/OnlineExamLibrary';
+import ExamInstructions from '../features/exams/pages/ExamInstructions';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
@@ -24,8 +25,18 @@ export const router = createBrowserRouter([
     // phục vụ cho việc chưa đăng nhập vẫn xem dc trang
     element: PublicShell, children: [
       { path: '/', element: <Home /> },
-      { path: '/de-thi-online', element: <PagesTest /> },
+      { path: '/de-thi-online', element: <OnlineExamLibrary /> },
     ]
+  },
+
+  // Exam Instructions - Trang riêng không dùng layout
+  {
+    path: '/exam/instructions/:skillId',
+    element: <ExamInstructions />,
+  },
+  {
+    path: '/exam/instructions/:skillId/:sectionId',
+    element: <ExamInstructions />,
   },
 
   {

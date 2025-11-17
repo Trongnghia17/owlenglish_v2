@@ -16,6 +16,7 @@ class ExamSkill extends Model
         'skill_type',
         'name',
         'description',
+        'image',
         'time_limit',
         'is_active',
     ];

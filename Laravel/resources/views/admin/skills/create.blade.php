@@ -29,7 +29,7 @@
                         <h5 class="mb-0">Quiz Builder</h5>
                     </div>
                     <div class="card-body">
-                        <form action="{{ route('admin.skills.store') }}" method="POST" id="skillForm">
+                        <form action="{{ route('admin.skills.store') }}" method="POST" id="skillForm" enctype="multipart/form-data">
                             @csrf
 
                             <!-- Name -->
@@ -51,14 +51,27 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <!-- Image -->
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Hình ảnh</label>
+                                <input type="file" class="form-control @error('image') is-invalid @enderror" id="image"
+                                    name="image" accept="image/*">
+                                <small class="form-text text-muted">Chấp nhận: JPG, PNG, GIF. Tối đa: 2MB</small>
+                                @error('image')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <img src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                </div>
+                            </div>
                             <!-- Time Limit -->
                             <div class="mb-3">
-                                <label for="time_limit" class="form-label">Time Limit <span
+                                <label for="time_limit" class="form-label">Time Limit (phút) <span
                                         class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('time_limit') is-invalid @enderror"
                                     id="time_limit" name="time_limit" value="{{ old('time_limit') }}" min="1"
-                                    placeholder="Enter time limit" required>
-
+                                    placeholder="Nhập thời gian (phút)" required>
+                                <small class="form-text text-muted">Thời gian làm bài tính theo phút</small>
                                 @error('time_limit')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -150,6 +163,24 @@
             document.addEventListener('DOMContentLoaded', function () {
                 const examSelect = document.getElementById('exam_id');
                 const testSelect = document.getElementById('exam_test_id');
+                
+                // Image preview
+                const imageInput = document.getElementById('image');
+                const imagePreview = document.getElementById('imagePreview');
+                
+                imageInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagePreview.querySelector('img').src = e.target.result;
+                            imagePreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagePreview.style.display = 'none';
+                    }
+                });
 
                 // Load tests when exam changes
                 examSelect.addEventListener('change', function () {

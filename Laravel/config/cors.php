@@ -1,6 +1,6 @@
 <?php
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'public/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => ['http://localhost:5173', 'http://your-react-domain.com'],
     'allowed_headers' => ['*'],
