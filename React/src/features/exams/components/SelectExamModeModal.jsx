@@ -46,15 +46,35 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
   };
 
   const handleFullTestClick = () => {
-    // TODO: Navigate to full test
-    console.log('Start full test for skill:', skill.id);
-    // navigate(`/exam/full/${skill.id}`);
+    // Tạo exam data cho full test
+    const examData = {
+      name: `${skill.name} - Full Test`,
+      duration: getTotalQuestions(),
+      questionCount: sections.length,
+      timeLimit: skill.time_limit || 60,
+      questionTypes: 'True / False / Not given, Short Answer, Matching Heading, Yes / No / Not Given, Flowchart Answer, Single Answer'
+    };
+
+    // Navigate đến trang hướng dẫn với state
+    navigate(`/exam/instructions/${skill.id}`, {
+      state: { examData }
+    });
   };
 
   const handleSectionClick = (section) => {
-    // TODO: Navigate to section test
-    console.log('Start section test:', section.id, 'for skill:', skill.id);
-    // navigate(`/exam/section/${skill.id}/${section.id}`);
+    // Tạo exam data cho section
+    const examData = {
+      name: `${skill.name} - ${section.title || 'Section'}`,
+      duration: getSectionQuestionCount(section),
+      questionCount: 1,
+      timeLimit: Math.round((skill.time_limit || 60) / sections.length),
+      questionTypes: 'True / False / Not given, Short Answer, Matching Heading, Yes / No / Not Given, Flowchart Answer, Single Answer'
+    };
+
+    // Navigate đến trang hướng dẫn với state
+    navigate(`/exam/instructions/${skill.id}/${section.id}`, {
+      state: { examData }
+    });
   };
 
   // Lấy sections từ skillDetails hoặc fallback về array rỗng

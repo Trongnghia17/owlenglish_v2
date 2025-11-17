@@ -10,6 +10,7 @@ import VerifyOtp from '@/features/auth/pages/VerifyOtp';
 import OAuthCallback from '@/features/auth/pages/OAuthCallback';
 import Home from '../features/home/pages/Home';
 import OnlineExamLibrary from '../features/exams/pages/OnlineExamLibrary';
+import ExamInstructions from '../features/exams/pages/ExamInstructions';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
@@ -26,6 +27,16 @@ export const router = createBrowserRouter([
       { path: '/', element: <Home /> },
       { path: '/de-thi-online', element: <OnlineExamLibrary /> },
     ]
+  },
+
+  // Exam Instructions - Trang riêng không dùng layout
+  {
+    path: '/exam/instructions/:skillId',
+    element: <ExamInstructions />,
+  },
+  {
+    path: '/exam/instructions/:skillId/:sectionId',
+    element: <ExamInstructions />,
   },
 
   {

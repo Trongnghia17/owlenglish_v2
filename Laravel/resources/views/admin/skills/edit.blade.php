@@ -125,11 +125,12 @@
 
                             <!-- Time Limit -->
                             <div class="mb-3">
-                                <label for="time_limit" class="form-label">Time Limit <span
+                                <label for="time_limit" class="form-label">Time Limit (phút) <span
                                         class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('time_limit') is-invalid @enderror"
                                     id="time_limit" name="time_limit" value="{{ old('time_limit', $skill->time_limit) }}"
-                                    min="1" placeholder="Enter time limit" required>
+                                    min="1" placeholder="Nhập thời gian (phút)" required>
+                                <small class="form-text text-muted">Thời gian làm bài tính theo phút</small>
                                 @error('time_limit')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
