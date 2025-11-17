@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSkillById } from '../api/exams.api';
 import './SelectExamModeModal.css';
+import speakingIcon from '../../../assets/images/Speaking.png';
 
 export default function SelectExamModeModal({ isOpen, onClose, skill }) {
   const navigate = useNavigate();
@@ -96,14 +97,13 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
         </button>
 
         <div className="select-exam-modal__header">
-          <div className="select-exam-modal__icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M28 4H4C2.89543 4 2 4.89543 2 6V26C2 27.1046 2.89543 28 4 28H28C29.1046 28 30 27.1046 30 26V6C30 4.89543 29.1046 4 28 4Z" fill="#045CCE" />
-              <path d="M8 12H24M8 16H24M8 20H16" stroke="white" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+          <div className="select-exam-modal__title-wrapper">
+            <img src={speakingIcon} alt={skill.name} className="select-exam-modal__title-icon" />
+            <div className="select-exam-modal__title-content">
+              <h2 className="select-exam-modal__title">{skill.name}</h2>
+              <p className="select-exam-modal__subtitle">Hãy chọn chế độ bạn muốn làm</p>
+            </div>
           </div>
-          <h2 className="select-exam-modal__title">{skill.name}</h2>
-          <p className="select-exam-modal__subtitle">Hãy chọn chế độ bạn muốn làm</p>
         </div>
 
         <div className="select-exam-modal__content">
@@ -114,7 +114,12 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
               {/* Full Test Mode */}
               <div className="select-exam-modal__section">
                 <div className="select-exam-modal__section-header">
+                  <div>
                   <h3 className="select-exam-modal__section-title">Mô phỏng thi thật</h3>
+                  <p className="select-exam-modal__section-description">
+                  Bạn sẽ làm 1 lần toàn bộ bài thi
+                </p>
+                </div>
                   <button
                     className="select-exam-modal__button"
                     onClick={handleFullTestClick}
@@ -125,10 +130,7 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
                     </svg>
                   </button>
                 </div>
-                <p className="select-exam-modal__section-description">
-                  Bạn sẽ làm 1 lần toàn bộ bài thi
-                  {getTotalQuestions() > 0 && ` (${getTotalQuestions()} câu)`}
-                </p>
+                
               </div>
 
               {/* Practice Mode */}
