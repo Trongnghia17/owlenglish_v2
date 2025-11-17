@@ -67,10 +67,10 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
       const groupQuestions = section.question_groups?.reduce((sum, group) => {
         return sum + (group.questions?.length || 0);
       }, 0) || 0;
-      
+
       // Đếm số câu hỏi trực tiếp (cho speaking/writing)
       const directQuestions = section.questions?.length || 0;
-      
+
       return total + groupQuestions + directQuestions;
     }, 0);
   };
@@ -80,9 +80,9 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
     const groupQuestions = section.question_groups?.reduce((sum, group) => {
       return sum + (group.questions?.length || 0);
     }, 0) || 0;
-    
+
     const directQuestions = section.questions?.length || 0;
-    
+
     return groupQuestions + directQuestions;
   };
 
@@ -91,15 +91,15 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
       <div className="select-exam-modal">
         <button className="select-exam-modal__close" onClick={onClose}>
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
         <div className="select-exam-modal__header">
           <div className="select-exam-modal__icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M28 4H4C2.89543 4 2 4.89543 2 6V26C2 27.1046 2.89543 28 4 28H28C29.1046 28 30 27.1046 30 26V6C30 4.89543 29.1046 4 28 4Z" fill="#045CCE"/>
-              <path d="M8 12H24M8 16H24M8 20H16" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M28 4H4C2.89543 4 2 4.89543 2 6V26C2 27.1046 2.89543 28 4 28H28C29.1046 28 30 27.1046 30 26V6C30 4.89543 29.1046 4 28 4Z" fill="#045CCE" />
+              <path d="M8 12H24M8 16H24M8 20H16" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </div>
           <h2 className="select-exam-modal__title">{skill.name}</h2>
@@ -115,13 +115,13 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
               <div className="select-exam-modal__section">
                 <div className="select-exam-modal__section-header">
                   <h3 className="select-exam-modal__section-title">Mô phỏng thi thật</h3>
-                  <button 
+                  <button
                     className="select-exam-modal__button"
                     onClick={handleFullTestClick}
                   >
                     Thi ngay
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M3.33334 8H12.6667M12.6667 8L8.00001 3.33333M12.6667 8L8.00001 12.6667" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M3.33334 8H12.6667M12.6667 8L8.00001 3.33333M12.6667 8L8.00001 12.6667" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>
                 </div>
@@ -136,25 +136,25 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
                 <div className="select-exam-modal__section select-exam-modal__section--practice">
                   <h3 className="select-exam-modal__section-title">Luyện tập</h3>
                   <p className="select-exam-modal__section-description">Chọn phần bạn muốn làm</p>
-                  
+
                   <div className="select-exam-modal__sections-list">
                     {sections.map((section, index) => (
                       <div key={section.id} className="select-exam-modal__section-item">
                         <div className="select-exam-modal__section-info">
                           <span className="select-exam-modal__section-name">
                             {section.title || `Section ${index + 1}`}
-                            {getSectionQuestionCount(section) > 0 && 
+                            {getSectionQuestionCount(section) > 0 &&
                               ` | ${getSectionQuestionCount(section)} câu làm thử`
                             }
                           </span>
                         </div>
-                        <button 
+                        <button
                           className="select-exam-modal__button"
                           onClick={() => handleSectionClick(section)}
                         >
                           Thi ngay
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M3.33334 8H12.6667M12.6667 8L8.00001 3.33333M12.6667 8L8.00001 12.6667" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3.33334 8H12.6667M12.6667 8L8.00001 3.33333M12.6667 8L8.00001 12.6667" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </button>
                       </div>
