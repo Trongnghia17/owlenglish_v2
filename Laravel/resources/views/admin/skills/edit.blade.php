@@ -61,7 +61,7 @@
         </div>
 
         <!-- Form -->
-        <form action="{{ route('admin.skills.update', $skill) }}" method="POST" id="skillForm">
+        <form action="{{ route('admin.skills.update', $skill) }}" method="POST" id="skillForm" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -89,6 +89,38 @@
                                 @error('description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            <!-- Image -->
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Hình ảnh</label>
+                                <input type="file" class="form-control @error('image') is-invalid @enderror" id="image"
+                                    name="image" accept="image/*">
+                                <small class="form-text text-muted">Chấp nhận: JPG, PNG, GIF. Tối đa: 2MB</small>
+                                @error('image')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                
+                                <!-- Current Image -->
+                                @if($skill->image)
+                                    <div class="mt-2">
+                                        <label class="form-label">Hình ảnh hiện tại:</label>
+                                        <div id="currentImage">
+                                            <img src="{{ asset('storage/' . $skill->image) }}" alt="Current image" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                            <div class="mt-1">
+                                                <small class="text-muted">{{ basename($skill->image) }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                                
+                                <!-- Image Preview -->
+                                <div id="imagePreview" class="mt-2" style="display: none;">
+                                    <label class="form-label">Xem trước hình mới:</label>
+                                    <div>
+                                        <img src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Time Limit -->
@@ -846,7 +878,37 @@
                     initExamSelect();
                     initSkillTypeSelect();
                     initializeAllEditors();
+                    initImagePreview();
                 });
+                
+                // Initialize image preview
+                function initImagePreview() {
+                    const imageInput = document.getElementById('image');
+                    const imagePreview = document.getElementById('imagePreview');
+                    const currentImage = document.getElementById('currentImage');
+                    
+                    if (imageInput) {
+                        imageInput.addEventListener('change', function(e) {
+                            const file = e.target.files[0];
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    imagePreview.querySelector('img').src = e.target.result;
+                                    imagePreview.style.display = 'block';
+                                    if (currentImage) {
+                                        currentImage.style.display = 'none';
+                                    }
+                                };
+                                reader.readAsDataURL(file);
+                            } else {
+                                imagePreview.style.display = 'none';
+                                if (currentImage) {
+                                    currentImage.style.display = 'block';
+                                }
+                            }
+                        });
+                    }
+                }
 
                 // Initialize exam select
                 function initExamSelect() {

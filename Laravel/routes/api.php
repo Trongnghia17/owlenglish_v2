@@ -33,6 +33,9 @@ Route::prefix('public')->group(function () {
     // Lấy test details
     Route::get('/tests/{id}', [ExamTestController::class, 'show']);
     
+    // Lấy danh sách skills public
+    Route::get('/skills', [ExamSkillController::class, 'index']);
+    
     // Lấy skill details
     Route::get('/skills/{id}', [ExamSkillController::class, 'show']);
     

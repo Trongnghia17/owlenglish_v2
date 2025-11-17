@@ -8,6 +8,7 @@ use App\Models\Exam;
 use App\Models\ExamTest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class SkillController extends Controller
 {
@@ -70,6 +71,7 @@ class SkillController extends Controller
             'skill_type' => 'required|in:reading,writing,listening,speaking',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'time_limit' => 'required|integer|min:1',
         ]);
 
@@ -77,6 +79,13 @@ class SkillController extends Controller
         $examTest = ExamTest::where('id', $validated['exam_test_id'])
             ->where('exam_id', $validated['exam_id'])
             ->firstOrFail();
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imagePath = $image->store('skills', 'public');
+            $validated['image'] = $imagePath;
+        }
 
         // Remove exam_id from validated data as it's not in the database table
         unset($validated['exam_id']);
@@ -126,6 +135,7 @@ class SkillController extends Controller
             'skill_type' => 'required|in:reading,writing,listening,speaking',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'time_limit' => 'required|integer|min:1',
             'sections' => 'nullable|array',
             'sections.*.id' => 'nullable|integer',
@@ -168,6 +178,18 @@ class SkillController extends Controller
         $examTest = ExamTest::where('id', $validated['exam_test_id'])
             ->where('exam_id', $validated['exam_id'])
             ->firstOrFail();
+
+        // Handle image upload
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($skill->image && Storage::disk('public')->exists($skill->image)) {
+                Storage::disk('public')->delete($skill->image);
+            }
+            
+            $image = $request->file('image');
+            $imagePath = $image->store('skills', 'public');
+            $validated['image'] = $imagePath;
+        }
 
         // Remove exam_id from validated data as it's not in the database table
         unset($validated['exam_id']);
