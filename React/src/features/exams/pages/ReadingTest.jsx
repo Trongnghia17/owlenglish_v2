@@ -119,6 +119,11 @@ export default function ReadingTest() {
   const [questionGroups, setQuestionGroups] = useState([]); // Lưu theo groups
   const [passages, setPassages] = useState([]); // Nhiều passages theo part
   const [parts, setParts] = useState([]); // Danh sách các parts
+  const [fontSize, setFontSize] = useState('normal'); // Thêm state cho font size
+  const [showFontSizeModal, setShowFontSizeModal] = useState(false); // State cho modal
+  const [showSubmitModal, setShowSubmitModal] = useState(false); // State cho popup nộp bài
+  const [isTestComplete, setIsTestComplete] = useState(false); // Kiểm tra đã làm xong chưa
+  const [showCongratulationModal, setShowCongratulationModal] = useState(false); // State cho popup chúc mừng
 
   // Lấy dữ liệu từ API
   useEffect(() => {
@@ -324,6 +329,24 @@ export default function ReadingTest() {
 
   // Xử lý nộp bài
   const handleSubmit = () => {
+    // Tính tổng số câu hỏi
+    const totalQuestions = questionGroups.reduce((total, group) => {
+      return total + (group.questions?.length || 0);
+    }, 0);
+    
+    // Đếm số câu đã trả lời
+    const answeredCount = Object.keys(answers).filter(key => answers[key] && answers[key].trim() !== '').length;
+    
+    // Kiểm tra đã hoàn thành hết câu hỏi chưa
+    const isComplete = answeredCount === totalQuestions;
+    setIsTestComplete(isComplete);
+    
+    // Hiển thị popup
+    setShowSubmitModal(true);
+  };
+
+  // Xác nhận nộp bài
+  const confirmSubmit = () => {
     // TODO: Gửi kết quả về server
     const result = {
       skillId,
@@ -332,7 +355,20 @@ export default function ReadingTest() {
       timeSpent: (skillData?.time_limit * 60 || 1800) - timeRemaining
     };
     console.log('Submit result:', result);
-    alert('Nộp bài thành công!');
+    setShowSubmitModal(false);
+    
+    // Hiển thị popup chúc mừng
+    setShowCongratulationModal(true);
+  };
+
+  // Hủy nộp bài
+  const cancelSubmit = () => {
+    setShowSubmitModal(false);
+  };
+
+  // Tiếp tục luyện tập
+  const handleContinuePractice = () => {
+    setShowCongratulationModal(false);
     navigate('/lich-su-lam-bai');
   };
 
@@ -655,6 +691,88 @@ export default function ReadingTest() {
           </div>
         </div>
         <div className="reading-test__header-right">
+          {/* Font Size Icon Button */}
+          <div className="reading-test__font-size-wrapper">
+            <button 
+              className={`reading-test__font-size-button ${showFontSizeModal ? 'active' : ''}`}
+              onClick={() => setShowFontSizeModal(!showFontSizeModal)}
+              title="Cỡ chữ"
+            >
+              <span className="reading-test__font-size-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M7.74102 11.0753L3.33268 15.492V14.167C3.33268 13.946 3.24488 13.734 3.0886 13.5777C2.93232 13.4215 2.72036 13.3337 2.49935 13.3337C2.27834 13.3337 2.06637 13.4215 1.91009 13.5777C1.75381 13.734 1.66602 13.946 1.66602 14.167V17.5003C1.66733 17.6092 1.68998 17.7168 1.73268 17.817C1.81724 18.0206 1.97906 18.1824 2.18268 18.267C2.28287 18.3097 2.39045 18.3323 2.49935 18.3337H5.83268C6.0537 18.3337 6.26566 18.2459 6.42194 18.0896C6.57822 17.9333 6.66602 17.7213 6.66602 17.5003C6.66602 17.2793 6.57822 17.0673 6.42194 16.9111C6.26566 16.7548 6.0537 16.667 5.83268 16.667H4.50768L8.92435 12.2587C9.08127 12.1017 9.16943 11.8889 9.16943 11.667C9.16943 11.4451 9.08127 11.2322 8.92435 11.0753C8.76743 10.9184 8.5546 10.8302 8.33268 10.8302C8.11076 10.8302 7.89794 10.9184 7.74102 11.0753ZM4.50768 3.33366H5.83268C6.0537 3.33366 6.26566 3.24586 6.42194 3.08958C6.57822 2.9333 6.66602 2.72134 6.66602 2.50033C6.66602 2.27931 6.57822 2.06735 6.42194 1.91107C6.26566 1.75479 6.0537 1.66699 5.83268 1.66699H2.49935C2.39045 1.66831 2.28287 1.69096 2.18268 1.73366C1.97906 1.81822 1.81724 1.98003 1.73268 2.18366C1.68998 2.28384 1.66733 2.39143 1.66602 2.50033V5.83366C1.66602 6.05467 1.75381 6.26663 1.91009 6.42291C2.06637 6.57919 2.27834 6.66699 2.49935 6.66699C2.72036 6.66699 2.93232 6.57919 3.0886 6.42291C3.24488 6.26663 3.33268 6.05467 3.33268 5.83366V4.50866L7.74102 8.92533C7.81848 9.00343 7.91065 9.06543 8.0122 9.10773C8.11375 9.15004 8.22267 9.17182 8.33268 9.17182C8.44269 9.17182 8.55161 9.15004 8.65316 9.10773C8.75471 9.06543 8.84688 9.00343 8.92435 8.92533C9.00246 8.84786 9.06445 8.75569 9.10676 8.65414C9.14907 8.55259 9.17085 8.44367 9.17085 8.33366C9.17085 8.22365 9.14907 8.11473 9.10676 8.01318C9.06445 7.91163 9.00246 7.81946 8.92435 7.74199L4.50768 3.33366ZM17.4993 13.3337C17.2783 13.3337 17.0664 13.4215 16.9101 13.5777C16.7538 13.734 16.666 13.946 16.666 14.167V15.492L12.2577 11.0753C12.1008 10.9184 11.8879 10.8302 11.666 10.8302C11.4441 10.8302 11.2313 10.9184 11.0743 11.0753C10.9174 11.2322 10.8293 11.4451 10.8293 11.667C10.8293 11.8889 10.9174 12.1017 11.0743 12.2587L15.491 16.667H14.166C13.945 16.667 13.733 16.7548 13.5768 16.9111C13.4205 17.0673 13.3327 17.2793 13.3327 17.5003C13.3327 17.7213 13.4205 17.9333 13.5768 18.0896C13.733 18.2459 13.945 18.3337 14.166 18.3337H17.4993C17.6082 18.3323 17.7158 18.3097 17.816 18.267C18.0196 18.1824 18.1815 18.0206 18.266 17.817C18.3087 17.7168 18.3314 17.6092 18.3327 17.5003V14.167C18.3327 13.946 18.2449 13.734 18.0886 13.5777C17.9323 13.4215 17.7204 13.3337 17.4993 13.3337ZM18.266 2.18366C18.1815 1.98003 18.0196 1.81822 17.816 1.73366C17.7158 1.69096 17.6082 1.66831 17.4993 1.66699H14.166C13.945 1.66699 13.733 1.75479 13.5768 1.91107C13.4205 2.06735 13.3327 2.27931 13.3327 2.50033C13.3327 2.72134 13.4205 2.9333 13.5768 3.08958C13.733 3.24586 13.945 3.33366 14.166 3.33366H15.491L11.0743 7.74199C10.9962 7.81946 10.9342 7.91163 10.8919 8.01318C10.8496 8.11473 10.8279 8.22365 10.8279 8.33366C10.8279 8.44367 10.8496 8.55259 10.8919 8.65414C10.9342 8.75569 10.9962 8.84786 11.0743 8.92533C11.1518 9.00343 11.244 9.06543 11.3455 9.10773C11.4471 9.15004 11.556 9.17182 11.666 9.17182C11.776 9.17182 11.8849 9.15004 11.9865 9.10773C12.088 9.06543 12.1802 9.00343 12.2577 8.92533L16.666 4.50866V5.83366C16.666 6.05467 16.7538 6.26663 16.9101 6.42291C17.0664 6.57919 17.2783 6.66699 17.4993 6.66699C17.7204 6.66699 17.9323 6.57919 18.0886 6.42291C18.2449 6.26663 18.3327 6.05467 18.3327 5.83366V2.50033C18.3314 2.39143 18.3087 2.28384 18.266 2.18366Z" fill="#4F4F4F"/>
+                </svg>
+              </span>
+              <span className="reading-test__font-size-icon-active">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M7.74102 11.0753L3.33268 15.492V14.167C3.33268 13.946 3.24488 13.734 3.0886 13.5777C2.93232 13.4215 2.72036 13.3337 2.49935 13.3337C2.27834 13.3337 2.06637 13.4215 1.91009 13.5777C1.75381 13.734 1.66602 13.946 1.66602 14.167V17.5003C1.66733 17.6092 1.68998 17.7168 1.73268 17.817C1.81724 18.0206 1.97906 18.1824 2.18268 18.267C2.28287 18.3097 2.39045 18.3323 2.49935 18.3337H5.83268C6.0537 18.3337 6.26566 18.2459 6.42194 18.0896C6.57822 17.9333 6.66602 17.7213 6.66602 17.5003C6.66602 17.2793 6.57822 17.0673 6.42194 16.9111C6.26566 16.7548 6.0537 16.667 5.83268 16.667H4.50768L8.92435 12.2587C9.08127 12.1017 9.16943 11.8889 9.16943 11.667C9.16943 11.4451 9.08127 11.2322 8.92435 11.0753C8.76743 10.9184 8.5546 10.8302 8.33268 10.8302C8.11076 10.8302 7.89794 10.9184 7.74102 11.0753ZM4.50768 3.33366H5.83268C6.0537 3.33366 6.26566 3.24586 6.42194 3.08958C6.57822 2.9333 6.66602 2.72134 6.66602 2.50033C6.66602 2.27931 6.57822 2.06735 6.42194 1.91107C6.26566 1.75479 6.0537 1.66699 5.83268 1.66699H2.49935C2.39045 1.66831 2.28287 1.69096 2.18268 1.73366C1.97906 1.81822 1.81724 1.98003 1.73268 2.18366C1.68998 2.28384 1.66733 2.39143 1.66602 2.50033V5.83366C1.66602 6.05467 1.75381 6.26663 1.91009 6.42291C2.06637 6.57919 2.27834 6.66699 2.49935 6.66699C2.72036 6.66699 2.93232 6.57919 3.0886 6.42291C3.24488 6.26663 3.33268 6.05467 3.33268 5.83366V4.50866L7.74102 8.92533C7.81848 9.00343 7.91065 9.06543 8.0122 9.10773C8.11375 9.15004 8.22267 9.17182 8.33268 9.17182C8.44269 9.17182 8.55161 9.15004 8.65316 9.10773C8.75471 9.06543 8.84688 9.00343 8.92435 8.92533C9.00246 8.84786 9.06445 8.75569 9.10676 8.65414C9.14907 8.55259 9.17085 8.44367 9.17085 8.33366C9.17085 8.22365 9.14907 8.11473 9.10676 8.01318C9.06445 7.91163 9.00246 7.81946 8.92435 7.74199L4.50768 3.33366ZM17.4993 13.3337C17.2783 13.3337 17.0664 13.4215 16.9101 13.5777C16.7538 13.734 16.666 13.946 16.666 14.167V15.492L12.2577 11.0753C12.1008 10.9184 11.8879 10.8302 11.666 10.8302C11.4441 10.8302 11.2313 10.9184 11.0743 11.0753C10.9174 11.2322 10.8293 11.4451 10.8293 11.667C10.8293 11.8889 10.9174 12.1017 11.0743 12.2587L15.491 16.667H14.166C13.945 16.667 13.733 16.7548 13.5768 16.9111C13.4205 17.0673 13.3327 17.2793 13.3327 17.5003C13.3327 17.7213 13.4205 17.9333 13.5768 18.0896C13.733 18.2459 13.945 18.3337 14.166 18.3337H17.4993C17.6082 18.3323 17.7158 18.3097 17.816 18.267C18.0196 18.1824 18.1815 18.0206 18.266 17.817C18.3087 17.7168 18.3314 17.6092 18.3327 17.5003V14.167C18.3327 13.946 18.2449 13.734 18.0886 13.5777C17.9323 13.4215 17.7204 13.3337 17.4993 13.3337ZM18.266 2.18366C18.1815 1.98003 18.0196 1.81822 17.816 1.73366C17.7158 1.69096 17.6082 1.66831 17.4993 1.66699H14.166C13.945 1.66699 13.733 1.75479 13.5768 1.91107C13.4205 2.06735 13.3327 2.27931 13.3327 2.50033C13.3327 2.72134 13.4205 2.9333 13.5768 3.08958C13.733 3.24586 13.945 3.33366 14.166 3.33366H15.491L11.0743 7.74199C10.9962 7.81946 10.9342 7.91163 10.8919 8.01318C10.8496 8.11473 10.8279 8.22365 10.8279 8.33366C10.8279 8.44367 10.8496 8.55259 10.8919 8.65414C10.9342 8.75569 10.9962 8.84786 11.0743 8.92533C11.1518 9.00343 11.244 9.06543 11.3455 9.10773C11.4471 9.15004 11.556 9.17182 11.666 9.17182C11.776 9.17182 11.8849 9.15004 11.9865 9.10773C12.088 9.06543 12.1802 9.00343 12.2577 8.92533L16.666 4.50866V5.83366C16.666 6.05467 16.7538 6.26663 16.9101 6.42291C17.0664 6.57919 17.2783 6.66699 17.4993 6.66699C17.7204 6.66699 17.9323 6.57919 18.0886 6.42291C18.2449 6.26663 18.3327 6.05467 18.3327 5.83366V2.50033C18.3314 2.39143 18.3087 2.28384 18.266 2.18366Z" fill="#045CCE"/>
+                </svg>
+              </span>
+            </button>
+
+            {/* Dropdown Menu */}
+            {showFontSizeModal && (
+              <div className="reading-test__font-dropdown">
+                <h3 className="reading-test__font-dropdown-title">Cỡ chữ</h3>
+                <p className="reading-test__font-dropdown-subtitle">Chọn cỡ chữ phù hợp cho việc đọc</p>
+                
+                <div className="reading-test__font-options">
+                  <button
+                    className={`reading-test__font-option ${fontSize === 'normal' ? 'active' : ''}`}
+                    onClick={() => {
+                      setFontSize('normal');
+                      setShowFontSizeModal(false);
+                    }}
+                  >
+                    Bình thường
+                    {fontSize === 'normal' && (
+                      <svg className="reading-test__check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M13.3337 4L6.00033 11.3333L2.66699 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                  
+                  <button
+                    className={`reading-test__font-option ${fontSize === 'large' ? 'active' : ''}`}
+                    onClick={() => {
+                      setFontSize('large');
+                      setShowFontSizeModal(false);
+                    }}
+                  >
+                    Lớn
+                    {fontSize === 'large' && (
+                      <svg className="reading-test__check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M13.3337 4L6.00033 11.3333L2.66699 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                  
+                  <button
+                    className={`reading-test__font-option ${fontSize === 'extra-large' ? 'active' : ''}`}
+                    onClick={() => {
+                      setFontSize('extra-large');
+                      setShowFontSizeModal(false);
+                    }}
+                  >
+                    Rất lớn
+                    {fontSize === 'extra-large' && (
+                      <svg className="reading-test__check-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M13.3337 4L6.00033 11.3333L2.66699 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                
+                <button 
+                  className="reading-test__font-dropdown-close"
+                  onClick={() => setShowFontSizeModal(false)}
+                >
+                  Đóng
+                </button>
+              </div>
+            )}
+          </div>
+          
           <div className="reading-test__timer">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
               <path d="M10 0C8.35215 0 6.74099 0.488742 5.37058 1.40442C4.00017 2.3201 2.93206 3.62159 2.30133 5.1443C1.6706 6.66702 1.50558 8.34258 1.82712 9.95909C2.14866 11.5756 2.94234 13.0605 4.10777 14.2259C5.27321 15.3913 6.75807 16.185 8.37458 16.5065C9.99109 16.8281 11.6666 16.6631 13.1894 16.0323C14.7121 15.4016 16.0136 14.3335 16.9292 12.9631C17.8449 11.5927 18.3337 9.98151 18.3337 8.33333C18.3337 6.12632 17.456 4.00956 15.8929 2.44628C14.3296 0.883001 12.2128 0 10 0ZM10 15C8.68179 15 7.39286 14.609 6.29654 13.8765C5.20021 13.1439 4.34572 12.1027 3.84114 10.8846C3.33655 9.66638 3.20453 8.32594 3.46176 7.03273C3.719 5.73953 4.35393 4.55164 5.28628 3.61929C6.21863 2.68694 7.40652 2.052 8.69973 1.79477C9.99293 1.53753 11.3334 1.66956 12.5516 2.17414C13.7697 2.67872 14.8109 3.5332 15.5435 4.62953C16.276 5.72586 16.667 7.01479 16.667 8.33333C16.667 10.1014 15.9646 11.7971 14.7144 13.0474C13.4641 14.2976 11.7684 15 10 15Z" fill="#045CCE"/>
@@ -680,13 +798,13 @@ export default function ReadingTest() {
               )}
             </div>
             <div 
-              className="reading-test__passage-content"
+              className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
               dangerouslySetInnerHTML={{ __html: currentPassage.content }}
             />
           </div>
 
           {/* Questions Panel */}
-          <div className="reading-test__questions">
+          <div className={`reading-test__questions reading-test__questions--${fontSize}`}>
           {/* Render all question groups for current part */}
           {currentPartGroups.map((group) => (
             <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
@@ -759,6 +877,103 @@ export default function ReadingTest() {
           ))}
         </div>
       </div>
+
+      {/* Submit Modal */}
+      {showSubmitModal && (
+        <div className="reading-test__modal-overlay" onClick={cancelSubmit}>
+          <div className="reading-test__modal-content reading-test__submit-modal" onClick={(e) => e.stopPropagation()}>
+            {/* Icon */}
+            <div className="reading-test__submit-modal-icon">
+              <img 
+                src={isTestComplete ? "/src/assets/images/cudaxong.png" : "/src/assets/images/cuchuaxong.png"} 
+                alt="Owl" 
+                className="reading-test__submit-modal-owl"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="reading-test__submit-modal-body">
+              {isTestComplete ? (
+                <>
+                  <h3 className="reading-test__submit-modal-title">Bạn đã hoàn thành bài thi.</h3>
+                  <p className="reading-test__submit-modal-text">Bạn có cần kiểm tra lại không?</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="reading-test__submit-modal-title">Bạn vẫn chưa hoàn thành</h3>
+                  <p className="reading-test__submit-modal-text">Bạn có chắc muốn nộp bài không?</p>
+                </>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div className="reading-test__submit-modal-actions">
+              {isTestComplete ? (
+                <>
+                  <button 
+                    className="reading-test__submit-modal-button reading-test__submit-modal-button--primary"
+                    onClick={confirmSubmit}
+                  >
+                    Nộp bài
+                  </button>
+                  <button 
+                    className="reading-test__submit-modal-button reading-test__submit-modal-button--secondary"
+                    onClick={cancelSubmit}
+                  >
+                    Kiểm tra lại
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button 
+                    className="reading-test__submit-modal-button reading-test__submit-modal-button--primary"
+                    onClick={cancelSubmit}
+                  >
+                    Tiếp tục làm bài
+                  </button>
+                  <button 
+                    className="reading-test__submit-modal-button reading-test__submit-modal-button--secondary"
+                    onClick={confirmSubmit}
+                  >
+                    Nộp bài
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Congratulation Modal */}
+      {showCongratulationModal && (
+        <div className="reading-test__modal-overlay">
+          <div className="reading-test__modal-content reading-test__submit-modal" onClick={(e) => e.stopPropagation()}>
+            {/* Icon */}
+            <div className="reading-test__submit-modal-icon">
+              <img 
+                src="/src/assets/images/cuchucmung.png" 
+                alt="Owl" 
+                className="reading-test__submit-modal-owl"
+              />
+            </div>
+
+            {/* Content */}
+            <div className="reading-test__submit-modal-body">
+              <h3 className="reading-test__submit-modal-title">Chúc mừng bạn đã hoàn thành</h3>
+            </div>
+
+            {/* Button */}
+            <div className="reading-test__submit-modal-actions">
+              <button 
+                className="reading-test__submit-modal-button reading-test__submit-modal-button--primary"
+                onClick={handleContinuePractice}
+              >
+                Tiếp tục luyện tập
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
