@@ -425,3 +425,134 @@
         grid-template-columns: repeat(1, 1fr);
     }
 }
+
+.hero-section{
+  padding: 56px 16px;
+  background: radial-gradient(closest-side at 50% 40%, rgba(6,78,255,0.06), transparent 45%);
+  overflow: hidden;
+}
+
+.hero-inner{
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  justify-content: center;
+  position: relative;
+}
+
+.hero-content{
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hp-btn-cta{
+    background-color: #045CCE;
+    width: max-content;
+    width: 200px;
+    height: 55px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 999px;
+}
+.hp-btn-cta a{
+    color: #fff;
+    text-decoration: none;
+}
+
+.hero-title{
+  font-size: 50px;
+  line-height: 60px;
+  margin: 20px 0px;
+  color: #1F2937;
+  font-weight: 700;
+}
+
+.hero-highlight{
+  display: inline-block;
+  color: #045CCE;
+  font-size: 50px;
+}
+
+.hero-desc{
+  margin: 0 0 20px;
+  color: #4F4F4F;
+  font-size: 16px;
+  max-width: 640px;
+}
+
+.hero-cta .btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-primary{
+  background: linear-gradient(180deg,#0b69ff,#065bee);
+  color: #fff;
+  box-shadow: 0 8px 26px rgba(11,105,255,0.12);
+}
+
+/* visual side */
+.hero-visual{
+  width: 360px;
+  height: 180px;
+  position: relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.hero-circle{
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(11,105,255,0.10), rgba(6,78,255,0.03) 40%, transparent 60%);
+  position: absolute;
+  filter: blur(10px);
+  transform: translateY(-20px);
+  z-index:1;
+}
+
+.hicon1{
+    position: absolute;
+    top: 10px;
+    left: 20%;
+}
+.hicon2{
+    position: absolute;
+    top: -20px;
+    right: 35%;
+}
+.hicon3{
+    position: absolute;
+    top:15%;
+    right: 15%;
+}
+.hicon4{
+    position: absolute;
+    bottom: 20px;
+    left: 15%;
+}
+
+/* responsive */
+@media (max-width: 1000px){
+  .hero-inner{ flex-direction: column-reverse; gap: 24px; text-align: center; }
+  .hero-visual{ width:100%; height:200px; }
+  .hero-circle{ width: 420px; height: 420px; transform: translateY(-10px); }
+  .hero-title{ font-size: 28px; }
+  .hero-desc{ max-width: 100%; }
+  .hero-content{ padding-top: 8px; }
+}
+
+.tongquan-img img{
+    width: 100%;
+}

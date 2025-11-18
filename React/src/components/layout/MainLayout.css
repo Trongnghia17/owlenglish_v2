@@ -22,11 +22,12 @@
   display: flex;
   width: 100%;
   justify-content: center;
+  width: 100%;
 }
 
-/*.full-width-user .main-content__inner{*/
-/*  width: 70%; */
-/*}*/
+.full-width-user .main-content__inner{
+  width: 70%;
+}
 .with-sidebar-user .main-content__inner {
   width: 85%;
 }

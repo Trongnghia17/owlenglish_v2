@@ -17,7 +17,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes , HasApiTokens;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -66,6 +66,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserIdentity::class);
     }
+
+    public function getLoginMethodsAttribute()
+    {
+        return $this->identities->pluck('provider')->toArray();
+    }
+
 
     public function contacts(): HasMany
     {
@@ -118,66 +124,66 @@ class User extends Authenticatable
         $this->attributes['email'] = $value ? mb_strtolower(trim($value)) : null;
     }
     public function permissions(): BelongsToMany
-{
-    return $this->belongsToMany(Permission::class, 'user_permissions')
-                ->withTimestamps()
-                ->withPivot(['granted', 'expires_at', 'deleted_at']);
-}
-
-public function hasPermission(string $permissionName): bool
-{
-    // Check role permissions
-    if ($this->role && $this->role->hasPermission($permissionName)) {
-        return true;
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions')
+            ->withTimestamps()
+            ->withPivot(['granted', 'expires_at', 'deleted_at']);
     }
-    
-    // Check direct user permissions
-    return $this->permissions()
-                ->where('name', $permissionName)
-                ->wherePivot('granted', true)
-                ->where(function($query) {
-                    $query->whereNull('user_permissions.expires_at')
-                          ->orWhere('user_permissions.expires_at', '>', now());
-                })
-                ->exists();
-}
 
-public static function getRoleOptions(): array
-{
-    return [
-        1 => 'Super Admin (Chủ hệ thống)',
-        2 => 'Org Admin (Quản trị hệ thống)', 
-        3 => 'Academic Manager (Giáo vụ)',
-        4 => 'Assessment & Curriculum Planning (Chấm & giáo trình)',
-        5 => 'Teaching (Giáo viên)',
-        6 => 'Student (Học viên)',
-        7 => 'Parent/Guardian (Phụ huynh)',
-        8 => 'Content Author (Biên soạn nội dung)',
-        9 => 'Finance (Kế toán)',
-        10 => 'Marketing'
-    ];
-}
+    public function hasPermission(string $permissionName): bool
+    {
+        // Check role permissions
+        if ($this->role && $this->role->hasPermission($permissionName)) {
+            return true;
+        }
 
-public function getRoleInfo(): array
-{
-    $roleColors = [
-        1 => 'danger',    // Super Admin
-        2 => 'warning',   // Org Admin
-        3 => 'primary',   // Academic Manager
-        4 => 'info',      // ACP
-        5 => 'success',   // Teaching
-        6 => 'secondary', // Student
-        7 => 'light',     // Parent
-        8 => 'dark',      // Content Author
-        9 => 'warning',   // Finance
-        10 => 'info'      // Marketing
-    ];
+        // Check direct user permissions
+        return $this->permissions()
+            ->where('name', $permissionName)
+            ->wherePivot('granted', true)
+            ->where(function ($query) {
+                $query->whereNull('user_permissions.expires_at')
+                    ->orWhere('user_permissions.expires_at', '>', now());
+            })
+            ->exists();
+    }
 
-    $roleOptions = self::getRoleOptions();
-    
-    return [
-        'name' => $roleOptions[$this->role_id] ?? 'Unknown',
-        'color' => $roleColors[$this->role_id] ?? 'secondary'
-    ];
-}
+    public static function getRoleOptions(): array
+    {
+        return [
+            1 => 'Super Admin (Chủ hệ thống)',
+            2 => 'Org Admin (Quản trị hệ thống)',
+            3 => 'Academic Manager (Giáo vụ)',
+            4 => 'Assessment & Curriculum Planning (Chấm & giáo trình)',
+            5 => 'Teaching (Giáo viên)',
+            6 => 'Student (Học viên)',
+            7 => 'Parent/Guardian (Phụ huynh)',
+            8 => 'Content Author (Biên soạn nội dung)',
+            9 => 'Finance (Kế toán)',
+            10 => 'Marketing'
+        ];
+    }
+
+    public function getRoleInfo(): array
+    {
+        $roleColors = [
+            1 => 'danger',    // Super Admin
+            2 => 'warning',   // Org Admin
+            3 => 'primary',   // Academic Manager
+            4 => 'info',      // ACP
+            5 => 'success',   // Teaching
+            6 => 'secondary', // Student
+            7 => 'light',     // Parent
+            8 => 'dark',      // Content Author
+            9 => 'warning',   // Finance
+            10 => 'info'      // Marketing
+        ];
+
+        $roleOptions = self::getRoleOptions();
+
+        return [
+            'name' => $roleOptions[$this->role_id] ?? 'Unknown',
+            'color' => $roleColors[$this->role_id] ?? 'secondary'
+        ];
+    }
 }

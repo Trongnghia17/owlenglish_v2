@@ -25,14 +25,15 @@
                                         </a>
                                     </div>
 
-                                    
+
 
                                     <div class="col-lg-4 col-md-6">
-                                        <form action="{{ route('admin.students.index') }}" method="GET" class="d-flex mb-3">
-                                            @if(request('role'))
+                                        <form action="{{ route('admin.students.index') }}" method="GET"
+                                            class="d-flex mb-3">
+                                            @if (request('role'))
                                                 <input type="hidden" name="role" value="{{ request('role') }}">
                                             @endif
-                                            <input type="search" name="search" value="{{ request('search') }}"
+                                            <input type="search" name="q" value="{{ request('q') }}"
                                                 class="form-control" placeholder="Tìm kiếm theo tên, email">
                                             <div class="col-auto ms-3">
                                                 <button type="submit" class="btn btn-primary">Tìm kiếm</button>
@@ -50,9 +51,10 @@
                                                 <th>STT</th>
                                                 <th>Tên</th>
                                                 <th>Email</th>
-                                                <th>Vai trò</th>
+                                                <th>Số điện thoại</th>
                                                 <th>Ngày tạo</th>
                                                 <th>Trạng thái</th>
+                                                <th>Đăng nhập bằng</th>
                                                 <th>Chức năng</th>
                                             </tr>
                                         </thead>
@@ -65,61 +67,64 @@
                                                         <div class="d-flex align-items-center">
                                                             <div class="ms-2">
                                                                 <h5 class="mb-0">
-                                                                    <a class="text-inherit">{{ $user->name }}</a>
+                                                                    <a class="text-inherit">
+                                                                        @if ($user->name)
+                                                                            {{ $user->name }}
+                                                                        @else
+                                                                            <span class="badge bg-secondary"
+                                                                                style="font-size: 11px;">Chưa
+                                                                                có</span>
+                                                                        @endif
+                                                                    </a>
                                                                 </h5>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td>{{ $user->email }}</td>
                                                     <td>
-                                                        @php $roleInfo = $user->getRoleInfo(); @endphp
-                                                        <span class="badge bg-{{ $roleInfo['color'] }}">
-                                                            {{ $roleInfo['name'] }}
-                                                        </span>
+                                                        @if ($user->phone)
+                                                            {{ $user->phone }}
+                                                        @else
+                                                            <span class="badge bg-secondary" style="font-size: 11px;">Chưa
+                                                                có</span>
+                                                        @endif
                                                     </td>
+
                                                     <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>
                                                     <td>
-                                                        @if($user->is_active)
-                                                            <span class="badge badge-success-soft text-success">Hoạt động</span>
+                                                        @if ($user->is_active)
+                                                            <span class="badge badge-success-soft text-success">Hoạt
+                                                                động</span>
                                                         @else
-                                                            <span class="badge badge-danger-soft text-danger">Không hoạt động</span>
+                                                            <span class="badge badge-danger-soft text-danger">Không hoạt
+                                                                động</span>
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        <!-- Edit button -->
+                                                        <div class="d-flex gap-2">
+                                                            @foreach ($user->login_methods as $method)
+                                                                <img src="/icons/{{ $method }}.svg"
+                                                                    title="{{ strtoupper($method) }}"
+                                                                    style="width:20px;height:20px;">
+                                                            @endforeach
+
+                                                            {{-- Không có phương thức nào → mặc định là local --}}
+                                                            @if ($user->login_methods == null || count($user->login_methods) === 0)
+                                                                <img src="/icons/local.svg" title="Local account"
+                                                                    style="width:20px;height:20px;">
+                                                            @endif
+                                                        </div>
+                                                    </td>
+                                                    <td>
                                                         <a class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#editUserModal{{ $user->id }}"
-                                                            data-template="editOne">
+                                                            href="{{ route('admin.students.edit', $user->id) }}"
+                                                            data-bs-toggle="tooltip" title="Chỉnh sửa">
                                                             <i data-feather="edit" class="icon-xs"></i>
                                                         </a>
 
-                                                        <!-- Permissions button -->
-                                                        <a class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#permissionsModal{{ $user->id }}"
-                                                            data-template="permissions"
-                                                            title="Phân quyền">
-                                                            <i data-feather="key" class="icon-xs"></i>
-                                                        </a>
-
-                                                        <!-- Toggle status button -->
-                                                        @if($user->id !== auth()->id())
-                                                            <form action="{{ route('admin.students.toggleStatus', $user) }}"
-                                                                method="POST" class="d-inline-block">
-                                                                @csrf
-                                                                @method('PATCH')
-                                                                <button type="submit"
-                                                                    class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
-                                                                    onclick="return confirm('Bạn có chắc muốn thay đổi trạng thái?')">
-                                                                    <i data-feather="{{ $user->is_active ? 'user-x' : 'user-check' }}"
-                                                                        class="icon-xs"></i>
-                                                                </button>
-                                                            </form>
-                                                        @endif
 
                                                         <!-- Delete button -->
-                                                        @if($user->id !== auth()->id())
+                                                        @if ($user->id !== auth()->id())
                                                             <a class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
                                                                 data-template="trashOne" data-bs-toggle="modal"
                                                                 data-bs-target="#deleteUserModal{{ $user->id }}">
@@ -128,12 +133,14 @@
                                                         @endif
 
                                                         <!-- Delete Modal -->
-                                                        @if($user->id !== auth()->id())
+                                                        @if ($user->id !== auth()->id())
                                                             <div class="modal fade" id="deleteUserModal{{ $user->id }}"
-                                                                tabindex="-1" aria-labelledby="deleteUserModalLabel{{ $user->id }}"
+                                                                tabindex="-1"
+                                                                aria-labelledby="deleteUserModalLabel{{ $user->id }}"
                                                                 aria-hidden="true">
                                                                 <div class="modal-dialog modal-dialog-centered">
-                                                                    <form action="{{ route('admin.users.destroy', $user) }}"
+                                                                    <form
+                                                                        action="{{ route('admin.students.destroy', $user) }}"
                                                                         method="POST">
                                                                         @csrf
                                                                         @method('DELETE')
@@ -141,7 +148,8 @@
                                                                             <div class="modal-header bg-danger text-white">
                                                                                 <h5 class="modal-title"
                                                                                     id="deleteUserModalLabel{{ $user->id }}">
-                                                                                    <i class="fe fe-trash-2 me-2"></i>Xác nhận xoá
+                                                                                    <i class="fe fe-trash-2 me-2"></i>Xác
+                                                                                    nhận xoá
                                                                                 </h5>
                                                                                 <button type="button"
                                                                                     class="btn-close btn-close-white"
@@ -157,19 +165,24 @@
                                                                                                 class="icon-md"></i>
                                                                                         </span>
                                                                                     </div>
-                                                                                    <h5 class="mb-3">Bạn có chắc chắn muốn xoá?</h5>
+                                                                                    <h5 class="mb-3">Bạn có chắc chắn muốn
+                                                                                        xoá?</h5>
                                                                                     <p class="mb-0">Người dùng <span
                                                                                             class="fw-bold text-danger">{{ $user->name }}</span>
                                                                                         sẽ bị xóa khỏi hệ thống.</p>
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="modal-footer border-top-0 pt-0 pb-3 px-4">
-                                                                                <button type="button" class="btn btn-light-soft"
+                                                                            <div
+                                                                                class="modal-footer border-top-0 pt-0 pb-3 px-4">
+                                                                                <button type="button"
+                                                                                    class="btn btn-light-soft"
                                                                                     data-bs-dismiss="modal">
-                                                                                    <i data-feather="x" class="icon-xs me-1"></i>
+                                                                                    <i data-feather="x"
+                                                                                        class="icon-xs me-1"></i>
                                                                                     Huỷ bỏ
                                                                                 </button>
-                                                                                <button type="submit" class="btn btn-danger">
+                                                                                <button type="submit"
+                                                                                    class="btn btn-danger">
                                                                                     <i data-feather="trash-2"
                                                                                         class="icon-xs me-1"></i> Xoá
                                                                                 </button>
@@ -196,7 +209,7 @@
                                 </div>
                             </div>
 
-                            
+
                         </div>
                     </div>
                 </div>
@@ -204,4 +217,3 @@
         </div>
     </div>
 @endsection
-

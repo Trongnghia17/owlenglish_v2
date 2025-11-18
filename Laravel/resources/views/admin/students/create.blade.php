@@ -2,26 +2,10 @@
 
 @section('content')
 <div class="container mt-4">
-	<a href="{{ route('admin.students.index') }}" class="btn btn-link mb-3">← Quay lại danh sách</a>
-
-	@if(session('success'))
-		<div class="alert alert-success">{{ session('success') }}</div>
-	@endif
-
+	<a href="{{ route('admin.students.index') }}" class="btn btn-primary me-2 mb-3">← Quay lại danh sách</a>
 	<div class="card">
 		<div class="card-body">
 			<h3 class="card-title">Thêm tài khoản học sinh</h3>
-
-			@if ($errors->any())
-				<div class="alert alert-danger">
-					<ul class="mb-0">
-						@foreach ($errors->all() as $error)
-							<li>{{ $error }}</li>
-						@endforeach
-					</ul>
-				</div>
-			@endif
-
 			<form action="{{ route('admin.students.store') }}" method="POST" enctype="multipart/form-data">
 				@csrf
 
@@ -43,11 +27,6 @@
 				</div>
 
 				<div class="row">
-					<div class="col-md-6 mb-3">
-						<label for="birthday" class="form-label">Ngày sinh</label>
-						<input type="date" id="birthday" name="birthday" class="form-control" value="{{ old('birthday') }}">
-					</div>
-
 					<div class="col-md-6 mb-3">
 						<label for="password" class="form-label">Mật khẩu</label>
 						<input type="password" id="password" name="password" class="form-control" placeholder="Để trống sẽ dùng mật khẩu mặc định">
