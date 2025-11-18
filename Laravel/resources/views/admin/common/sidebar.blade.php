@@ -130,13 +130,13 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.students.*') ? '' : 'collapsed' }}"
-                       href="#!" data-bs-toggle="collapse" data-bs-target="#navUsers"
+                       href="#!" data-bs-toggle="collapse" data-bs-target="#navStudent"
                        aria-expanded="{{ request()->routeIs('admin.students.*') ? 'true' : 'false' }}"
-                       aria-controls="navUsers">
-                        <i data-feather="users" class="nav-icon me-2 icon-xxs"></i>
+                       aria-controls="navStudent">
+                        <i data-feather="user-check" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý học sinh
                     </a>
-                    <div id="navUsers" class="collapse {{ request()->routeIs('admin.students.*') ? 'show' : '' }}"
+                    <div id="navStudent" class="collapse {{ request()->routeIs('admin.students.*') ? 'show' : '' }}"
                          data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">

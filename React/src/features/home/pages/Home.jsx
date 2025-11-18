@@ -19,9 +19,44 @@ import tainghe_icon3 from '@/assets/images/tainghe-icon3.png';
 import tainghe_icon4 from '@/assets/images/tainghe-icon4.png';
 import next_icon from '@/assets/images/next-icon.svg';
 import full_test from '@/assets/images/full-test.png';
+import tong_quan from '@/assets/images/tong-quan.png';
+import hicon1 from '@/assets/images/hicon1.svg';
+import hicon2 from '@/assets/images/hicon2.svg';
+import hicon3 from '@/assets/images/hicon3.svg';
+import hicon4 from '@/assets/images/hicon4.svg';
 export default function Home() {
   return (
     <div className="home-page">
+      <section className="hero-section">
+        <div className="hero-inner">
+          <div className="hero-content">
+            <h1 className="hero-title">
+              Nền tảng công nghệ
+              <br />
+              <span className="hero-highlight">OWL LeadX-LMS</span>
+            </h1>
+
+            <p className="hero-desc">
+              OWL LeadXLMS nằm trong hệ sinh thái học thuật OWL 3C giúp bạn trải nghiệm học tập toàn diện,
+              nhanh gọn và đơn giản.
+            </p>
+
+            <div className="hp-btn-cta">
+              <Link to="/learn" className="">Bắt đầu luyện tập</Link>
+            </div>
+          </div>
+
+          <img src={hicon1} alt="" className="hicon1" />
+          <img src={hicon2} alt="" className="hicon2" />
+          <img src={hicon3} alt="" className="hicon3" />
+          <img src={hicon4} alt="" className="hicon4" />
+        </div>
+      </section>
+      <section>
+        <div className='tongquan-img'>
+          <img src={tong_quan} alt="" />
+        </div>
+      </section>
       <section className="hp-hero">
         <div className="hp-hero__inner">
           <div className="hp-hero__text">
@@ -168,35 +203,35 @@ export default function Home() {
             </div>
           </div>
           <div className='hp-exam-list-bottom'>
-              <div className="hp-exam-card hp-exam-card1 small">
-                <img className='tainghe' src={tainghe_icon} alt="" />
-                <h4>Luyện đề Listening</h4>
-                <p>
-                  Rèn luyện khả năng nghe hiểu với các bài nghe thực tế, đa dạng giọng đọc và tình huống. Làm quen với các accent tiếng Anh phổ biến.
-                </p>
-                <Link to="/exams/ielts" className="hp-exam-cta">
-                  Luyện đề ngay <img src={next_icon} alt="" />
-                </Link>
-              </div>
-
-              <div className="hp-exam-card hp-exam-card2 small">
-                <img className='tainghe' src={tainghe_icon3} alt="" />
-                <h4>Luyện đề Speaking</h4>
-                <p>Luyện nói 24/7 với trợ lý AI thông minh - nhận phản hồi chi tiết về phát âm, ngữ điệu và từ vựng. Được chấm điểm và góp ý ngay lập tức sau mỗi bài tập.</p>
-                <Link to="/exams/ielts" className="hp-exam-cta">
-                  Luyện đề ngay <img src={next_icon} alt="" />
-                </Link>
-              </div>
-
-              <div className="hp-exam-card hp-exam-card3 small">
-                <img className='tainghe' src={tainghe_icon4} alt="" />
-                <h4>Luyện đề Writing</h4>
-                <p>Nâng cao điểm Writing với công nghệ AI phân tích bài viết chuyên sâu - nhận xét về cấu trúc, từ vựng, ngữ pháp và gợi ý cải thiện. Chấm điểm và sửa lỗi tức thì.</p>
-                <Link to="/exams/ielts" className="hp-exam-cta">
-                  Luyện đề ngay <img src={next_icon} alt="" />
-                </Link>
-              </div>
+            <div className="hp-exam-card hp-exam-card1 small">
+              <img className='tainghe' src={tainghe_icon} alt="" />
+              <h4>Luyện đề Listening</h4>
+              <p>
+                Rèn luyện khả năng nghe hiểu với các bài nghe thực tế, đa dạng giọng đọc và tình huống. Làm quen với các accent tiếng Anh phổ biến.
+              </p>
+              <Link to="/exams/ielts" className="hp-exam-cta">
+                Luyện đề ngay <img src={next_icon} alt="" />
+              </Link>
             </div>
+
+            <div className="hp-exam-card hp-exam-card2 small">
+              <img className='tainghe' src={tainghe_icon3} alt="" />
+              <h4>Luyện đề Speaking</h4>
+              <p>Luyện nói 24/7 với trợ lý AI thông minh - nhận phản hồi chi tiết về phát âm, ngữ điệu và từ vựng. Được chấm điểm và góp ý ngay lập tức sau mỗi bài tập.</p>
+              <Link to="/exams/ielts" className="hp-exam-cta">
+                Luyện đề ngay <img src={next_icon} alt="" />
+              </Link>
+            </div>
+
+            <div className="hp-exam-card hp-exam-card3 small">
+              <img className='tainghe' src={tainghe_icon4} alt="" />
+              <h4>Luyện đề Writing</h4>
+              <p>Nâng cao điểm Writing với công nghệ AI phân tích bài viết chuyên sâu - nhận xét về cấu trúc, từ vựng, ngữ pháp và gợi ý cải thiện. Chấm điểm và sửa lỗi tức thì.</p>
+              <Link to="/exams/ielts" className="hp-exam-cta">
+                Luyện đề ngay <img src={next_icon} alt="" />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>
