@@ -11,7 +11,7 @@ use App\Http\Controllers\Admin\ExamSkillController;
 use App\Http\Controllers\Admin\ExamSectionController;
 use App\Http\Controllers\Admin\ExamQuestionController;
 use App\Http\Controllers\Admin\ImageUploadController;
-
+use App\Http\Controllers\Admin\StudentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +51,11 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
         Route::resource('users', UserController::class);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggleStatus');
         Route::put('users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
+
+        Route::resource('students', StudentController::class);
+        Route::patch('students/{student}/toggle-status', [StudentController::class, 'toggleStatus'])->name('students.toggleStatus');
+        Route::post('students/{student}/restore', [StudentController::class, 'restore'])->name('students.restore');
+        Route::delete('students/{student}/force-delete', [StudentController::class, 'forceDelete'])->name('students.forceDelete');
     });
 
     // Exam Management Routes

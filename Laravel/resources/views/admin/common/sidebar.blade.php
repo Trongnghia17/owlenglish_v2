@@ -100,6 +100,32 @@
                         </ul>
                     </div>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow {{ request()->routeIs('admin.students.*') ? '' : 'collapsed' }}"
+                       href="#!" data-bs-toggle="collapse" data-bs-target="#navUsers"
+                       aria-expanded="{{ request()->routeIs('admin.students.*') ? 'true' : 'false' }}"
+                       aria-controls="navUsers">
+                        <i data-feather="users" class="nav-icon me-2 icon-xxs"></i>
+                        Quản lý học sinh
+                    </a>
+                    <div id="navUsers" class="collapse {{ request()->routeIs('admin.students.*') ? 'show' : '' }}"
+                         data-bs-parent="#sideNavbar">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.students.index') && !request('role') ? 'active' : '' }}"
+                                   href="{{ route('admin.students.index') }}">
+                                    Tất cả học sinh
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.students.create') && !request('role') ? 'active' : '' }}"
+                                   href="{{ route('admin.students.create') }}">
+                                    Thêm học sinh
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
             @endif
             <style>
                 .navbar-vertical .navbar-nav .nav .nav-item .nav-link.active {
