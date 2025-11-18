@@ -16,6 +16,7 @@ class ExamSkill extends Model
         'skill_type',
         'name',
         'description',
+        'image',
         'time_limit',
         'is_active',
     ];
@@ -38,7 +39,7 @@ class ExamSkill extends Model
      */
     public function sections(): HasMany
     {
-        return $this->hasMany(ExamSection::class);
+        return $this->hasMany(ExamSection::class)->orderBy('id');
     }
 
     /**
