@@ -10,7 +10,6 @@ export default function ReadingTest() {
   const examData = location.state?.examData;
 
   // State để quản lý câu hỏi hiện tại và câu trả lời
-  const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 phút = 1800 giây
   const [currentPartTab, setCurrentPartTab] = useState(1); // Tab hiện tại
@@ -204,61 +203,22 @@ export default function ReadingTest() {
     });
   };
 
-  // Chuyển question group
-  const handleNextGroup = () => {
-    const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-    const currentIndexInPart = currentPartGroups.findIndex(g => g.id === questionGroups[currentGroupIndex].id);
-    
-    if (currentIndexInPart < currentPartGroups.length - 1) {
-      // Còn group khác trong part này
-      const nextGroup = currentPartGroups[currentIndexInPart + 1];
-      const globalIndex = questionGroups.findIndex(g => g.id === nextGroup.id);
-      setCurrentGroupIndex(globalIndex);
-    } else if (currentPartTab < parts.length) {
-      // Chuyển sang part tiếp theo
-      const nextPart = currentPartTab + 1;
-      setCurrentPartTab(nextPart);
-      const firstGroupOfNextPart = questionGroups.find(g => g.part === nextPart);
-      if (firstGroupOfNextPart) {
-        const globalIndex = questionGroups.findIndex(g => g.id === firstGroupOfNextPart.id);
-        setCurrentGroupIndex(globalIndex);
-      }
-    }
-  };
-
-  const handlePreviousGroup = () => {
-    const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-    const currentIndexInPart = currentPartGroups.findIndex(g => g.id === questionGroups[currentGroupIndex].id);
-    
-    if (currentIndexInPart > 0) {
-      // Còn group khác trong part này
-      const prevGroup = currentPartGroups[currentIndexInPart - 1];
-      const globalIndex = questionGroups.findIndex(g => g.id === prevGroup.id);
-      setCurrentGroupIndex(globalIndex);
-    } else if (currentPartTab > 1) {
-      // Quay về part trước
-      const prevPart = currentPartTab - 1;
-      setCurrentPartTab(prevPart);
-      const groupsOfPrevPart = questionGroups.filter(g => g.part === prevPart);
-      const lastGroupOfPrevPart = groupsOfPrevPart[groupsOfPrevPart.length - 1];
-      if (lastGroupOfPrevPart) {
-        const globalIndex = questionGroups.findIndex(g => g.id === lastGroupOfPrevPart.id);
-        setCurrentGroupIndex(globalIndex);
-      }
-    }
-  };
-
   const handleQuestionClick = (questionNumber) => {
-    // Tìm group chứa câu hỏi này
+    // Scroll to the question group containing this question
     const group = questionGroups.find(g => 
       g.questions.some(q => q.number === questionNumber)
     );
     if (group) {
-      const globalIndex = questionGroups.findIndex(g => g.id === group.id);
-      setCurrentGroupIndex(globalIndex);
       if (group.part !== currentPartTab) {
         setCurrentPartTab(group.part);
       }
+      // Scroll to the question group element
+      setTimeout(() => {
+        const groupElement = document.getElementById(`question-group-${group.id}`);
+        if (groupElement) {
+          groupElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
     }
   };
 
@@ -342,21 +302,15 @@ export default function ReadingTest() {
     );
   }
 
-  const currentGroup = questionGroups[currentGroupIndex];
   const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
   
   // Get all questions in current part for question numbers display
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
   const allQuestionsInPart = currentPartGroups.flatMap(g => g.questions);
   
-  // Chuyển group khi đổi part
+  // Chuyển part
   const handlePartChange = (partNumber) => {
     setCurrentPartTab(partNumber);
-    const firstGroup = questionGroups.find(g => g.part === partNumber);
-    if (firstGroup) {
-      const globalIndex = questionGroups.findIndex(g => g.id === firstGroup.id);
-      setCurrentGroupIndex(globalIndex);
-    }
   };
 
   // Parse group content có chứa {{ a }} thành input fields
@@ -595,34 +549,6 @@ export default function ReadingTest() {
     ));
   };
   
-  // Kiểm tra nếu không có currentGroup
-  if (!currentGroup) {
-    return (
-      <div className="reading-test">
-        <div className="reading-test__header">
-          <button className="reading-test__close" onClick={() => navigate(-1)}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <div className="reading-test__header-info">
-            <img src="/src/assets/images/logo.png" alt="OWL IELTS" className="reading-test__logo" />
-            <div className="reading-test__header-text">
-              <div className="reading-test__header-label">Đang tải...</div>
-            </div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 73px)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '18px', color: '#6B7280' }}>
-              Đang tải câu hỏi...
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
   return (
     <div className="reading-test">
       {/* Header */}
@@ -671,49 +597,36 @@ export default function ReadingTest() {
           />
         </div>
 
-          {/* Questions Panel */}
+        {/* Questions Panel */}
         <div className="reading-test__questions">
-          {/* Group Header - Chỉ hiển thị số câu hỏi */}
-          <div className="reading-test__group-header">
-            <h3>Question {currentGroup.startNumber} - {currentGroup.endNumber}: {currentGroup.instructions ? currentGroup.instructions.split('\n')[0] : `Choose ${currentGroup.type.replace(/_/g, '/')}`}</h3>
-          </div>
+          {/* Render all question groups for current part */}
+          {currentPartGroups.map((group) => (
+            <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
+              {/* Group Header */}
+              <div className="reading-test__group-header">
+                <h3>Questions {group.startNumber} - {group.endNumber}</h3>
+                {group.instructions && (
+                  <div 
+                    className="reading-test__group-instructions"
+                    dangerouslySetInnerHTML={{ __html: group.instructions }}
+                  />
+                )}
+              </div>
 
-          {/* Group Content - Hiển thị nội dung đầy đủ của question group */}
-          {currentGroup.groupContent && (
-            <div
-              className="reading-test__group-content"
-              dangerouslySetInnerHTML={{ __html: currentGroup.groupContent }}
-            />
-          )}
+              {/* Group Content - Hiển thị nội dung đầy đủ của question group */}
+              {group.groupContent && !(/\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent)) && (
+                <div
+                  className="reading-test__group-content"
+                  dangerouslySetInnerHTML={{ __html: group.groupContent }}
+                />
+              )}
 
-          {/* All Questions in Group */}
-          <div className="reading-test__questions-list">
-            {renderQuestionsByType(currentGroup, answers, handleAnswerSelect)}
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="reading-test__navigation">
-            <button
-              className="reading-test__nav-button"
-              onClick={handlePreviousGroup}
-              disabled={currentGroupIndex === 0}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Previous
-            </button>
-            <button
-              className="reading-test__nav-button reading-test__nav-button--next"
-              onClick={handleNextGroup}
-              disabled={currentGroupIndex === questionGroups.length - 1}
-            >
-              Next
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
+              {/* All Questions in Group */}
+              <div className="reading-test__questions-list">
+                {renderQuestionsByType(group, answers, handleAnswerSelect)}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       
@@ -740,8 +653,8 @@ export default function ReadingTest() {
             <button
               key={q.id}
               className={`reading-test__question-number-item ${
-                currentGroup.questions.some(cq => cq.id === q.id) ? 'active' : ''
-              } ${answers[q.id] ? 'answered' : ''}`}
+                answers[q.id] ? 'answered' : ''
+              }`}
               onClick={() => handleQuestionClick(q.number)}
             >
               {q.number}

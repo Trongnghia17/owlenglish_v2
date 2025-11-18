@@ -298,19 +298,13 @@
   color: #045CCE;
 }
 
-.reading-test__question-number-item.active {
-  background: #045CCE;
-  color: white;
-  border-color: #045CCE;
-}
-
 .reading-test__question-number-item.answered {
   background: #10B981;
   color: white;
   border-color: #10B981;
 }
 
-.reading-test__question-number-item.answered.active {
+.reading-test__question-number-item.answered:hover {
   background: #059669;
   border-color: #059669;
 }
@@ -322,6 +316,18 @@
   flex-direction: column;
   padding: 24px;
   overflow-y: auto;
+}
+
+/* Question Group Container - cho mỗi nhóm câu hỏi */
+.reading-test__question-group {
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.reading-test__question-group:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 /* Group Header - màu xanh nhạt như trong ảnh */
@@ -337,6 +343,7 @@
   font-weight: 600;
   color: #045CCE;
   margin: 0;
+  margin-bottom: 8px;
 }
 
 .reading-test__questions-header {
@@ -360,13 +367,9 @@
 
 /* Group Instructions */
 .reading-test__group-instructions {
-  padding: 16px;
-  background: #F9FAFB;
-  border-left: 4px solid #D1D5DB;
-  border-radius: 4px;
-  margin-bottom: 24px;
+  padding: 12px 0;
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.6;
   color: #374151;
 }
 
@@ -376,17 +379,17 @@
 }
 
 .reading-test__group-instructions p {
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .reading-test__group-instructions ol,
 .reading-test__group-instructions ul {
-  margin: 12px 0;
-  padding-left: 24px;
+  margin: 8px 0;
+  padding-left: 20px;
 }
 
 .reading-test__group-instructions li {
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 /* Group Content - Nội dung chi tiết của question group */
@@ -742,51 +745,6 @@
 .reading-test__select option:checked {
   background: #EFF6FF;
   color: #045CCE;
-}
-
-/* Navigation Buttons */
-.reading-test__navigation {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.reading-test__nav-button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: white;
-  border: 1px solid #D1D5DB;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #374151;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.reading-test__nav-button:hover:not(:disabled) {
-  background: #F9FAFB;
-  border-color: #045CCE;
-  color: #045CCE;
-}
-
-.reading-test__nav-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.reading-test__nav-button--next {
-  background: #045CCE;
-  color: white;
-  border-color: #045CCE;
-}
-
-.reading-test__nav-button--next:hover:not(:disabled) {
-  background: #0347A8;
 }
 
 /* Scrollbar Styling */
