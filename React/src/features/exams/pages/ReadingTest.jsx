@@ -3,6 +3,106 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/exams.api';
 import './ReadingTest.css';
 
+const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
+
+const GroupContentWithInlineInputs = ({ content, questions = [], answers = {}, onAnswerChange }) => {
+  const containerRef = useRef(null);
+  const placeholdersMetaRef = useRef([]);
+  const latestHandlerRef = useRef(onAnswerChange);
+
+  useEffect(() => {
+    latestHandlerRef.current = onAnswerChange;
+  }, [onAnswerChange]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!content) {
+      container.innerHTML = '';
+      placeholdersMetaRef.current = [];
+      return;
+    }
+
+    const placeholderRegex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
+    const placeholderMeta = [];
+    let questionIndex = 0;
+
+    const processedContent = content.replace(placeholderRegex, (match) => {
+      const question = questions[questionIndex];
+      questionIndex += 1;
+
+      if (!question) {
+        return match;
+      }
+
+      const placeholderId = `inline-placeholder-${question.id}`;
+      placeholderMeta.push({ placeholderId, question });
+      return `<span class="reading-test__inline-placeholder" data-placeholder-id="${placeholderId}"></span>`;
+    });
+
+    container.innerHTML = processedContent;
+
+    placeholderMeta.forEach((meta) => {
+      const placeholderElement = container.querySelector(`[data-placeholder-id="${meta.placeholderId}"]`);
+      if (!placeholderElement) return;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'reading-test__inline-input';
+      input.placeholder = meta.question.number?.toString() || '';
+      input.maxLength = 50;
+      input.dataset.questionId = meta.question.id;
+
+      const handleInput = (event) => {
+        latestHandlerRef.current?.(meta.question.id, event.target.value);
+      };
+
+      const stopPropagation = (event) => event.stopPropagation();
+
+      input.addEventListener('input', handleInput);
+      input.addEventListener('focus', stopPropagation);
+      input.addEventListener('click', stopPropagation);
+
+      const wrapper = document.createElement('span');
+      wrapper.className = 'reading-test__inline-input-wrapper';
+      wrapper.appendChild(input);
+
+      placeholderElement.replaceWith(wrapper);
+
+      meta.input = input;
+      meta.cleanup = () => {
+        input.removeEventListener('input', handleInput);
+        input.removeEventListener('focus', stopPropagation);
+        input.removeEventListener('click', stopPropagation);
+      };
+    });
+
+    placeholdersMetaRef.current = placeholderMeta;
+
+    return () => {
+      placeholderMeta.forEach((meta) => meta.cleanup?.());
+    };
+  }, [content, questions]);
+
+  useEffect(() => {
+    placeholdersMetaRef.current.forEach(({ question, input }) => {
+      if (!input) return;
+      const nextValue = answers?.[question.id] || '';
+      if (input.value !== nextValue) {
+        input.value = nextValue;
+      }
+    });
+  }, [answers]);
+
+  return (
+    <div
+      className="reading-test__group-content-parsed"
+      ref={containerRef}
+    />
+  );
+};
+
 export default function ReadingTest() {
   const navigate = useNavigate();
   const { skillId, sectionId } = useParams();
@@ -313,141 +413,29 @@ export default function ReadingTest() {
     setCurrentPartTab(partNumber);
   };
 
-  // Parse group content có chứa {{ a }} thành input fields
-  const parseGroupContentWithInputs = (content, questions, answers, handleAnswerSelect) => {
-    if (!content) return null;
-
-    // Kiểm tra xem content có chứa {{ }} không
-    const hasPlaceholders = /\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(content);
-    if (!hasPlaceholders) {
-      return <div dangerouslySetInnerHTML={{ __html: content }} />;
-    }
-
-    // Tạo các input elements với unique IDs
-    let questionIndex = 0;
-    const inputsMap = new Map();
-    
-    const processedContent = content.replace(/\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g, (match) => {
-      const question = questions[questionIndex];
-      if (question) {
-        const inputId = `input-placeholder-${question.id}`;
-        inputsMap.set(inputId, question);
-        questionIndex++;
-        return `<span class="reading-test__input-placeholder" data-input-id="${inputId}" data-question-id="${question.id}"></span>`;
-      }
-      return match;
-    });
-
-    // Render content với placeholders
-    return (
-      <div 
-        className="reading-test__group-content-parsed"
-        dangerouslySetInnerHTML={{ __html: processedContent }}
-        ref={(element) => {
-          if (!element) return;
-          
-          // Replace placeholders với actual input elements
-          const placeholders = element.querySelectorAll('.reading-test__input-placeholder');
-          placeholders.forEach((placeholder) => {
-            const inputId = placeholder.getAttribute('data-input-id');
-            const question = inputsMap.get(inputId);
-            
-            if (!question) return;
-            
-            // Kiểm tra xem input đã tồn tại chưa
-            let input = placeholder.querySelector('input');
-            
-            if (!input) {
-              // Tạo input mới
-              input = document.createElement('input');
-              input.type = 'text';
-              input.className = 'reading-test__inline-input';
-              input.placeholder = question.number.toString();
-              input.maxLength = 50;
-              input.dataset.questionId = question.id;
-              
-              // Sử dụng oninput để tránh duplicate listeners
-              input.oninput = (e) => {
-                handleAnswerSelect(question.id, e.target.value);
-              };
-              
-              // Ngăn re-render khi focus vào input
-              input.onfocus = (e) => {
-                e.stopPropagation();
-              };
-              
-              input.onclick = (e) => {
-                e.stopPropagation();
-              };
-              
-              placeholder.appendChild(input);
-            }
-            
-            // Luôn update giá trị từ state (nhưng không thay đổi focus)
-            const currentValue = answers[question.id] || '';
-            if (input.value !== currentValue && document.activeElement !== input) {
-              input.value = currentValue;
-            }
-          });
-        }}
-      />
-    );
-  };
-
   // Render câu hỏi dựa trên loại question type
   const renderQuestionsByType = (group, answers, handleAnswerSelect) => {
-    let questionType = group.type;
+    const questionType = (group.type || '').toLowerCase();
+    console.log('Question Type:', questionType);
 
-    // Auto-detect question type từ instructions nếu backend trả sai
-    if (questionType === 'TRUE_FALSE_NOT_GIVEN') {
-      const instructions = (group.instructions || '').toLowerCase();
-      const options = group.options || [];
+    // 1. DẠNG SHORT_TEXT - Điền vào chỗ trống inline (có {{ placeholders }})
+    const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
+    if (hasPlaceholders || questionType === 'short_text') {
+      // Nếu có placeholders, render groupContent với inline inputs
+      if (hasPlaceholders) {
+        return (
+          <div className="reading-test__question-group-with-inputs">
+            <GroupContentWithInlineInputs
+              content={group.groupContent}
+              questions={group.questions}
+              answers={answers}
+              onAnswerChange={handleAnswerSelect}
+            />
+          </div>
+        );
+      }
       
-      console.log('Auto-detecting question type:', {
-        instructions,
-        options,
-        groupType: group.type
-      });
-      
-      // Detect MATCHING - chọn đoạn văn A, B, C...
-      if (instructions.includes('which paragraph') || 
-          instructions.includes('correct letter') ||
-          (options.length > 0 && /^[A-Z]$/.test(options[0]))) {
-        questionType = 'MATCHING_HEADINGS';
-        console.log('✅ Detected as MATCHING_HEADINGS');
-      }
-      // Detect MULTIPLE_CHOICE - có nhiều options không phải True/False
-      else if (options.length > 3 && 
-               !options.includes('True') && 
-               !options.includes('False')) {
-        questionType = 'MULTIPLE_CHOICE';
-        console.log('✅ Detected as MULTIPLE_CHOICE');
-      }
-      // Detect FILL_IN_THE_BLANK
-      else if (instructions.includes('complete') || 
-               instructions.includes('no more than') ||
-               instructions.includes('write your answer')) {
-        questionType = 'FILL_IN_THE_BLANK';
-        console.log('✅ Detected as FILL_IN_THE_BLANK');
-      }
-    }
-
-   
-
-    // 1. Dạng điền vào chỗ trống - Nếu groupContent có {{ a }} thì chỉ render groupContent với inputs
-    const hasPlaceholders = group.groupContent && /\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent);
-    
-    if (hasPlaceholders) {
-      // Render groupContent với inline inputs thay cho placeholders
-      return (
-        <div className="reading-test__question-group-with-inputs">
-          {parseGroupContentWithInputs(group.groupContent, group.questions, answers, handleAnswerSelect)}
-        </div>
-      );
-    }
-
-    // 2. Dạng text input riêng lẻ (không có placeholders trong content)
-    if (questionType === 'FILL_IN_THE_BLANK' || questionType === 'SHORT_ANSWER' || questionType === 'COMPLETE_NOTES') {
+      // Nếu không có placeholders, render input riêng lẻ
       return group.questions.map((question) => (
         <div key={question.id} className="reading-test__question-item reading-test__question-item--input">
           <div className="reading-test__question-row">
@@ -473,8 +461,8 @@ export default function ReadingTest() {
       ));
     }
 
-    // 3. Dạng Multiple Choice (chọn từ dropdown hoặc list)
-    if (questionType === 'MULTIPLE_CHOICE' || questionType === 'CHOOSE_FROM_LIST') {
+    // 2. DẠNG MULTIPLE_CHOICE - Trắc nghiệm (chọn A, B, C, D...)
+    if (questionType === 'multiple_choice') {
       return group.questions.map((question) => (
         <div key={question.id} className="reading-test__question-item">
           <div className="reading-test__question-row">
@@ -509,8 +497,80 @@ export default function ReadingTest() {
       ));
     }
 
-    // 4. Dạng MATCHING - Chọn đoạn văn A, B, C... (giống Multiple Choice nhưng style khác)
-    if (questionType === 'MATCHING_HEADINGS' || questionType === 'MATCHING_INFORMATION' || questionType === 'MATCHING') {
+    // 3. DẠNG YES_NO_NOT_GIVEN - Yes/No/Not Given
+    if (questionType === 'yes_no_not_given') {
+      return group.questions.map((question) => (
+        <div key={question.id} className="reading-test__question-item">
+          <div className="reading-test__question-row">
+            <div className="reading-test__question-number">
+              {question.number}
+            </div>
+            <div
+              className="reading-test__question-text"
+              dangerouslySetInnerHTML={{ __html: question.content }}
+            />
+          </div>
+          <div className="reading-test__options">
+            {(group.options || ['Yes', 'No', 'Not Given']).map((option) => (
+              <label
+                key={option}
+                className={`reading-test__option ${
+                  answers[question.id] === option ? 'selected' : ''
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
+                  value={option}
+                  checked={answers[question.id] === option}
+                  onChange={() => handleAnswerSelect(question.id, option)}
+                />
+                <span className="reading-test__option-text">{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ));
+    }
+
+    // 4. DẠNG TRUE_FALSE_NOT_GIVEN - True/False/Not Given
+    if (questionType === 'true_false_not_given') {
+      return group.questions.map((question) => (
+        <div key={question.id} className="reading-test__question-item">
+          <div className="reading-test__question-row">
+            <div className="reading-test__question-number">
+              {question.number}
+            </div>
+            <div
+              className="reading-test__question-text"
+              dangerouslySetInnerHTML={{ __html: question.content }}
+            />
+          </div>
+          <div className="reading-test__options">
+            {(group.options || ['True', 'False', 'Not Given']).map((option) => (
+              <label
+                key={option}
+                className={`reading-test__option ${
+                  answers[question.id] === option ? 'selected' : ''
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
+                  value={option}
+                  checked={answers[question.id] === option}
+                  onChange={() => handleAnswerSelect(question.id, option)}
+                />
+                <span className="reading-test__option-text">{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ));
+    }
+
+    // 5. DẠNG TABLE_SELECTION - Chọn từ bảng/dropdown
+    if (questionType === 'table_selection') {
       return group.questions.map((question) => (
         <div key={question.id} className="reading-test__question-item reading-test__question-item--matching">
           <div className="reading-test__question-row">
@@ -540,7 +600,8 @@ export default function ReadingTest() {
       ));
     }
 
-    // 5. Dạng TRUE/FALSE/NOT GIVEN (mặc định)
+    // Mặc định fallback - nếu không match type nào
+    console.warn('Unknown question type:', questionType);
     return group.questions.map((question) => (
       <div key={question.id} className="reading-test__question-item">
         <div className="reading-test__question-row">
@@ -553,7 +614,7 @@ export default function ReadingTest() {
           />
         </div>
         <div className="reading-test__options">
-          {group.options.map((option) => (
+          {(group.options || []).map((option) => (
             <label
               key={option}
               className={`reading-test__option ${
@@ -609,22 +670,23 @@ export default function ReadingTest() {
 
       {/* Main Content */}
       <div className="reading-test__content">
-        {/* Passage Panel */}
-        <div className="reading-test__passage">
-          <div className="reading-test__passage-header">
-            <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
-            {currentPassage.subtitle && (
-              <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
-            )}
+        <div className="reading-test__content-wrapper">
+          {/* Passage Panel */}
+          <div className="reading-test__passage">
+            <div className="reading-test__passage-header">
+              <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
+              {currentPassage.subtitle && (
+                <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
+              )}
+            </div>
+            <div 
+              className="reading-test__passage-content"
+              dangerouslySetInnerHTML={{ __html: currentPassage.content }}
+            />
           </div>
-          <div 
-            className="reading-test__passage-content"
-            dangerouslySetInnerHTML={{ __html: currentPassage.content }}
-          />
-        </div>
 
-        {/* Questions Panel */}
-        <div className="reading-test__questions">
+          {/* Questions Panel */}
+          <div className="reading-test__questions">
           {/* Render all question groups for current part */}
           {currentPartGroups.map((group) => (
             <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
@@ -654,6 +716,7 @@ export default function ReadingTest() {
             </div>
           ))}
         </div>
+        </div>
       </div>
       
       {/* Part Tabs và Question Numbers - Fixed ở dưới cùng */}
@@ -661,15 +724,23 @@ export default function ReadingTest() {
         {/* Part Tabs */}
         {parts.length > 1 && (
           <div className="reading-test__part-tabs">
-            {parts.map((part) => (
-              <button
-                key={part.part}
-                className={`reading-test__part-tab ${currentPartTab === part.part ? 'active' : ''}`}
-                onClick={() => handlePartChange(part.part)}
-              >
-                {part.title}
-              </button>
-            ))}
+            {parts.map((part) => {
+              // Lấy câu hỏi đầu và cuối của part
+              const partGroups = questionGroups.filter(g => g.part === part.part);
+              const partQuestions = partGroups.flatMap(g => g.questions);
+              const firstQuestion = partQuestions[0]?.number || 1;
+              const lastQuestion = partQuestions[partQuestions.length - 1]?.number || 1;
+              
+              return (
+                <button
+                  key={part.part}
+                  className={`reading-test__part-tab ${currentPartTab === part.part ? 'active' : ''}`}
+                  onClick={() => handlePartChange(part.part)}
+                >
+                  Part {part.part} - {firstQuestion}/{lastQuestion}
+                </button>
+              );
+            })}
           </div>
         )}
         

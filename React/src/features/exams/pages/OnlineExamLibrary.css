@@ -19,7 +19,6 @@
 
 .online-exam-library__breadcrumb-item {
     color: var(--Mine-Shaft-500, #6D6D6D);
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -32,7 +31,6 @@
 
 .online-exam-library__breadcrumb-item--active {
     color: #0537A5;
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -41,7 +39,6 @@
 
 .online-exam-library__breadcrumb-item--active:hover {
     color: var(--Main-color-Primary-2, #0537A5);
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -182,7 +179,6 @@
     cursor: pointer;
     transition: all 0.2s;
     color: var(--Mine-Shaft-900, #333);
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 700;
@@ -201,7 +197,6 @@
 .sidebar-subitem__list li {
 
 
-    font-family: var(--FontFont-font, Inter);
     font-size: 14px;
     font-style: normal;
     font-weight: 400;
@@ -224,8 +219,6 @@
 
 .sidebar-subitem__list li:hover {
     color: var(--Main-color-Primary-4, #045CCE);
-
-    font-family: var(--FontFont-font, Inter);
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
