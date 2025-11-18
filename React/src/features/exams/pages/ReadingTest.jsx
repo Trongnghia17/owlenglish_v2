@@ -10,14 +10,14 @@ export default function ReadingTest() {
   const examData = location.state?.examData;
 
   // State để quản lý câu hỏi hiện tại và câu trả lời
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentGroupIndex, setCurrentGroupIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(1800); // 30 phút = 1800 giây
   const [currentPartTab, setCurrentPartTab] = useState(1); // Tab hiện tại
   const [loading, setLoading] = useState(true);
   const [skillData, setSkillData] = useState(null);
   const [sectionData, setSectionData] = useState(null);
-  const [questions, setQuestions] = useState([]);
+  const [questionGroups, setQuestionGroups] = useState([]); // Lưu theo groups
   const [passages, setPassages] = useState([]); // Nhiều passages theo part
   const [parts, setParts] = useState([]); // Danh sách các parts
 
@@ -45,32 +45,41 @@ export default function ReadingTest() {
             
             setParts([{ id: section.id, part: 1, title: `Part 1 (1-${section.question_groups?.reduce((sum, g) => sum + (g.questions?.length || 0), 0) || 0})` }]);
             
-            // Lấy questions từ question groups
-            const allQuestions = [];
+            // Lấy question groups
+            const allGroups = [];
+            let questionNumber = 1;
             if (section.question_groups) {
               section.question_groups.forEach(group => {
                 console.log('Question Group:', group); // Debug
+                const questions = [];
                 if (group.questions) {
-                  group.questions.forEach((q, qIndex) => {
-                    allQuestions.push({
+                  group.questions.forEach((q) => {
+                    questions.push({
                       id: q.id,
-                      number: allQuestions.length + 1,
-                      part: 1,
-                      type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
-                      question: q.content,
-                      options: Array.isArray(group.options) 
-                        ? group.options 
-                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['True', 'False', 'Not given']) : ['True', 'False', 'Not given']),
-                      correctAnswer: q.answer_content,
-                      groupId: group.id,
-                      groupInstructions: group.instructions
+                      number: questionNumber++,
+                      content: q.content,
+                      correctAnswer: q.answer_content
                     });
                   });
                 }
+                
+                allGroups.push({
+                  id: group.id,
+                  part: 1,
+                  type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
+                  instructions: group.instructions,
+                  groupContent: group.content, // Thêm group content
+                  options: Array.isArray(group.options) 
+                    ? group.options 
+                    : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['True', 'False', 'Not given']) : ['True', 'False', 'Not given']),
+                  questions: questions,
+                  startNumber: questions[0]?.number || 1,
+                  endNumber: questions[questions.length - 1]?.number || 1
+                });
               });
             }
-            console.log('All Questions (section):', allQuestions); // Debug
-            setQuestions(allQuestions);
+            console.log('All Question Groups (section):', allGroups); // Debug
+            setQuestionGroups(allGroups);
           }
         } else if (skillId) {
           // Lấy data cho full test (nhiều parts/sections)
@@ -79,15 +88,16 @@ export default function ReadingTest() {
             const skill = response.data.data;
             setSkillData(skill);
             
-            // Lấy tất cả questions từ tất cả sections
-            const allQuestions = [];
+            // Lấy tất cả question groups từ tất cả sections
+            const allGroups = [];
             const allPassages = [];
             const allParts = [];
+            let questionNumber = 1;
             
             if (skill.sections && skill.sections.length > 0) {
               skill.sections.forEach((section, sectionIndex) => {
                 const partNumber = sectionIndex + 1;
-                const questionStartIndex = allQuestions.length + 1;
+                const groupStartIndex = allGroups.length;
                 
                 // Lưu passage cho mỗi part
                 allPassages.push({
@@ -98,44 +108,53 @@ export default function ReadingTest() {
                   content: section.content || ''
                 });
                 
-                // Lấy questions
+                // Lấy question groups
                 if (section.question_groups) {
                   section.question_groups.forEach(group => {
                     console.log('Question Group (full test):', group); // Debug
+                    const questions = [];
                     if (group.questions) {
-                      group.questions.forEach((q, qIndex) => {
-                        allQuestions.push({
+                      group.questions.forEach((q) => {
+                        questions.push({
                           id: q.id,
-                          number: allQuestions.length + 1,
-                          part: partNumber,
-                          type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
-                          question: q.content,
-                          options: Array.isArray(group.options) 
-                            ? group.options 
-                            : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['True', 'False', 'Not given']) : ['True', 'False', 'Not given']),
-                          correctAnswer: q.answer_content,
-                          groupId: group.id,
-                          groupInstructions: group.instructions
+                          number: questionNumber++,
+                          content: q.content,
+                          correctAnswer: q.answer_content
                         });
                       });
                     }
+                    
+                    allGroups.push({
+                      id: group.id,
+                      part: partNumber,
+                      type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
+                      instructions: group.instructions,
+                      groupContent: group.content, // Thêm group content
+                      options: Array.isArray(group.options) 
+                        ? group.options 
+                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['True', 'False', 'Not given']) : ['True', 'False', 'Not given']),
+                      questions: questions,
+                      startNumber: questions[0]?.number || questionNumber,
+                      endNumber: questions[questions.length - 1]?.number || questionNumber
+                    });
                   });
                 }
                 
-                const questionEndIndex = allQuestions.length;
+                const firstQuestionNum = allGroups[groupStartIndex]?.startNumber || questionNumber;
+                const lastQuestionNum = allGroups[allGroups.length - 1]?.endNumber || questionNumber;
                 allParts.push({
                   id: section.id,
                   part: partNumber,
-                  title: `Part ${partNumber} (${questionStartIndex}-${questionEndIndex})`
+                  title: `Part ${partNumber} (${firstQuestionNum}-${lastQuestionNum})`
                 });
               });
               
-              console.log('All Questions (full test):', allQuestions); // Debug
+              console.log('All Question Groups (full test):', allGroups); // Debug
               setPassages(allPassages);
               setParts(allParts);
             }
             
-            setQuestions(allQuestions);
+            setQuestionGroups(allGroups);
             
             // Set thời gian từ skill
             if (skill.time_limit) {
@@ -185,34 +204,61 @@ export default function ReadingTest() {
     });
   };
 
-  // Chuyển câu hỏi
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      const nextQuestion = questions[currentQuestionIndex + 1];
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      // Nếu câu tiếp theo thuộc part khác, chuyển tab part
-      if (nextQuestion.part !== currentPartTab) {
-        setCurrentPartTab(nextQuestion.part);
+  // Chuyển question group
+  const handleNextGroup = () => {
+    const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+    const currentIndexInPart = currentPartGroups.findIndex(g => g.id === questionGroups[currentGroupIndex].id);
+    
+    if (currentIndexInPart < currentPartGroups.length - 1) {
+      // Còn group khác trong part này
+      const nextGroup = currentPartGroups[currentIndexInPart + 1];
+      const globalIndex = questionGroups.findIndex(g => g.id === nextGroup.id);
+      setCurrentGroupIndex(globalIndex);
+    } else if (currentPartTab < parts.length) {
+      // Chuyển sang part tiếp theo
+      const nextPart = currentPartTab + 1;
+      setCurrentPartTab(nextPart);
+      const firstGroupOfNextPart = questionGroups.find(g => g.part === nextPart);
+      if (firstGroupOfNextPart) {
+        const globalIndex = questionGroups.findIndex(g => g.id === firstGroupOfNextPart.id);
+        setCurrentGroupIndex(globalIndex);
       }
     }
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      const prevQuestion = questions[currentQuestionIndex - 1];
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      // Nếu câu trước đó thuộc part khác, chuyển tab part
-      if (prevQuestion.part !== currentPartTab) {
-        setCurrentPartTab(prevQuestion.part);
+  const handlePreviousGroup = () => {
+    const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+    const currentIndexInPart = currentPartGroups.findIndex(g => g.id === questionGroups[currentGroupIndex].id);
+    
+    if (currentIndexInPart > 0) {
+      // Còn group khác trong part này
+      const prevGroup = currentPartGroups[currentIndexInPart - 1];
+      const globalIndex = questionGroups.findIndex(g => g.id === prevGroup.id);
+      setCurrentGroupIndex(globalIndex);
+    } else if (currentPartTab > 1) {
+      // Quay về part trước
+      const prevPart = currentPartTab - 1;
+      setCurrentPartTab(prevPart);
+      const groupsOfPrevPart = questionGroups.filter(g => g.part === prevPart);
+      const lastGroupOfPrevPart = groupsOfPrevPart[groupsOfPrevPart.length - 1];
+      if (lastGroupOfPrevPart) {
+        const globalIndex = questionGroups.findIndex(g => g.id === lastGroupOfPrevPart.id);
+        setCurrentGroupIndex(globalIndex);
       }
     }
   };
 
-  const handleQuestionClick = (index) => {
-    setCurrentQuestionIndex(index);
-    const question = questions[index];
-    if (question && question.part !== currentPartTab) {
-      setCurrentPartTab(question.part);
+  const handleQuestionClick = (questionNumber) => {
+    // Tìm group chứa câu hỏi này
+    const group = questionGroups.find(g => 
+      g.questions.some(q => q.number === questionNumber)
+    );
+    if (group) {
+      const globalIndex = questionGroups.findIndex(g => g.id === group.id);
+      setCurrentGroupIndex(globalIndex);
+      if (group.part !== currentPartTab) {
+        setCurrentPartTab(group.part);
+      }
     }
   };
 
@@ -254,7 +300,7 @@ export default function ReadingTest() {
   }
 
   // Error state
-  if (!passages || passages.length === 0 || questions.length === 0) {
+  if (!passages || passages.length === 0 || questionGroups.length === 0) {
     return (
       <div className="reading-test">
         <div className="reading-test__header">
@@ -296,24 +342,261 @@ export default function ReadingTest() {
     );
   }
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const currentGroup = questionGroups[currentGroupIndex];
   const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
-  const currentPartQuestions = questions.filter(q => q.part === currentPartTab);
   
-  // Tìm index của câu hỏi đầu tiên trong part hiện tại
-  const firstQuestionIndexInPart = questions.findIndex(q => q.part === currentPartTab);
+  // Get all questions in current part for question numbers display
+  const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+  const allQuestionsInPart = currentPartGroups.flatMap(g => g.questions);
   
-  // Chuyển câu hỏi khi đổi part
+  // Chuyển group khi đổi part
   const handlePartChange = (partNumber) => {
     setCurrentPartTab(partNumber);
-    const firstIndex = questions.findIndex(q => q.part === partNumber);
-    if (firstIndex !== -1) {
-      setCurrentQuestionIndex(firstIndex);
+    const firstGroup = questionGroups.find(g => g.part === partNumber);
+    if (firstGroup) {
+      const globalIndex = questionGroups.findIndex(g => g.id === firstGroup.id);
+      setCurrentGroupIndex(globalIndex);
     }
   };
+
+  // Parse group content có chứa {{ a }} thành input fields
+  const parseGroupContentWithInputs = (content, questions, answers, handleAnswerSelect) => {
+    if (!content) return null;
+
+    // Kiểm tra xem content có chứa {{ }} không
+    const hasPlaceholders = /\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(content);
+    if (!hasPlaceholders) {
+      return <div dangerouslySetInnerHTML={{ __html: content }} />;
+    }
+
+    // Parse content và thay thế {{ a }}, {{ b }}, etc. bằng input fields
+    const parts = [];
+    let lastIndex = 0;
+    let questionIndex = 0;
+    const regex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
+    let match;
+
+    while ((match = regex.exec(content)) !== null) {
+      // Thêm phần text trước placeholder
+      if (match.index > lastIndex) {
+        parts.push(
+          <span key={`text-${lastIndex}`} dangerouslySetInnerHTML={{ __html: content.substring(lastIndex, match.index) }} />
+        );
+      }
+
+      // Thêm input field cho placeholder
+      const question = questions[questionIndex];
+      if (question) {
+        parts.push(
+          <input
+            key={`input-${question.id}`}
+            type="text"
+            className="reading-test__inline-input"
+            placeholder={question.number.toString()}
+            value={answers[question.id] || ''}
+            onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
+            maxLength={50}
+          />
+        );
+        questionIndex++;
+      }
+
+      lastIndex = regex.lastIndex;
+    }
+
+    // Thêm phần text còn lại
+    if (lastIndex < content.length) {
+      parts.push(
+        <span key={`text-${lastIndex}`} dangerouslySetInnerHTML={{ __html: content.substring(lastIndex) }} />
+      );
+    }
+
+    return <div className="reading-test__group-content-parsed">{parts}</div>;
+  };
+
+  // Render câu hỏi dựa trên loại question type
+  const renderQuestionsByType = (group, answers, handleAnswerSelect) => {
+    let questionType = group.type;
+
+    // Auto-detect question type từ instructions nếu backend trả sai
+    if (questionType === 'TRUE_FALSE_NOT_GIVEN') {
+      const instructions = (group.instructions || '').toLowerCase();
+      const options = group.options || [];
+      
+      console.log('Auto-detecting question type:', {
+        instructions,
+        options,
+        groupType: group.type
+      });
+      
+      // Detect MATCHING - chọn đoạn văn A, B, C...
+      if (instructions.includes('which paragraph') || 
+          instructions.includes('correct letter') ||
+          (options.length > 0 && /^[A-Z]$/.test(options[0]))) {
+        questionType = 'MATCHING_HEADINGS';
+        console.log('✅ Detected as MATCHING_HEADINGS');
+      }
+      // Detect MULTIPLE_CHOICE - có nhiều options không phải True/False
+      else if (options.length > 3 && 
+               !options.includes('True') && 
+               !options.includes('False')) {
+        questionType = 'MULTIPLE_CHOICE';
+        console.log('✅ Detected as MULTIPLE_CHOICE');
+      }
+      // Detect FILL_IN_THE_BLANK
+      else if (instructions.includes('complete') || 
+               instructions.includes('no more than') ||
+               instructions.includes('write your answer')) {
+        questionType = 'FILL_IN_THE_BLANK';
+        console.log('✅ Detected as FILL_IN_THE_BLANK');
+      }
+    }
+
+    console.log('Final question type:', questionType);
+
+    // 1. Dạng điền vào chỗ trống - Nếu groupContent có {{ a }} thì chỉ render groupContent với inputs
+    const hasPlaceholders = group.groupContent && /\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent);
+    
+    if (hasPlaceholders) {
+      // Render groupContent với inline inputs thay cho placeholders
+      return (
+        <div className="reading-test__question-group-with-inputs">
+          {parseGroupContentWithInputs(group.groupContent, group.questions, answers, handleAnswerSelect)}
+        </div>
+      );
+    }
+
+    // 2. Dạng text input riêng lẻ (không có placeholders trong content)
+    if (questionType === 'FILL_IN_THE_BLANK' || questionType === 'SHORT_ANSWER' || questionType === 'COMPLETE_NOTES') {
+      return group.questions.map((question) => (
+        <div key={question.id} className="reading-test__question-item reading-test__question-item--input">
+          <div className="reading-test__question-row">
+            <div className="reading-test__question-number">
+              {question.number}
+            </div>
+            <div
+              className="reading-test__question-text"
+              dangerouslySetInnerHTML={{ __html: question.content }}
+            />
+          </div>
+          <div className="reading-test__answer-input-wrapper">
+            <input
+              type="text"
+              className="reading-test__answer-input"
+              placeholder="Type your answer here..."
+              value={answers[question.id] || ''}
+              onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
+              maxLength={100}
+            />
+          </div>
+        </div>
+      ));
+    }
+
+    // 3. Dạng Multiple Choice (chọn từ dropdown hoặc list)
+    if (questionType === 'MULTIPLE_CHOICE' || questionType === 'CHOOSE_FROM_LIST') {
+      return group.questions.map((question) => (
+        <div key={question.id} className="reading-test__question-item">
+          <div className="reading-test__question-row">
+            <div className="reading-test__question-number">
+              {question.number}
+            </div>
+            <div
+              className="reading-test__question-text"
+              dangerouslySetInnerHTML={{ __html: question.content }}
+            />
+          </div>
+          <div className="reading-test__options reading-test__options--grid">
+            {group.options.map((option) => (
+              <label
+                key={option}
+                className={`reading-test__option reading-test__option--box ${
+                  answers[question.id] === option ? 'selected' : ''
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
+                  value={option}
+                  checked={answers[question.id] === option}
+                  onChange={() => handleAnswerSelect(question.id, option)}
+                />
+                <span className="reading-test__option-text">{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ));
+    }
+
+    // 4. Dạng MATCHING - Chọn đoạn văn A, B, C... (giống Multiple Choice nhưng style khác)
+    if (questionType === 'MATCHING_HEADINGS' || questionType === 'MATCHING_INFORMATION' || questionType === 'MATCHING') {
+      return group.questions.map((question) => (
+        <div key={question.id} className="reading-test__question-item reading-test__question-item--matching">
+          <div className="reading-test__question-row">
+            <div className="reading-test__question-number">
+              {question.number}
+            </div>
+            <div
+              className="reading-test__question-text"
+              dangerouslySetInnerHTML={{ __html: question.content }}
+            />
+          </div>
+          <div className="reading-test__matching-select">
+            <select
+              className="reading-test__select"
+              value={answers[question.id] || ''}
+              onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
+            >
+              <option value="">Select...</option>
+              {group.options.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ));
+    }
+
+    // 5. Dạng TRUE/FALSE/NOT GIVEN (mặc định)
+    return group.questions.map((question) => (
+      <div key={question.id} className="reading-test__question-item">
+        <div className="reading-test__question-row">
+          <div className="reading-test__question-number">
+            {question.number}
+          </div>
+          <div
+            className="reading-test__question-text"
+            dangerouslySetInnerHTML={{ __html: question.content }}
+          />
+        </div>
+        <div className="reading-test__options">
+          {group.options.map((option) => (
+            <label
+              key={option}
+              className={`reading-test__option ${
+                answers[question.id] === option ? 'selected' : ''
+              }`}
+            >
+              <input
+                type="radio"
+                name={`question-${question.id}`}
+                value={option}
+                checked={answers[question.id] === option}
+                onChange={() => handleAnswerSelect(question.id, option)}
+              />
+              <span className="reading-test__option-text">{option}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    ));
+  };
   
-  // Kiểm tra nếu không có currentQuestion
-  if (!currentQuestion) {
+  // Kiểm tra nếu không có currentGroup
+  if (!currentGroup) {
     return (
       <div className="reading-test">
         <div className="reading-test__header">
@@ -340,250 +623,6 @@ export default function ReadingTest() {
     );
   }
   
-  // Kiểm tra xem question content có chứa placeholder {{ a }}, {{ b }}, etc không
-  const hasInlineInputs = (content) => {
-    return content && /\{\{\s*[a-z]\s*\}\}/i.test(content);
-  };
-
-  // Parse và render group instructions với inline input fields
-  const renderGroupInstructionsWithInlineInputs = () => {
-    let content = currentQuestion.groupInstructions || '';
-    
-    // Split content theo placeholder pattern
-    const parts = content.split(/(\{\{\s*[a-z]\s*\}\})/gi);
-    let inputIndex = 0;
-    
-    return (
-      <div className="reading-test__group-instructions">
-        {parts.map((part, index) => {
-          // Nếu là placeholder
-          if (/\{\{\s*[a-z]\s*\}\}/i.test(part)) {
-            const inputId = `${currentQuestion.groupId}_${currentQuestion.number}_input_${inputIndex}`;
-            inputIndex++;
-            
-            return (
-              <input
-                key={`input-${index}`}
-                type="text"
-                className="reading-test__inline-input"
-                id={inputId}
-                placeholder="..."
-                value={answers[inputId] || ''}
-                onChange={(e) => handleAnswerSelect(inputId, e.target.value)}
-              />
-            );
-          }
-          
-          // Nếu là text HTML thông thường
-          return (
-            <span 
-              key={`text-${index}`}
-              dangerouslySetInnerHTML={{ __html: part }}
-            />
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Parse và render question content với inline input fields
-  const renderQuestionWithInlineInputs = () => {
-    let content = currentQuestion.question || '';
-    
-    // Split content theo placeholder pattern
-    const parts = content.split(/(\{\{\s*[a-z]\s*\}\})/gi);
-    let inputIndex = 0;
-    
-    return (
-      <div className="reading-test__question-text">
-        {parts.map((part, index) => {
-          // Nếu là placeholder
-          if (/\{\{\s*[a-z]\s*\}\}/i.test(part)) {
-            const inputId = `${currentQuestion.id}_input_${inputIndex}`;
-            const currentInputIndex = inputIndex;
-            inputIndex++;
-            
-            return (
-              <input
-                key={`input-${index}`}
-                type="text"
-                className="reading-test__inline-input"
-                id={inputId}
-                placeholder="..."
-                value={answers[inputId] || ''}
-                onChange={(e) => handleAnswerSelect(inputId, e.target.value)}
-              />
-            );
-          }
-          
-          // Nếu là text HTML thông thường
-          return (
-            <span 
-              key={`text-${index}`}
-              dangerouslySetInnerHTML={{ __html: part }}
-            />
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Render câu hỏi theo loại
-  const renderQuestionInput = () => {
-    const questionType = currentQuestion.type;
-
-    // Nếu content có {{ a }}, {{ b }} thì dùng inline inputs
-    if (hasInlineInputs(currentQuestion.question)) {
-      return null; // Không render options riêng, đã có input trong content
-    }
-
-    // TRUE/FALSE/NOT GIVEN hoặc YES/NO/NOT GIVEN
-    if (questionType === 'TRUE_FALSE_NOT_GIVEN' || questionType === 'YES_NO_NOT_GIVEN') {
-      return (
-        <div className="reading-test__options">
-          {questionOptions.map((option) => (
-            <label
-              key={option}
-              className={`reading-test__option ${
-                answers[currentQuestion.id] === option ? 'selected' : ''
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${currentQuestion.id}`}
-                value={option}
-                checked={answers[currentQuestion.id] === option}
-                onChange={() => handleAnswerSelect(currentQuestion.id, option)}
-              />
-              <span className="reading-test__option-text">{option}</span>
-            </label>
-          ))}
-        </div>
-      );
-    }
-
-    // MULTIPLE CHOICE - Radio buttons với A, B, C, D...
-    if (questionType === 'MULTIPLE_CHOICE' || questionType === 'SINGLE_CHOICE') {
-      return (
-        <div className="reading-test__options">
-          {questionOptions.map((option, index) => (
-            <label
-              key={index}
-              className={`reading-test__option ${
-                answers[currentQuestion.id] === option ? 'selected' : ''
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${currentQuestion.id}`}
-                value={option}
-                checked={answers[currentQuestion.id] === option}
-                onChange={() => handleAnswerSelect(currentQuestion.id, option)}
-              />
-              <span className="reading-test__option-label">{String.fromCharCode(65 + index)}</span>
-              <span className="reading-test__option-text">{option}</span>
-            </label>
-          ))}
-        </div>
-      );
-    }
-
-    // FILL IN THE BLANK - Text input
-    if (questionType === 'FILL_IN_BLANK' || questionType === 'SHORT_ANSWER' || questionType === 'COMPLETION') {
-      return (
-        <div className="reading-test__input-group">
-          <input
-            type="text"
-            className="reading-test__text-input"
-            placeholder="Type your answer here..."
-            value={answers[currentQuestion.id] || ''}
-            onChange={(e) => handleAnswerSelect(currentQuestion.id, e.target.value)}
-          />
-          {currentQuestion.groupInstructions && (
-            <div className="reading-test__word-limit">
-              {currentQuestion.groupInstructions}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // MATCHING - Dropdown hoặc select
-    if (questionType === 'MATCHING' || questionType === 'MATCHING_HEADINGS') {
-      return (
-        <div className="reading-test__dropdown-group">
-          <select
-            className="reading-test__dropdown"
-            value={answers[currentQuestion.id] || ''}
-            onChange={(e) => handleAnswerSelect(currentQuestion.id, e.target.value)}
-          >
-            <option value="">-- Select an option --</option>
-            {questionOptions.map((option, index) => (
-              <option key={index} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    }
-
-    // DRAG AND DROP / LIST SELECTION - Clickable list items
-    if (questionType === 'LIST_SELECTION' || questionType === 'DRAG_DROP') {
-      return (
-        <div className="reading-test__list-options">
-          <div className="reading-test__list-title">LIST OF OPTIONS</div>
-          <div className="reading-test__list-items">
-            {questionOptions.map((option, index) => (
-              <button
-                key={index}
-                className={`reading-test__list-item ${
-                  answers[currentQuestion.id] === option ? 'selected' : ''
-                }`}
-                onClick={() => handleAnswerSelect(currentQuestion.id, option)}
-              >
-                <span className="reading-test__list-icon">⋮⋮</span>
-                <span className="reading-test__list-text">{option}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // Default fallback - Radio buttons
-    return (
-      <div className="reading-test__options">
-        {questionOptions.map((option) => (
-          <label
-            key={option}
-            className={`reading-test__option ${
-              answers[currentQuestion.id] === option ? 'selected' : ''
-            }`}
-          >
-            <input
-              type="radio"
-              name={`question-${currentQuestion.id}`}
-              value={option}
-              checked={answers[currentQuestion.id] === option}
-              onChange={() => handleAnswerSelect(currentQuestion.id, option)}
-            />
-            <span className="reading-test__option-text">{option}</span>
-          </label>
-        ))}
-      </div>
-    );
-  };
-
-  // Đảm bảo options luôn là array
-  const questionOptions = currentQuestion?.options 
-    ? (Array.isArray(currentQuestion.options) 
-        ? currentQuestion.options 
-        : (typeof currentQuestion.options === 'string' 
-            ? JSON.parse(currentQuestion.options) 
-            : ['True', 'False', 'Not given']))
-    : ['True', 'False', 'Not given'];
-
   return (
     <div className="reading-test">
       {/* Header */}
@@ -634,48 +673,30 @@ export default function ReadingTest() {
 
           {/* Questions Panel */}
         <div className="reading-test__questions">
-          <div className="reading-test__questions-header">
-            <h3>Question {currentQuestionIndex + 1} - {questions.length}</h3>
-            <span className="reading-test__question-type">
-              {currentQuestion?.type?.replace(/_/g, ' ') || 'Choose an answer'}
-            </span>
-          </div>          {/* Group Instructions - nếu có và có inline inputs */}
-          {currentQuestion.groupInstructions && hasInlineInputs(currentQuestion.groupInstructions) && (
-            renderGroupInstructionsWithInlineInputs()
-          )}
+          {/* Group Header - Chỉ hiển thị số câu hỏi */}
+          <div className="reading-test__group-header">
+            <h3>Question {currentGroup.startNumber} - {currentGroup.endNumber}: {currentGroup.instructions ? currentGroup.instructions.split('\n')[0] : `Choose ${currentGroup.type.replace(/_/g, '/')}`}</h3>
+          </div>
 
-          {/* Group Instructions - nếu có và KHÔNG có inline inputs */}
-          {currentQuestion.groupInstructions && !hasInlineInputs(currentQuestion.groupInstructions) && (
-            <div 
-              className="reading-test__group-instructions"
-              dangerouslySetInnerHTML={{ __html: currentQuestion.groupInstructions }}
+          {/* Group Content - Hiển thị nội dung đầy đủ của question group */}
+          {currentGroup.groupContent && (
+            <div
+              className="reading-test__group-content"
+              dangerouslySetInnerHTML={{ __html: currentGroup.groupContent }}
             />
           )}
 
-          {/* Current Question */}
-          <div className="reading-test__current-question">
-            <div className="reading-test__question-number">
-              {currentQuestion.number}
-            </div>
-            {hasInlineInputs(currentQuestion.question) ? (
-              renderQuestionWithInlineInputs()
-            ) : (
-              <div 
-                className="reading-test__question-text"
-                dangerouslySetInnerHTML={{ __html: currentQuestion.question }}
-              />
-            )}
+          {/* All Questions in Group */}
+          <div className="reading-test__questions-list">
+            {renderQuestionsByType(currentGroup, answers, handleAnswerSelect)}
           </div>
-
-          {/* Answer Options */}
-          {renderQuestionInput()}
 
           {/* Navigation Buttons */}
           <div className="reading-test__navigation">
             <button
               className="reading-test__nav-button"
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0}
+              onClick={handlePreviousGroup}
+              disabled={currentGroupIndex === 0}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -684,8 +705,8 @@ export default function ReadingTest() {
             </button>
             <button
               className="reading-test__nav-button reading-test__nav-button--next"
-              onClick={handleNextQuestion}
-              disabled={currentQuestionIndex === questions.length - 1}
+              onClick={handleNextGroup}
+              disabled={currentGroupIndex === questionGroups.length - 1}
             >
               Next
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -715,20 +736,17 @@ export default function ReadingTest() {
         
         {/* Question Numbers Grid - chỉ hiển thị câu của part hiện tại */}
         <div className="reading-test__question-numbers">
-          {currentPartQuestions.map((q, index) => {
-            const globalIndex = questions.findIndex(qu => qu.id === q.id);
-            return (
-              <button
-                key={q.id}
-                className={`reading-test__question-number-item ${
-                  globalIndex === currentQuestionIndex ? 'active' : ''
-                } ${answers[q.id] ? 'answered' : ''}`}
-                onClick={() => handleQuestionClick(globalIndex)}
-              >
-                {q.number}
-              </button>
-            );
-          })}
+          {allQuestionsInPart.map((q) => (
+            <button
+              key={q.id}
+              className={`reading-test__question-number-item ${
+                currentGroup.questions.some(cq => cq.id === q.id) ? 'active' : ''
+              } ${answers[q.id] ? 'answered' : ''}`}
+              onClick={() => handleQuestionClick(q.number)}
+            >
+              {q.number}
+            </button>
+          ))}
         </div>
       </div>
     </div>
