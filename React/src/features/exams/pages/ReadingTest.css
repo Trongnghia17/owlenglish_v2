@@ -447,23 +447,17 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
 }
 
 /* Main Content */
-.reading-test__content {
-  display: flex;
-  justify-content: center;
-  flex: 1;
-  overflow: hidden;
-  padding: 0 40px;
-  background: #F8F8F8;
-}
-
 .reading-test__content-wrapper {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  max-width: 1400px;
+  max-width: 1600px;
   width: 100%;
+  margin: 0 auto;
+  height: 100%;
   overflow: hidden;
-  padding: 24px 0;
-  gap: 20px
+  padding: 24px 40px;
+  gap: 24px;
+  background: #F8F8F8;
 }
 
 /* Passage Panel */
@@ -1466,7 +1460,9 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   object-fit: contain;
 }
 
-.reading-test__submit-modal-body {}
+.reading-test__submit-modal-body {
+  margin-bottom: 24px;
+}
 
 .reading-test__submit-modal-title,
 .reading-test__submit-modal-text {

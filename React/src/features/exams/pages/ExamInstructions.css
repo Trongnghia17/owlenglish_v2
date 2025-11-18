@@ -28,6 +28,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius:  5px;
+  border: 1px solid  #E7E7E7;
+  background:  #FFF;
+  margin-right: 10px;
 }
 
 .exam-instructions-page__close:hover {
@@ -124,15 +128,15 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-border-radius: var(--Radius-XL, 20px);
-border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   border-radius: 20px;
-  color: var(--Mine-Shaft-800, #454545);
-font-family: var(--FontFont-font, Inter);
-font-size: 14px;
-font-style: normal;
-font-weight: 500;
-line-height: normal;
+  border: 1px solid  #E7E7E7;
+  border-radius: 20px;
+  color:  #454545;
+
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
 }
 
 .exam-instructions-page__badge svg {
@@ -155,22 +159,22 @@ line-height: normal;
 }
 
 .exam-instructions-page__section-title {
-  color: var(--Mine-Shaft-800, #454545);
-font-family: var(--FontFont-font, Inter);
-font-size: 24px;
-font-style: normal;
-font-weight: 700;
-line-height: normal;
+  color:  #454545;
+
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
 }
 
 .exam-instructions-page__list {
   margin: 0;
-  color: var(--Mine-Shaft-800, #454545);
-font-family: var(--FontFont-font, Inter);
-font-size: 17px;
-font-style: normal;
-font-weight: 400;
-line-height: 36px; /* 211.765% */
+  color:  #454545;
+  font-size: 17px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 36px;
+  /* 211.765% */
 }
 
 .exam-instructions-page__list li {
@@ -194,7 +198,7 @@ line-height: 36px; /* 211.765% */
   display: flex;
   width: 180px;
   height: 55px;
-  padding: 10px var(--Spacing-5, 16px);
+  padding: 10px 16px;
   justify-content: center;
   align-items: center;
   gap: 8px;
