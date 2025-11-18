@@ -19,3 +19,14 @@ export const getSkills = (params) =>
 // Lấy chi tiết skill
 export const getSkillById = (id, params) => 
   api.get(`/api/public/skills/${id}`, { params });
+
+// Lấy chi tiết section
+export const getSectionById = (id, params) => 
+  api.get(`/api/public/sections/${id}`, { params });
+
+// Lấy question group và questions
+export const getQuestionGroup = (id, params) => 
+  api.get(`/api/public/question-groups/${id}`, { params });
+
+export const getQuestionsByGroup = (groupId, params) => 
+  api.get(`/api/public/question-groups/${groupId}/questions`, { params });

@@ -11,6 +11,7 @@ import OAuthCallback from '@/features/auth/pages/OAuthCallback';
 import Home from '../features/home/pages/Home';
 import OnlineExamLibrary from '../features/exams/pages/OnlineExamLibrary';
 import ExamInstructions from '../features/exams/pages/ExamInstructions';
+import ReadingTest from '../features/exams/pages/ReadingTest';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
@@ -37,6 +38,16 @@ export const router = createBrowserRouter([
   {
     path: '/exam/instructions/:skillId/:sectionId',
     element: <ExamInstructions />,
+  },
+
+  // Exam Test Pages - Trang làm bài
+  {
+    path: '/exam/section/:skillId/:sectionId/test',
+    element: <ReadingTest />,
+  },
+  {
+    path: '/exam/full/:skillId/test',
+    element: <ReadingTest />,
   },
 
   {
