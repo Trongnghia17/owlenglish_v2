@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/exams.api';
 import './ReadingTest.css';
@@ -323,49 +323,75 @@ export default function ReadingTest() {
       return <div dangerouslySetInnerHTML={{ __html: content }} />;
     }
 
-    // Parse content và thay thế {{ a }}, {{ b }}, etc. bằng input fields
-    const parts = [];
-    let lastIndex = 0;
+    // Tạo các input elements với unique IDs
     let questionIndex = 0;
-    const regex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
-    let match;
-
-    while ((match = regex.exec(content)) !== null) {
-      // Thêm phần text trước placeholder
-      if (match.index > lastIndex) {
-        parts.push(
-          <span key={`text-${lastIndex}`} dangerouslySetInnerHTML={{ __html: content.substring(lastIndex, match.index) }} />
-        );
-      }
-
-      // Thêm input field cho placeholder
+    const inputsMap = new Map();
+    
+    const processedContent = content.replace(/\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g, (match) => {
       const question = questions[questionIndex];
       if (question) {
-        parts.push(
-          <input
-            key={`input-${question.id}`}
-            type="text"
-            className="reading-test__inline-input"
-            placeholder={question.number.toString()}
-            value={answers[question.id] || ''}
-            onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
-            maxLength={50}
-          />
-        );
+        const inputId = `input-placeholder-${question.id}`;
+        inputsMap.set(inputId, question);
         questionIndex++;
+        return `<span class="reading-test__input-placeholder" data-input-id="${inputId}" data-question-id="${question.id}"></span>`;
       }
+      return match;
+    });
 
-      lastIndex = regex.lastIndex;
-    }
-
-    // Thêm phần text còn lại
-    if (lastIndex < content.length) {
-      parts.push(
-        <span key={`text-${lastIndex}`} dangerouslySetInnerHTML={{ __html: content.substring(lastIndex) }} />
-      );
-    }
-
-    return <div className="reading-test__group-content-parsed">{parts}</div>;
+    // Render content với placeholders
+    return (
+      <div 
+        className="reading-test__group-content-parsed"
+        dangerouslySetInnerHTML={{ __html: processedContent }}
+        ref={(element) => {
+          if (!element) return;
+          
+          // Replace placeholders với actual input elements
+          const placeholders = element.querySelectorAll('.reading-test__input-placeholder');
+          placeholders.forEach((placeholder) => {
+            const inputId = placeholder.getAttribute('data-input-id');
+            const question = inputsMap.get(inputId);
+            
+            if (!question) return;
+            
+            // Kiểm tra xem input đã tồn tại chưa
+            let input = placeholder.querySelector('input');
+            
+            if (!input) {
+              // Tạo input mới
+              input = document.createElement('input');
+              input.type = 'text';
+              input.className = 'reading-test__inline-input';
+              input.placeholder = question.number.toString();
+              input.maxLength = 50;
+              input.dataset.questionId = question.id;
+              
+              // Sử dụng oninput để tránh duplicate listeners
+              input.oninput = (e) => {
+                handleAnswerSelect(question.id, e.target.value);
+              };
+              
+              // Ngăn re-render khi focus vào input
+              input.onfocus = (e) => {
+                e.stopPropagation();
+              };
+              
+              input.onclick = (e) => {
+                e.stopPropagation();
+              };
+              
+              placeholder.appendChild(input);
+            }
+            
+            // Luôn update giá trị từ state (nhưng không thay đổi focus)
+            const currentValue = answers[question.id] || '';
+            if (input.value !== currentValue && document.activeElement !== input) {
+              input.value = currentValue;
+            }
+          });
+        }}
+      />
+    );
   };
 
   // Render câu hỏi dựa trên loại question type
@@ -406,7 +432,7 @@ export default function ReadingTest() {
       }
     }
 
-    console.log('Final question type:', questionType);
+   
 
     // 1. Dạng điền vào chỗ trống - Nếu groupContent có {{ a }} thì chỉ render groupContent với inputs
     const hasPlaceholders = group.groupContent && /\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent);

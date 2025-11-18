@@ -206,6 +206,14 @@
   font-style: italic;
 }
 
+.reading-test__passage-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 20px auto;
+  border-radius: 8px;
+}
+
 /* Part Tabs */
 .reading-test__passage-footer {
   margin-top: 32px;
@@ -524,10 +532,23 @@
   line-height: 2;
 }
 
+.reading-test__input-placeholder {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .reading-test__group-content-parsed strong,
 .reading-test__group-content-parsed b {
   font-weight: 600;
   color: #1F2937;
+}
+
+.reading-test__group-content-parsed img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 16px 0;
+  border-radius: 8px;
 }
 
 /* Questions List */
@@ -951,7 +972,6 @@
 .reading-test__inline-input {
   display: inline-block;
   min-width: 120px;
-  max-width: 200px;
   padding: 6px 12px;
   margin: 0 4px;
   border: none;
