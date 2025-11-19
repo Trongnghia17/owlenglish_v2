@@ -21,6 +21,12 @@ export default function OnlineExamLibrary() {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState(null);
+  
+  // State for pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [perPage, setPerPage] = useState(18);
 
   // State for sidebar collapse/expand
   const [expandedSections, setExpandedSections] = useState({
@@ -44,19 +50,31 @@ export default function OnlineExamLibrary() {
 
   useEffect(() => {
     fetchSkills();
-  }, []);
+  }, [currentPage, perPage]);
 
   const fetchSkills = async () => {
     try {
       setLoading(true);
       // Chỉ lấy skills từ exams có type = 'online'
-      const response = await getSkills({ exam_type: 'online' });
+      const response = await getSkills({ 
+        exam_type: 'online',
+        page: currentPage,
+        per_page: perPage
+      });
 
       if (response.data.success) {
-        const skillsData = response.data.data.data || response.data.data;
-
-
+        const responseData = response.data.data;
+        const skillsData = responseData.data || responseData;
+        
         setSkills(skillsData);
+        
+        // Set pagination data if available
+        if (responseData.current_page) {
+          setCurrentPage(responseData.current_page);
+          setTotalPages(responseData.last_page);
+          setTotalItems(responseData.total);
+          setPerPage(responseData.per_page);
+        }
       }
     } catch (error) {
       console.error('Error fetching skills:', error);
@@ -120,6 +138,13 @@ export default function OnlineExamLibrary() {
   const handleSkillClick = (skill) => {
     setSelectedSkill(skill);
     setIsModalOpen(true);
+  };
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const getSkillImage = (skill) => {
@@ -488,39 +513,103 @@ export default function OnlineExamLibrary() {
           ) : sortedSkills.length === 0 ? (
             <div className="online-exam-library__empty">Không có bài thi nào</div>
           ) : (
-            <div className="online-exam-library__grid">
-              {sortedSkills.map(skill => (
-                <div
-                  key={skill.id}
-                  className="online-exam-library__card"
-                  onClick={() => handleSkillClick(skill)}
-                >
-                  <img
-                    src={getSkillImage(skill)}
-                    alt={skill.name}
-                    className="online-exam-library__card-image"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/280x180/6366f1/ffffff?text=No+Image';
-                    }}
-                  />
-                  <div className="online-exam-library__card-content">
-                    <h3 className="online-exam-library__card-title">{skill.name}</h3>
-                    <p className="online-exam-library__card-subtitle">
-                      Tiền trình: <span className="online-exam-library__card-skill-type">{getSkillTypeLabel(skill.skill_type)}</span>
+            <>
+              <div className="online-exam-library__grid">
+                {sortedSkills.map(skill => (
+                  <div
+                    key={skill.id}
+                    className="online-exam-library__card"
+                    onClick={() => handleSkillClick(skill)}
+                  >
+                    <img
+                      src={getSkillImage(skill)}
+                      alt={skill.name}
+                      className="online-exam-library__card-image"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/280x180/6366f1/ffffff?text=No+Image';
+                      }}
+                    />
+                    <div className="online-exam-library__card-content">
+                      <h3 className="online-exam-library__card-title">{skill.name}</h3>
+                      <p className="online-exam-library__card-subtitle">
+                        Tiền trình: <span className="online-exam-library__card-skill-type">{getSkillTypeLabel(skill.skill_type)}</span>
 
-                    </p>
-                    <div className="online-exam-library__card-footer">
-                      <button className="online-exam-library__card-button">
-                        Thi ngay
-                        <span className="online-exam-library__card-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path d="M9.93333 4.68674C9.89367 4.58445 9.8342 4.491 9.75833 4.41174L5.59167 0.245076C5.51397 0.167378 5.42173 0.105744 5.32021 0.0636935C5.21869 0.0216433 5.10988 0 5 0C4.77808 0 4.56525 0.0881567 4.40833 0.245076C4.33063 0.322775 4.269 0.415017 4.22695 0.516535C4.1849 0.618054 4.16326 0.72686 4.16326 0.836743C4.16326 1.05866 4.25141 1.27149 4.40833 1.42841L7.15833 4.17008H0.833333C0.61232 4.17008 0.400358 4.25787 0.244078 4.41415C0.0877975 4.57044 0 4.7824 0 5.00341C0 5.22442 0.0877975 5.43639 0.244078 5.59267C0.400358 5.74895 0.61232 5.83674 0.833333 5.83674H7.15833L4.40833 8.57841C4.33023 8.65588 4.26823 8.74805 4.22592 8.8496C4.18362 8.95115 4.16183 9.06007 4.16183 9.17008C4.16183 9.28009 4.18362 9.38901 4.22592 9.49056C4.26823 9.59211 4.33023 9.68427 4.40833 9.76174C4.4858 9.83985 4.57797 9.90185 4.67952 9.94415C4.78107 9.98646 4.88999 10.0082 5 10.0082C5.11001 10.0082 5.21893 9.98646 5.32048 9.94415C5.42203 9.90185 5.5142 9.83985 5.59167 9.76174L9.75833 5.59508C9.8342 5.51582 9.89367 5.42237 9.93333 5.32008C10.0167 5.11719 10.0167 4.88963 9.93333 4.68674Z" fill="#045CCE" />
-                        </svg></span>
-                      </button>
+                      </p>
+                      <div className="online-exam-library__card-footer">
+                        <button className="online-exam-library__card-button">
+                          Thi ngay
+                          <span className="online-exam-library__card-arrow"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <path d="M9.93333 4.68674C9.89367 4.58445 9.8342 4.491 9.75833 4.41174L5.59167 0.245076C5.51397 0.167378 5.42173 0.105744 5.32021 0.0636935C5.21869 0.0216433 5.10988 0 5 0C4.77808 0 4.56525 0.0881567 4.40833 0.245076C4.33063 0.322775 4.269 0.415017 4.22695 0.516535C4.1849 0.618054 4.16326 0.72686 4.16326 0.836743C4.16326 1.05866 4.25141 1.27149 4.40833 1.42841L7.15833 4.17008H0.833333C0.61232 4.17008 0.400358 4.25787 0.244078 4.41415C0.0877975 4.57044 0 4.7824 0 5.00341C0 5.22442 0.0877975 5.43639 0.244078 5.59267C0.400358 5.74895 0.61232 5.83674 0.833333 5.83674H7.15833L4.40833 8.57841C4.33023 8.65588 4.26823 8.74805 4.22592 8.8496C4.18362 8.95115 4.16183 9.06007 4.16183 9.17008C4.16183 9.28009 4.18362 9.38901 4.22592 9.49056C4.26823 9.59211 4.33023 9.68427 4.40833 9.76174C4.4858 9.83985 4.57797 9.90185 4.67952 9.94415C4.78107 9.98646 4.88999 10.0082 5 10.0082C5.11001 10.0082 5.21893 9.98646 5.32048 9.94415C5.42203 9.90185 5.5142 9.83985 5.59167 9.76174L9.75833 5.59508C9.8342 5.51582 9.89367 5.42237 9.93333 5.32008C10.0167 5.11719 10.0167 4.88963 9.93333 4.68674Z" fill="#045CCE" />
+                          </svg></span>
+                        </button>
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="online-exam-library__pagination">
+                  <button 
+                    className="online-exam-library__pagination-btn online-exam-library__pagination-btn--prev"
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M14.1669 9.16715H7.84191L10.5919 6.42548C10.7488 6.26856 10.837 6.05573 10.837 5.83381C10.837 5.6119 10.7488 5.39907 10.5919 5.24215C10.435 5.08523 10.2222 4.99707 10.0002 4.99707C9.77832 4.99707 9.56549 5.08523 9.40857 5.24215L5.24191 9.40881C5.16604 9.48807 5.10657 9.58152 5.06691 9.68381C4.98356 9.8867 4.98356 10.1143 5.06691 10.3171C5.10657 10.4194 5.16604 10.5129 5.24191 10.5921L9.40857 14.7588C9.48604 14.8369 9.57821 14.8989 9.67976 14.9412C9.78131 14.9835 9.89023 15.0053 10.0002 15.0053C10.1102 15.0053 10.2192 14.9835 10.3207 14.9412C10.4223 14.8989 10.5144 14.8369 10.5919 14.7588C10.67 14.6813 10.732 14.5892 10.7743 14.4876C10.8166 14.3861 10.8384 14.2772 10.8384 14.1671C10.8384 14.0571 10.8166 13.9482 10.7743 13.8467C10.732 13.7451 10.67 13.653 10.5919 13.5755L7.84191 10.8338H14.1669C14.3879 10.8338 14.5999 10.746 14.7562 10.5897C14.9124 10.4335 15.0002 10.2215 15.0002 10.0005C15.0002 9.77947 14.9124 9.56751 14.7562 9.41122C14.5999 9.25494 14.3879 9.16715 14.1669 9.16715Z" fill="#6D6D6D"/>
+                    </svg>
+                    <span>Trang đầu</span>
+                  </button>
+
+                  <div className="online-exam-library__pagination-numbers">
+                    {[...Array(totalPages)].map((_, index) => {
+                      const page = index + 1;
+                      // Show first 2 pages, last 2 pages, current page and 1 page around current
+                      const showPage = 
+                        page === 1 || 
+                        page === 2 || 
+                        page === totalPages || 
+                        page === totalPages - 1 ||
+                        page === currentPage ||
+                        page === currentPage - 1 ||
+                        page === currentPage + 1;
+
+                      if (showPage) {
+                        return (
+                          <button
+                            key={page}
+                            className={`online-exam-library__pagination-number ${
+                              page === currentPage ? 'active' : ''
+                            }`}
+                            onClick={() => handlePageChange(page)}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (
+                        (page === 3 && currentPage > 4) ||
+                        (page === totalPages - 2 && currentPage < totalPages - 3)
+                      ) {
+                        return <span key={page} className="online-exam-library__pagination-dots">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button 
+                    className="online-exam-library__pagination-btn online-exam-library__pagination-btn--next"
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <span>Trang cuối</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                      <path d="M14.9333 9.68381C14.8937 9.58152 14.8342 9.48807 14.7583 9.40881L10.5917 5.24215C10.514 5.16445 10.4217 5.10281 10.3202 5.06076C10.2187 5.01871 10.1099 4.99707 10 4.99707C9.77808 4.99707 9.56525 5.08523 9.40833 5.24215C9.33063 5.31985 9.269 5.41209 9.22695 5.51361C9.1849 5.61512 9.16326 5.72393 9.16326 5.83381C9.16326 6.05573 9.25141 6.26856 9.40833 6.42548L12.1583 9.16715H5.83333C5.61232 9.16715 5.40036 9.25494 5.24408 9.41122C5.0878 9.56751 5 9.77947 5 10.0005C5 10.2215 5.0878 10.4335 5.24408 10.5897C5.40036 10.746 5.61232 10.8338 5.83333 10.8338H12.1583L9.40833 13.5755C9.33023 13.653 9.26823 13.7451 9.22592 13.8467C9.18362 13.9482 9.16183 14.0571 9.16183 14.1671C9.16183 14.2772 9.18362 14.3861 9.22592 14.4876C9.26823 14.5892 9.33023 14.6813 9.40833 14.7588C9.4858 14.8369 9.57797 14.8989 9.67952 14.9412C9.78107 14.9835 9.88999 15.0053 10 15.0053C10.11 15.0053 10.2189 14.9835 10.3205 14.9412C10.422 14.8989 10.5142 14.8369 10.5917 14.7588L14.7583 10.5921C14.8342 10.5129 14.8937 10.4194 14.9333 10.3171C15.0167 10.1143 15.0167 9.8867 14.9333 9.68381Z" fill="#6D6D6D"/>
+                    </svg>
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </main>
       </div>

@@ -5,9 +5,6 @@
     background-color: #f8f9fa;
 }
 
-/* Header Wrapper */
-.online-exam-library__header-wrapper {}
-
 /* Breadcrumb */
 .online-exam-library__breadcrumb {
     display: flex;
@@ -602,6 +599,94 @@
 .online-exam-library__card-arrow {
     font-size: 16px;
     margin-left: 8px;
+}
+
+/* Pagination */
+.online-exam-library__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 40px;
+    padding: 20px 0;
+}
+
+.online-exam-library__pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #333333;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.online-exam-library__pagination-btn:hover:not(:disabled) {
+    color: #0537A5;
+}
+
+.online-exam-library__pagination-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    color: #9ca3af;
+}
+
+.online-exam-library__pagination-btn--prev svg {
+    order: -1;
+}
+
+.online-exam-library__pagination-btn--next svg {
+    order: 1;
+}
+
+.online-exam-library__pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.online-exam-library__pagination-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid #D9D9D9;
+    background-color: #ffffff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 16px;
+    font-weight: 400;
+    color: #333333;
+}
+
+.online-exam-library__pagination-number:hover {
+    border-color: #0537A5;
+    color: #0537A5;
+}
+
+.online-exam-library__pagination-number.active {
+    background-color: #ffffff;
+    border-color: #0537A5;
+    color: #0537A5;
+    font-weight: 500;
+}
+
+.online-exam-library__pagination-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    color: #9ca3af;
+    font-size: 16px;
+    font-weight: 400;
 }
 
 /* Responsive */
