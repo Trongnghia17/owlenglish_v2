@@ -62,7 +62,10 @@ class ExamSkillController extends Controller
         $query = ExamSkill::query();
 
         if ($request->boolean('with_sections')) {
-            $query->with('sections.questionGroups.questions');
+            $query->with([
+                'sections.questionGroups.questions', // For Reading/Listening
+                'sections.questions' // For Writing/Speaking
+            ]);
         }
 
         $skill = $query->find($id);

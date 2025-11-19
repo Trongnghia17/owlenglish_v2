@@ -19,7 +19,7 @@ class ExamSectionController extends Controller
         $query = ExamSection::query();
 
         if ($request->boolean('with_questions')) {
-            $query->with('questionGroups.questions');
+            $query->with(['questionGroups.questions', 'questions']);
         }
 
         $section = $query->find($id);

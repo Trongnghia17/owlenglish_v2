@@ -22,16 +22,62 @@
   font-size: 20px;
 }
 
+/* Font size variations for task title */
+.writing-test__content--large .writing-test__task-title {
+  font-size: 30px;
+}
+
+.writing-test__content--extra-large .writing-test__task-title {
+  font-size: 32px;
+}
+
+/* Font size variations for instructions */
+.writing-test__content--large .writing-test__task-instructions {
+  font-size: 18px;
+}
+
+.writing-test__content--extra-large .writing-test__task-instructions {
+  font-size: 20px;
+}
+
+/* Font size variations for task content */
+.writing-test__content--large .writing-test__task-content {
+  font-size: 18px;
+}
+
+.writing-test__content--extra-large .writing-test__task-content {
+  font-size: 20px;
+}
+
+/* Font size variations for question content */
+.writing-test__content--large .writing-test__question-content {
+  font-size: 18px;
+}
+
+.writing-test__content--extra-large .writing-test__question-content {
+  font-size: 20px;
+}
+
+/* Font size variations for answer label */
+.writing-test__content--large .writing-test__answer-label {
+  font-size: 18px;
+}
+
+.writing-test__content--extra-large .writing-test__answer-label {
+  font-size: 20px;
+}
+
 /* Task Container - 2 column layout */
 .writing-test__task {
-  display: contents; /* Children will be direct grid items */
+  display: contents;
+  /* Children will be direct grid items */
 }
 
 /* Left Column - Instructions */
 .writing-test__task-left {
   background: white;
   overflow-y: auto;
-  padding: 32px 48px;
+  padding: 40px;
   border-radius: 8px;
 }
 
@@ -44,7 +90,7 @@
   font-size: 28px;
   font-weight: 700;
   color: #1F2937;
-  margin: 0 0 12px 0;
+  margin: 0px;
 }
 
 .writing-test__task-info {
@@ -76,10 +122,16 @@
 
 /* Task Content (for images, charts, etc.) */
 .writing-test__task-content {
-  margin-bottom: 32px;
-  padding: 24px;
-  background: #F9FAFB;
-  border-radius: 8px;
+
+  display: flex;
+  height: 50px;
+  padding: 0 var(--Spacing-5, 16px);
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  border-radius: var(--Radius-S, 5px);
+  background: var(--Main-color-Primary-7, rgba(4, 92, 206, 0.07));
+
 }
 
 .writing-test__task-content img {
@@ -91,7 +143,12 @@
 }
 
 .writing-test__task-content p {
-  margin: 12px 0;
+  color: #0537A5 !important;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  margin: 0;
   line-height: 1.8;
 }
 
@@ -106,11 +163,13 @@
 
 .writing-test__answer-header {
   display: flex;
-  justify-content: space-between;
+  padding: var(--Spacing-5, 16px);
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #E5E7EB;
+  gap: 10px;
+  align-self: stretch;
+  border-radius: var(--Radius-S, 5px);
+  background: var(--Main-color-Primary-7, rgba(4, 92, 206, 0.07));
+  margin-bottom: 10px;
 }
 
 .writing-test__answer-label {
@@ -123,6 +182,25 @@
   font-size: 14px;
   color: #6B7280;
   font-weight: 500;
+}
+
+/* Word count footer below textarea */
+.writing-test__word-count-footer {
+  text-align: right;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.writing-test__word-count-footer .text-red {
+  color: #DC2626;
+  font-weight: 600;
+}
+
+.writing-test__word-count-footer .text-green {
+  color: #16A34A;
+  font-weight: 600;
 }
 
 /* Textarea */
@@ -207,6 +285,59 @@
   background: #9CA3AF;
 }
 
+/* Question Content Section */
+.writing-test__questions {
+  margin-top: 24px;
+}
+
+.writing-test__question {
+  margin-bottom: 24px;
+}
+
+.writing-test__question-content {
+  line-height: 1.8;
+  color: #1F2937;
+  font-size: 16px;
+}
+
+.writing-test__question-content p {
+  margin: 12px 0;
+}
+
+.writing-test__question-content strong {
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.writing-test__question-content ul,
+.writing-test__question-content ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.writing-test__question-content li {
+  margin: 8px 0;
+}
+
+/* Table trong question content */
+.writing-test__question-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+}
+
+.writing-test__question-content table td,
+.writing-test__question-content table th {
+  border: 1px solid #D1D5DB;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.writing-test__question-content table th {
+  background: #F3F4F6;
+  font-weight: 600;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .writing-test__content {
@@ -224,5 +355,13 @@
 
   .writing-test__task-title {
     font-size: 24px;
+  }
+
+  .writing-test__questions-title {
+    font-size: 18px;
+  }
+
+  .writing-test__question {
+    padding: 16px;
   }
 }
