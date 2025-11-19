@@ -12,6 +12,9 @@ export default function ExamInstructions() {
   };
 
   const handleStartExam = () => {
+    // Xác định skill type từ exam data (reading, writing, speaking, listening)
+    const skillType = examData?.skillType?.toLowerCase() || 'reading';
+    
     if (sectionId) {
       // Chuyển đến trang làm bài section
       // navigate(`/exam/section/${skillId}/${sectionId}/test`);

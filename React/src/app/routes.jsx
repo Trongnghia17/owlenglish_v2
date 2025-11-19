@@ -14,6 +14,9 @@ import ExamPackage from '../features/exams/pages/ExamPackage';
 import ExamPackageDetail from '../features/exams/pages/ExamPackageDetail';
 import ExamInstructions from '../features/exams/pages/ExamInstructions';
 import ReadingTest from '../features/exams/pages/ReadingTest';
+import WritingTest from '../features/exams/pages/WritingTest';
+import SpeakingTest from '../features/exams/pages/SpeakingTest';
+import ListeningTest from '../features/exams/pages/ListeningTest';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
@@ -46,13 +49,44 @@ export const router = createBrowserRouter([
   },
 
   // Exam Test Pages - Trang làm bài
+  // Reading
   {
-    path: '/exam/section/:skillId/:sectionId/test',
+    path: '/exam/section/:skillId/:sectionId/test/reading',
     element: <ReadingTest />,
   },
   {
-    path: '/exam/full/:skillId/test',
+    path: '/exam/full/:skillId/test/reading',
     element: <ReadingTest />,
+  },
+  
+  // Writing
+  {
+    path: '/exam/section/:skillId/:sectionId/test/writing',
+    element: <WritingTest />,
+  },
+  {
+    path: '/exam/full/:skillId/test/writing',
+    element: <WritingTest />,
+  },
+  
+  // Speaking
+  {
+    path: '/exam/section/:skillId/:sectionId/test/speaking',
+    element: <SpeakingTest />,
+  },
+  {
+    path: '/exam/full/:skillId/test/speaking',
+    element: <SpeakingTest />,
+  },
+  
+  // Listening
+  {
+    path: '/exam/section/:skillId/:sectionId/test/listening',
+    element: <ListeningTest />,
+  },
+  {
+    path: '/exam/full/:skillId/test/listening',
+    element: <ListeningTest />,
   },
 
   // phần thi TOEIC
