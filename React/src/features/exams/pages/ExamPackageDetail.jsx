@@ -175,7 +175,8 @@ export default function ExamDetailView() {
                 <SelectExamModeModal
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
-                    skill={selectedSkill}        
+                    skill={selectedSkill}   
+                    examType={examData.exam_type}     
                     onStartExam={handleStartExam} 
                 />
             )}

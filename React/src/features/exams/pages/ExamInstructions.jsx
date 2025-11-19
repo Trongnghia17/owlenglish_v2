@@ -6,25 +6,30 @@ export default function ExamInstructions() {
   const { skillId, sectionId } = useParams();
   const location = useLocation();
   const examData = location.state?.examData;
-
+  const examType = location.state?.examType;
   const handleBack = () => {
     navigate(-1);
   };
 
-  const handleStartExam = () => {
-    // Xác định skill type từ exam data (reading, writing, speaking, listening)
+  // Thay đổi tên biến trong tham số để tránh nhầm lẫn
+const handleStartExam = (skillId, section_id = null) => { 
     const skillType = examData?.skillType?.toLowerCase() || 'reading';
-    
-    if (sectionId) {
-      // Chuyển đến trang làm bài section
-      // navigate(`/exam/section/${skillId}/${sectionId}/test`);
-      navigate(`/toeic-listening/${skillId}/${sectionId}`);
+    const type = examType?.toLowerCase() || '';
+
+    if (type === 'toeic') {
+        if (section_id) {
+            navigate(`/toeic-listening/${skillId}/${section_id}`);
+        } else {
+            navigate(`/toeic-listening/${skillId}`);
+        }
     } else {
-      // Chuyển đến trang làm bài full test
-      // navigate(`/exam/full/${skillId}/test`);
-      navigate(`/toeic-listening/${skillId}`);
+        if (section_id) {
+            navigate(`/exam/section/${skillId}/${section_id}/test/${skillType}`);
+        } else {
+            navigate(`/exam/full/${skillId}/test/${skillType}`);
+        }
     }
-  };
+};
 
   // Chuyển đổi phút sang giờ:phút
   const formatTime = (minutes) => {
@@ -139,7 +144,7 @@ export default function ExamInstructions() {
           <div className="exam-instructions-page__footer">
             <button
               className="exam-instructions-page__start-button"
-              onClick={handleStartExam}
+              onClick={() => handleStartExam(skillId, sectionId)}
             >
               Bắt đầu
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
