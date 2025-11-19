@@ -162,7 +162,44 @@
                         <!-- Pagination -->
                         @if($exams->hasPages())
                             <div class="d-flex justify-content-center mt-4">
-                                {{ $exams->links() }}
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        {{-- Previous Page Link --}}
+                                        @if ($exams->onFirstPage())
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&lsaquo;</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $exams->previousPageUrl() }}" rel="prev">&lsaquo;</a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Pagination Elements --}}
+                                        @foreach ($exams->getUrlRange(1, $exams->lastPage()) as $page => $url)
+                                            @if ($page == $exams->currentPage())
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ $page }}</span>
+                                                </li>
+                                            @else
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                                </li>
+                                            @endif
+                                        @endforeach
+
+                                        {{-- Next Page Link --}}
+                                        @if ($exams->hasMorePages())
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $exams->nextPageUrl() }}" rel="next">&rsaquo;</a>
+                                            </li>
+                                        @else
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&rsaquo;</span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </nav>
                             </div>
                         @endif
                     </div>
@@ -183,84 +220,6 @@
                 font-size: 14px;
             }
 
-            /* Pagination Styles */
-            .pagination {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                margin: 0;
-                padding: 20px 0;
-            }
-
-            .pagination .page-item {
-                list-style: none;
-            }
-
-            .pagination .page-link {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 44px;
-                height: 44px;
-                padding: 0 12px;
-                border: 1px solid #D9D9D9;
-                background-color: #ffffff;
-                border-radius: 8px;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 16px;
-                font-weight: 400;
-                color: #333333;
-                text-decoration: none;
-            }
-
-            .pagination .page-link:hover {
-                border-color: #0537A5;
-                color: #0537A5;
-                background-color: #ffffff;
-            }
-
-            .pagination .page-item.active .page-link {
-                background-color: #ffffff;
-                border-color: #0537A5;
-                color: #0537A5;
-                font-weight: 500;
-                z-index: 3;
-            }
-
-            .pagination .page-item.disabled .page-link {
-                cursor: not-allowed;
-                opacity: 0.4;
-                color: #9ca3af;
-                background-color: #ffffff;
-                border-color: #D9D9D9;
-            }
-
-            .pagination .page-item.disabled .page-link:hover {
-                border-color: #D9D9D9;
-                color: #9ca3af;
-            }
-
-            /* Style for prev/next buttons */
-            .pagination .page-item:first-child .page-link,
-            .pagination .page-item:last-child .page-link {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 10px 16px;
-                border: none;
-                background-color: transparent;
-                font-size: 14px;
-                font-weight: 500;
-                min-width: auto;
-            }
-
-            .pagination .page-item:first-child .page-link:hover:not(.disabled),
-            .pagination .page-item:last-child .page-link:hover:not(.disabled) {
-                background-color: transparent;
-                border: none;
-            }
         </style>
     @endpush
 
