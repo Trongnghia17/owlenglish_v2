@@ -182,6 +182,85 @@
                 min-height: 200px;
                 font-size: 14px;
             }
+
+            /* Pagination Styles */
+            .pagination {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                margin: 0;
+                padding: 20px 0;
+            }
+
+            .pagination .page-item {
+                list-style: none;
+            }
+
+            .pagination .page-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 44px;
+                height: 44px;
+                padding: 0 12px;
+                border: 1px solid #D9D9D9;
+                background-color: #ffffff;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 16px;
+                font-weight: 400;
+                color: #333333;
+                text-decoration: none;
+            }
+
+            .pagination .page-link:hover {
+                border-color: #0537A5;
+                color: #0537A5;
+                background-color: #ffffff;
+            }
+
+            .pagination .page-item.active .page-link {
+                background-color: #ffffff;
+                border-color: #0537A5;
+                color: #0537A5;
+                font-weight: 500;
+                z-index: 3;
+            }
+
+            .pagination .page-item.disabled .page-link {
+                cursor: not-allowed;
+                opacity: 0.4;
+                color: #9ca3af;
+                background-color: #ffffff;
+                border-color: #D9D9D9;
+            }
+
+            .pagination .page-item.disabled .page-link:hover {
+                border-color: #D9D9D9;
+                color: #9ca3af;
+            }
+
+            /* Style for prev/next buttons */
+            .pagination .page-item:first-child .page-link,
+            .pagination .page-item:last-child .page-link {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 16px;
+                border: none;
+                background-color: transparent;
+                font-size: 14px;
+                font-weight: 500;
+                min-width: auto;
+            }
+
+            .pagination .page-item:first-child .page-link:hover:not(.disabled),
+            .pagination .page-item:last-child .page-link:hover:not(.disabled) {
+                background-color: transparent;
+                border: none;
+            }
         </style>
     @endpush
 
