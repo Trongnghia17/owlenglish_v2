@@ -15,7 +15,7 @@ export default function Footer() {
         <div className="col">
           <h4 className="colTitle">Liên hệ</h4>
           <ul className="list">
-            <li><a href="https://zalo.me/" className="link">Zalo: https://zalo.me/</a></li>
+            <li><a href="https://zalo.me/0909017399" target='_blank' className="link">Zalo: https://zalo.me/</a></li>
             <li><a href="tel:0909017399" className="link">Hotline: 090 901 73 99</a></li>
             <li><a href="#" className="link">Instagram</a></li>
             <li><a href="#" className="link">Tiktok</a></li>

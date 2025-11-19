@@ -15,7 +15,9 @@
 
 .select-exam-modal {
   background: white;
-  border-radius: 16px;
+  border-radius: 8px;
+  border: 1px solid;
+  border-image: linear-gradient(130.31deg, rgba(4, 92, 206, 0.34) 1.71%, rgba(178, 211, 255, 0.53) 49.48%, rgba(4, 92, 206, 0.42) 97.25%);
   width: 100%;
   max-width: 600px;
   max-height: 90vh;

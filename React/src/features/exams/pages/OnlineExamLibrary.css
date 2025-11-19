@@ -19,7 +19,6 @@
 
 .online-exam-library__breadcrumb-item {
     color: var(--Mine-Shaft-500, #6D6D6D);
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -32,7 +31,6 @@
 
 .online-exam-library__breadcrumb-item--active {
     color: #0537A5;
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -41,7 +39,6 @@
 
 .online-exam-library__breadcrumb-item--active:hover {
     color: var(--Main-color-Primary-2, #0537A5);
-    font-family: var(--FontFont-font, Inter);
     font-size: 12px;
     font-style: normal;
     font-weight: 600;
@@ -584,6 +581,7 @@
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
+    background-color: #F8F8F8;
 }
 
 .online-exam-library__card-button {

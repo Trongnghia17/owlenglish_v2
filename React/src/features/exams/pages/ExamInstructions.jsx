@@ -14,10 +14,12 @@ export default function ExamInstructions() {
   const handleStartExam = () => {
     if (sectionId) {
       // Chuyển đến trang làm bài section
-      navigate(`/exam/section/${skillId}/${sectionId}/test`);
+      // navigate(`/exam/section/${skillId}/${sectionId}/test`);
+      navigate(`/toeic-listening/${skillId}/${sectionId}`);
     } else {
       // Chuyển đến trang làm bài full test
-      navigate(`/exam/full/${skillId}/test`);
+      // navigate(`/exam/full/${skillId}/test`);
+      navigate(`/toeic-listening/${skillId}`);
     }
   };
 
