@@ -525,7 +525,7 @@
                                                                 <!-- Question Type -->
                                                                 <div class="mb-3">
                                                                     <label class="form-label">Question Type</label>
-                                                                    <select class="form-select"
+                                                                    <select class="form-select group-question-type-select"
                                                                         name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][question_type]">
                                                                         <option value="multiple_choice" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
                                                                         <option value="yes_no_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'yes_no_not_given' ? 'selected' : '' }}>Yes/No/Not Given</option>
@@ -534,6 +534,16 @@
                                                                         <option value="table_selection" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'table_selection' ? 'selected' : '' }}>Table Selection</option>
 
                                                                     </select>
+                                                                </div>
+
+                                                                <!-- Number of Options (for Table Selection) -->
+                                                                <div class="mb-3 table-selection-options" style="display: {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'table_selection' ? 'block' : 'none' }};">
+                                                                    <label class="form-label">Number of Options</label>
+                                                                    <input type="number" class="form-control" 
+                                                                        name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][number_of_options]"
+                                                                        value="{{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.number_of_options', $group->options['number_of_options'] ?? 4) }}"
+                                                                        min="2" max="10" placeholder="Enter number of options (e.g., 4)">
+                                                                    <small class="form-text text-muted">Number of dropdown options for table selection questions</small>
                                                                 </div>
 
                                                                 <!-- Group Options -->
@@ -865,11 +875,21 @@
 
                 // Question type change handler
                 document.addEventListener('change', function (e) {
+                    // Handle individual question type select
                     if (e.target.matches('.question-type-select')) {
                         const questionItem = e.target.closest('.question-item');
                         const optionsSection = questionItem?.querySelector('.question-options-section');
                         if (optionsSection) {
                             optionsSection.style.display = e.target.value === 'multiple_choice' ? 'block' : 'none';
+                        }
+                    }
+                    
+                    // Handle group question type select (for Table Selection)
+                    if (e.target.matches('.group-question-type-select')) {
+                        const groupItem = e.target.closest('.question-group-item');
+                        const tableSelectionOptions = groupItem?.querySelector('.table-selection-options');
+                        if (tableSelectionOptions) {
+                            tableSelectionOptions.style.display = e.target.value === 'table_selection' ? 'block' : 'none';
                         }
                     }
                 });
@@ -1205,13 +1225,18 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Question Type</label>
-                                <select class="form-select" name="sections[${sectionIdx}][groups][${groupIndex}][question_type]">
+                                <select class="form-select group-question-type-select" name="sections[${sectionIdx}][groups][${groupIndex}][question_type]">
                                     <option value="multiple_choice">Multiple Choice</option>
                                     <option value="yes_no_not_given">Yes/No/Not Given</option>
                                     <option value="true_false_not_given">True/False/Not Given</option>
                                     <option value="short_text">Short Text</option>
                                     <option value="table_selection">Table Selection</option>
                                 </select>
+                            </div>
+                            <div class="mb-3 table-selection-options" style="display: none;">
+                                <label class="form-label">Number of Options</label>
+                                <input type="number" class="form-control" name="sections[${sectionIdx}][groups][${groupIndex}][number_of_options]" value="4" min="2" max="10" placeholder="Enter number of options (e.g., 4)">
+                                <small class="form-text text-muted">Number of dropdown options for table selection questions</small>
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-6">

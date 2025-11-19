@@ -590,6 +590,7 @@ export default function ReadingTest() {
                   isDragDrop: isDragDrop,
                   hasAnswersInContent: hasAnswersInContent,
                   dragDropAnswers: dragDropAnswers,
+                  numberOfOptions: groupOptions.number_of_options || 7,
                   questions: questions,
                   startNumber: questions[0]?.number || 1,
                   endNumber: questions[questions.length - 1]?.number || 1
@@ -749,6 +750,7 @@ export default function ReadingTest() {
                       isDragDrop: isDragDrop,
                       hasAnswersInContent: hasAnswersInContent,
                       dragDropAnswers: dragDropAnswers,
+                      numberOfOptions: groupOptions.number_of_options || 7,
                       questions: questions,
                       startNumber: questions[0]?.number || questionNumber,
                       endNumber: questions[questions.length - 1]?.number || questionNumber
@@ -923,24 +925,51 @@ export default function ReadingTest() {
       ));
     }
 
-    // 3. DẠNG TABLE_SELECTION - Render dropdown
+    // 3. DẠNG TABLE_SELECTION - Render table with checkboxes
     if (questionType === 'table_selection') {
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item reading-test__question-item--matching">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">{question.number}</div>
-            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
+      const numberOfOptions = group.numberOfOptions || 6;
+      const optionLetters = Array.from({ length: numberOfOptions }, (_, i) => String.fromCharCode(65 + i)); // A, B, C, D, E, F
+      
+      return (
+        <div className="reading-test__selection-table-wrapper">
+          {/* Header */}
+          <div className="reading-test__selection-header">
+            <div className="reading-test__selection-header-spacer"></div>
+            {optionLetters.map((letter) => (
+              <div key={letter} className="reading-test__selection-header-cell">
+                {letter}
+              </div>
+            ))}
           </div>
-          <div className="reading-test__matching-select">
-            <select className="reading-test__select" value={answers[question.id] || ''} onChange={(e) => handleAnswerSelect(question.id, e.target.value)}>
-              <option value="">Select...</option>
-              {(group.options || []).map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
+          
+          {/* Rows */}
+          {group.questions.map((question) => (
+            <div key={question.id} className="reading-test__selection-row">
+              <div className="reading-test__selection-question">
+                <span className="reading-test__question-number">{question.number}</span>
+                <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
+              </div>
+              <div className="reading-test__selection-options">
+                {optionLetters.map((letter) => (
+                  <div key={letter} className="reading-test__selection-option-cell">
+                    <label className="reading-test__checkbox-wrapper">
+                      <input
+                        type="radio"
+                        name={`question-${question.id}`}
+                        value={letter}
+                        checked={answers[question.id] === letter}
+                        onChange={() => handleAnswerSelect(question.id, letter)}
+                        className="reading-test__checkbox-input"
+                      />
+                      <span className="reading-test__checkbox-custom"></span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      ));
+      );
     }
 
     // 4. DẠNG CÒN LẠI - Render radio buttons với group.options

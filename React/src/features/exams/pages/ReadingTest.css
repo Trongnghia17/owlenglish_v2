@@ -1879,6 +1879,169 @@ line-height: normal;
   transform: scale(0.98);
 }
 
+/* Table Selection Styles - Grid Layout */
+.reading-test__selection-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 16px 0;
+}
+
+/* Header Row */
+.reading-test__selection-header {
+  display: flex;
+  align-items: center;
+
+  margin-bottom: 8px;
+}
+
+.reading-test__selection-header-spacer {
+  flex: 1;
+  min-width: 132px;
+}
+
+.reading-test__selection-header-cell {
+  width: 45px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+/* Question Row */
+.reading-test__selection-row {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 12px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+
+.reading-test__selection-question {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content:center;
+  gap: 12px;
+}
+
+.reading-test__selection-question .reading-test__question-number {
+    color: var(--Main-color-Primary-4, #045CCE);
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 24px;
+    justify-content: center;
+    display: flex;
+}
+
+.reading-test__selection-question .reading-test__question-text {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1F2937;
+  padding: 10px 12px;
+  border-radius: var(--Radius-M-2, 10px);
+  border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
+  min-height: 75px;
+  display: flex;
+  align-items: center;
+}
+
+.reading-test__selection-options {
+  display: flex;
+  align-items: stretch;
+}
+
+.reading-test__selection-option-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reading-test__checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
+}
+
+.reading-test__checkbox-input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.reading-test__checkbox-custom {
+  position: relative;
+  width: 45px;
+  height: 40px;
+  min-height: 75px;
+  border: 2px solid #D1D5DB;
+  border-radius: 6px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+/* Always show checkmark (default: light gray) */
+.reading-test__checkbox-custom::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 11px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9' viewBox='0 0 12 9' fill='none'%3E%3Cpath d='M11.4433 0.246499C11.3658 0.168392 11.2736 0.106396 11.1721 0.0640889C11.0705 0.0217817 10.9616 0 10.8516 0C10.7416 0 10.6327 0.0217817 10.5311 0.0640889C10.4296 0.106396 10.3374 0.168392 10.2599 0.246499L4.0516 6.46317L1.44327 3.8465C1.36283 3.7688 1.26788 3.7077 1.16384 3.6667C1.05979 3.6257 0.948688 3.60559 0.836871 3.60752C0.725053 3.60946 0.614712 3.6334 0.512147 3.67798C0.409582 3.72255 0.316801 3.7869 0.239102 3.86733C0.161403 3.94777 0.100308 4.04272 0.0593049 4.14676C0.0183016 4.25081 -0.00180712 4.36191 0.000127432 4.47373C0.00206199 4.58555 0.0260018 4.69589 0.0705797 4.79845C0.115158 4.90102 0.179501 4.9938 0.259935 5.0715L3.45994 8.2715C3.53741 8.34961 3.62957 8.4116 3.73112 8.45391C3.83267 8.49622 3.94159 8.518 4.0516 8.518C4.16161 8.518 4.27053 8.49622 4.37208 8.45391C4.47363 8.4116 4.5658 8.34961 4.64327 8.2715L11.4433 1.4715C11.5279 1.39346 11.5954 1.29875 11.6415 1.19334C11.6877 1.08792 11.7115 0.974084 11.7115 0.858999C11.7115 0.743914 11.6877 0.630076 11.6415 0.52466C11.5954 0.419244 11.5279 0.324534 11.4433 0.246499Z' fill='%23D1D5DB'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.reading-test__checkbox-input:checked + .reading-test__checkbox-custom {
+  border-color: #045CCE;
+  background: white;
+}
+
+/* When checked: blue checkmark, full opacity */
+.reading-test__checkbox-input:checked + .reading-test__checkbox-custom::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='9' viewBox='0 0 12 9' fill='none'%3E%3Cpath d='M11.4433 0.246499C11.3658 0.168392 11.2736 0.106396 11.1721 0.0640889C11.0705 0.0217817 10.9616 0 10.8516 0C10.7416 0 10.6327 0.0217817 10.5311 0.0640889C10.4296 0.106396 10.3374 0.168392 10.2599 0.246499L4.0516 6.46317L1.44327 3.8465C1.36283 3.7688 1.26788 3.7077 1.16384 3.6667C1.05979 3.6257 0.948688 3.60559 0.836871 3.60752C0.725053 3.60946 0.614712 3.6334 0.512147 3.67798C0.409582 3.72255 0.316801 3.7869 0.239102 3.86733C0.161403 3.94777 0.100308 4.04272 0.0593049 4.14676C0.0183016 4.25081 -0.00180712 4.36191 0.000127432 4.47373C0.00206199 4.58555 0.0260018 4.69589 0.0705797 4.79845C0.115158 4.90102 0.179501 4.9938 0.259935 5.0715L3.45994 8.2715C3.53741 8.34961 3.62957 8.4116 3.73112 8.45391C3.83267 8.49622 3.94159 8.518 4.0516 8.518C4.16161 8.518 4.27053 8.49622 4.37208 8.45391C4.47363 8.4116 4.5658 8.34961 4.64327 8.2715L11.4433 1.4715C11.5279 1.39346 11.5954 1.29875 11.6415 1.19334C11.6877 1.08792 11.7115 0.974084 11.7115 0.858999C11.7115 0.743914 11.6877 0.630076 11.6415 0.52466C11.5954 0.419244 11.5279 0.324534 11.4433 0.246499Z' fill='%23045CCE'/%3E%3C/svg%3E");
+  opacity: 1;
+}
+
+.reading-test__checkbox-wrapper:hover .reading-test__checkbox-custom {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.reading-test__checkbox-input:focus + .reading-test__checkbox-custom {
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reading-test__table-selection-options {
+    padding-left: 0;
+    justify-content: center;
+  }
+  
+  .reading-test__checkbox-custom {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .reading-test__checkbox-input:checked + .reading-test__checkbox-custom::after {
+    width: 12px;
+    height: 9px;
+  }
+}
+
 /* Adjust inline dropzone in table context */
 .reading-test__drag-drop-table .reading-test__inline-dropzone {
   min-width: 100px;
