@@ -6,7 +6,7 @@ import readingIcon from '@/assets/images/exam-reading.png';
 import listeningIcon from '@/assets/images/exam-listening.png';
 import writingIcon from '@/assets/images/exam-writing.png';
 import speakingIcon from '@/assets/images/exam-speaking.png';
-export default function SelectExamModeModal({ isOpen, onClose, skill }) {
+export default function SelectExamModeModal({ isOpen, onClose, skill, examType }) {
   const navigate = useNavigate();
   const [skillDetails, setSkillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -55,10 +55,10 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
   const handleFullTestClick = () => {
     // Xác định skill type từ skill name
     const skillType = skill.name.toLowerCase().includes('reading') ? 'reading' :
-                     skill.name.toLowerCase().includes('writing') ? 'writing' :
-                     skill.name.toLowerCase().includes('speaking') ? 'speaking' :
-                     skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
-    
+      skill.name.toLowerCase().includes('writing') ? 'writing' :
+        skill.name.toLowerCase().includes('speaking') ? 'speaking' :
+          skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
+
     // Tạo exam data cho full test
     const examData = {
       name: `${skill.name} - Full Test`,
@@ -71,17 +71,17 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
 
     // Navigate đến trang hướng dẫn với state
     navigate(`/exam/instructions/${skill.id}`, {
-      state: { examData }
+      state: { examData, examType }
     });
   };
 
   const handleSectionClick = (section) => {
     // Xác định skill type từ skill name
     const skillType = skill.name.toLowerCase().includes('reading') ? 'reading' :
-                     skill.name.toLowerCase().includes('writing') ? 'writing' :
-                     skill.name.toLowerCase().includes('speaking') ? 'speaking' :
-                     skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
-    
+      skill.name.toLowerCase().includes('writing') ? 'writing' :
+        skill.name.toLowerCase().includes('speaking') ? 'speaking' :
+          skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
+
     // Tạo exam data cho section
     const examData = {
       name: `${skill.name} - ${section.title || 'Section'}`,
@@ -94,7 +94,7 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
 
     // Navigate đến trang hướng dẫn với state
     navigate(`/exam/instructions/${skill.id}/${section.id}`, {
-      state: { examData }
+      state: { examData, examType }
     });
   };
 
