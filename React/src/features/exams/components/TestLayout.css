@@ -50,8 +50,8 @@
 }
 
 .test-layout__logo {
-    width: 40px;
-    height: 40px;
+    width: 130px;
+    height: 34px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -209,7 +209,7 @@
 .test-layout__font-dropdown-close {
     display: flex;
     align-items: center;
-    justify-content: center;    
+    justify-content: center;
     padding: 10px 24px;
     background: #F3F4F6;
     border: none;

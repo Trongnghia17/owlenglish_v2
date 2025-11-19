@@ -1,13 +1,20 @@
 /* Speaking Test - Main Content */
+.main_v2 {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  margin: 0 auto;
+  background: var(--Mine-Shaft-50, #F8F8F8);
+}
 
 .speaking-test__content {
   flex: 1;
   overflow-y: auto;
   padding: 40px;
-  background: #F8F8F8;
   max-width: 900px;
-  margin: 0 auto;
-  width: 100%;
+  border-radius: var(--Radius-M, 8px);
+  background: var(--Main-color-White, #FFF);
 }
 
 /* Font size variations */
@@ -21,146 +28,153 @@
 
 /* Part Header */
 .speaking-test__part-header {
-  background: white;
-  border-radius: 8px;
-  padding: 32px;
   margin-bottom: 24px;
 }
 
 .speaking-test__part-title {
-  font-size: 28px;
+
+  margin: 0;
+  color: var(--Mine-Shaft-800, #454545);
+  font-size: 32px;
+  font-style: normal;
   font-weight: 700;
-  color: #1F2937;
-  margin: 0 0 16px 0;
+  line-height: normal;
 }
 
-.speaking-test__part-description {
-  padding: 16px;
+/* Instruction */
+.speaking-test__instruction {
+  padding: 16px 20px;
   background: #EFF6FF;
-  border-radius: 8px;
-  color: #045CCE;
-  font-size: 15px;
-  line-height: 1.6;
-  font-weight: 500;
+  color: #0537A5;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  margin-bottom: 32px;
+}
+
+.speaking-test__instruction p {
+  margin: 0;
 }
 
 /* Questions */
 .speaking-test__questions {
-  background: white;
-  border-radius: 8px;
-  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .speaking-test__question-group {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .speaking-test__question-item {
-  padding: 24px;
-  background: #F9FAFB;
-  border-radius: 8px;
-  border: 1px solid #E5E7EB;
+  padding: 16px;
+  border-radius: var(--Radius-S, 5px);
+  border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
+  background: var(--Main-color-White, #FFF);
 }
 
-.speaking-test__question-header {
-  display: flex;
-  gap: 12px;
+.speaking-test__question-content {
   margin-bottom: 20px;
+  line-height: 1.6;
 }
 
-.speaking-test__question-number {
-  flex-shrink: 0;
+.speaking-test__question-label {
   font-size: 16px;
   font-weight: 600;
   color: #1F2937;
+  margin-right: 8px;
 }
 
 .speaking-test__question-text {
-  flex: 1;
   font-size: 16px;
-  line-height: 1.8;
   color: #374151;
 }
 
-.speaking-test__question-text strong {
-  font-weight: 600;
-  color: #1F2937;
+.speaking-test__question-text p {
+  display: inline;
+  margin: 0;
 }
 
 /* Recording Controls */
 .speaking-test__recording-controls {
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  align-items: center;
 }
 
-.speaking-test__record-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: #045CCE;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.speaking-test__record-button:hover {
-  background: #0349B4;
-}
-
-.speaking-test__record-button.recording {
-  background: #DC2626;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Audio Player */
-.speaking-test__audio-player {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.speaking-test__audio-wrapper {
   width: 100%;
 }
 
-.speaking-test__audio-player audio {
-  flex: 1;
-  height: 40px;
-  border-radius: 8px;
+.speaking-test__audio-wrapper audio {
+  width: 100%;
+  height: 51px;
+  border-radius: var(--Radius-XXL, 30px);
+  background: var(--Mine-Shaft-50, #F8F8F8);
 }
 
-.speaking-test__upload-button {
+.speaking-test__action-buttons {
   display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.speaking-test__action-btn {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #10B981;
-  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
 }
 
-.speaking-test__upload-button:hover {
-  background: #059669;
+.speaking-test__record-btn {
+  border-radius: var(--Radius-S, 5px);
+  border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
+  color: var(--Main-color-Primary-4, #045CCE);
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 24px;
+  /* 160% */
+}
+
+
+.speaking-test__record-btn.recording {
+  background: #DC2626;
+  animation: pulse 1.5s infinite;
+}
+
+.speaking-test__upload-btn {
+  background: white;
+  color: #045CCE;
+  border-radius: var(--Radius-S, 5px);
+  border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
+}
+
+.speaking-test__upload-btn:hover {
+  background: #EFF6FF;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Font size variations */
