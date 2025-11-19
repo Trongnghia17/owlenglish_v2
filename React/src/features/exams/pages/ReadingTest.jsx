@@ -157,9 +157,67 @@ export default function ReadingTest() {
                       id: q.id,
                       number: questionNumber++,
                       content: q.content,
-                      correctAnswer: q.answer_content
+                      correctAnswer: q.answer_content,
+                      metadata: q.metadata
                     });
                   });
+                }
+                
+                // Parse options based on question_type
+                let options = [];
+                let optionsWithContent = null;
+                const questionType = (group.question_type || '').toLowerCase();
+                
+                switch (questionType) {
+                  case 'multiple_choice':
+                    // Get from metadata.answers
+                    if (group.questions && group.questions.length > 0) {
+                      const firstQuestion = group.questions[0];
+                      if (firstQuestion.metadata) {
+                        const metadata = typeof firstQuestion.metadata === 'string' 
+                          ? JSON.parse(firstQuestion.metadata) 
+                          : firstQuestion.metadata;
+                        
+                        if (metadata.answers && Array.isArray(metadata.answers)) {
+                          options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
+                          optionsWithContent = metadata.answers.map((answer, index) => {
+                            let content = answer.content || '';
+                            content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
+                            return {
+                              letter: String.fromCharCode(65 + index),
+                              content: content
+                            };
+                          });
+                        }
+                      }
+                    }
+                    break;
+                    
+                  case 'yes_no_not_given':
+                    options = (group.options && group.options.length > 0) 
+                      ? group.options 
+                      : ['Yes', 'No', 'Not Given'];
+                    break;
+                    
+                  case 'true_false_not_given':
+                    options = (group.options && group.options.length > 0) 
+                      ? group.options 
+                      : ['True', 'False', 'Not Given'];
+                    break;
+                    
+                  case 'table_selection':
+                    options = (group.options && group.options.length > 0) ? group.options : [];
+                    break;
+                    
+                  case 'short_text':
+                    // No options needed for text input
+                    options = [];
+                    break;
+                    
+                  default:
+                    // Other types use group.options if available
+                    options = (group.options && group.options.length > 0) ? group.options : [];
+                    break;
                 }
                 
                 allGroups.push({
@@ -168,9 +226,8 @@ export default function ReadingTest() {
                   type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
                   instructions: group.instructions,
                   groupContent: group.content,
-                  options: Array.isArray(group.options) 
-                    ? group.options 
-                    : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['True', 'False', 'Not given']) : ['True', 'False', 'Not given']),
+                  options: options,
+                  optionsWithContent: optionsWithContent,
                   questions: questions,
                   startNumber: questions[0]?.number || 1,
                   endNumber: questions[questions.length - 1]?.number || 1
@@ -216,9 +273,67 @@ export default function ReadingTest() {
                           id: q.id,
                           number: questionNumber++,
                           content: q.content,
-                          correctAnswer: q.answer_content
+                          correctAnswer: q.answer_content,
+                          metadata: q.metadata
                         });
                       });
+                    }
+                    
+                    // Parse options based on question_type
+                    let options = [];
+                    let optionsWithContent = null;
+                    const questionType = (group.question_type || '').toLowerCase();
+                    
+                    switch (questionType) {
+                      case 'multiple_choice':
+                        // Get from metadata.answers
+                        if (group.questions && group.questions.length > 0) {
+                          const firstQuestion = group.questions[0];
+                          if (firstQuestion.metadata) {
+                            const metadata = typeof firstQuestion.metadata === 'string' 
+                              ? JSON.parse(firstQuestion.metadata) 
+                              : firstQuestion.metadata;
+                            
+                            if (metadata.answers && Array.isArray(metadata.answers)) {
+                              options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
+                              optionsWithContent = metadata.answers.map((answer, index) => {
+                                let content = answer.content || '';
+                                content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
+                                return {
+                                  letter: String.fromCharCode(65 + index),
+                                  content: content
+                                };
+                              });
+                            }
+                          }
+                        }
+                        break;
+                        
+                      case 'yes_no_not_given':
+                        options = (group.options && group.options.length > 0) 
+                          ? group.options 
+                          : ['Yes', 'No', 'Not Given'];
+                        break;
+                        
+                      case 'true_false_not_given':
+                        options = (group.options && group.options.length > 0) 
+                          ? group.options 
+                          : ['True', 'False', 'Not Given'];
+                        break;
+                        
+                      case 'table_selection':
+                        options = (group.options && group.options.length > 0) ? group.options : [];
+                        break;
+                        
+                      case 'short_text':
+                        // No options needed for text input
+                        options = [];
+                        break;
+                        
+                      default:
+                        // Other types use group.options if available
+                        options = (group.options && group.options.length > 0) ? group.options : [];
+                        break;
                     }
                     
                     allGroups.push({
@@ -227,9 +342,8 @@ export default function ReadingTest() {
                       type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
                       instructions: group.instructions,
                       groupContent: group.content,
-                      options: Array.isArray(group.options) 
-                        ? group.options 
-                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['True', 'False', 'Not given']) : ['True', 'False', 'Not given']),
+                      options: options,
+                      optionsWithContent: optionsWithContent,
                       questions: questions,
                       startNumber: questions[0]?.number || questionNumber,
                       endNumber: questions[questions.length - 1]?.number || questionNumber
@@ -363,71 +477,28 @@ export default function ReadingTest() {
       ));
     }
 
-    // 2. DẠNG MULTIPLE_CHOICE - Trắc nghiệm
+    // 2. DẠNG MULTIPLE_CHOICE - Render với optionsWithContent
     if (questionType === 'multiple_choice') {
       return group.questions.map((question) => (
         <div key={question.id} className="reading-test__question-item">
           <div className="reading-test__question-row">
-            <div className="reading-test__question-number">
-              {question.number}
-            </div>
-            <div
-              className="reading-test__question-text"
-              dangerouslySetInnerHTML={{ __html: question.content }}
-            />
-          </div>
-          <div className="reading-test__options reading-test__options--grid">
-            {group.options.map((option) => (
-              <label
-                key={option}
-                className={`reading-test__option reading-test__option--box ${
-                  answers[question.id] === option ? 'selected' : ''
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option}
-                  checked={answers[question.id] === option}
-                  onChange={() => handleAnswerSelect(question.id, option)}
-                />
-                <span className="reading-test__option-text">{option}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      ));
-    }
-
-    // 3. DẠNG YES_NO_NOT_GIVEN
-    if (questionType === 'yes_no_not_given') {
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">
-              {question.number}
-            </div>
-            <div
-              className="reading-test__question-text"
-              dangerouslySetInnerHTML={{ __html: question.content }}
-            />
+            <div className="reading-test__question-number">{question.number}</div>
+            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
           </div>
           <div className="reading-test__options">
-            {(group.options || ['Yes', 'No', 'Not Given']).map((option) => (
-              <label
-                key={option}
-                className={`reading-test__option ${
-                  answers[question.id] === option ? 'selected' : ''
-                }`}
-              >
+            {(group.optionsWithContent || []).map((option) => (
+              <label key={option.letter} className={`reading-test__option ${answers[question.id] === option.letter ? 'selected' : ''}`}>
                 <input
                   type="radio"
                   name={`question-${question.id}`}
-                  value={option}
-                  checked={answers[question.id] === option}
-                  onChange={() => handleAnswerSelect(question.id, option)}
+                  value={option.letter}
+                  checked={answers[question.id] === option.letter}
+                  onChange={() => handleAnswerSelect(question.id, option.letter)}
                 />
-                <span className="reading-test__option-text">{option}</span>
+                <span className="reading-test__option-text">
+                  <strong style={{ marginRight: '8px' }}>{option.letter}.</strong>
+                  <span dangerouslySetInnerHTML={{ __html: option.content }} style={{ display: 'inline' }} />
+                </span>
               </label>
             ))}
           </div>
@@ -435,66 +506,19 @@ export default function ReadingTest() {
       ));
     }
 
-    // 4. DẠNG TRUE_FALSE_NOT_GIVEN
-    if (questionType === 'true_false_not_given') {
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">
-              {question.number}
-            </div>
-            <div
-              className="reading-test__question-text"
-              dangerouslySetInnerHTML={{ __html: question.content }}
-            />
-          </div>
-          <div className="reading-test__options">
-            {(group.options || ['True', 'False', 'Not Given']).map((option) => (
-              <label
-                key={option}
-                className={`reading-test__option ${
-                  answers[question.id] === option ? 'selected' : ''
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option}
-                  checked={answers[question.id] === option}
-                  onChange={() => handleAnswerSelect(question.id, option)}
-                />
-                <span className="reading-test__option-text">{option}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      ));
-    }
-
-    // 5. DẠNG TABLE_SELECTION
+    // 3. DẠNG TABLE_SELECTION - Render dropdown
     if (questionType === 'table_selection') {
       return group.questions.map((question) => (
         <div key={question.id} className="reading-test__question-item reading-test__question-item--matching">
           <div className="reading-test__question-row">
-            <div className="reading-test__question-number">
-              {question.number}
-            </div>
-            <div
-              className="reading-test__question-text"
-              dangerouslySetInnerHTML={{ __html: question.content }}
-            />
+            <div className="reading-test__question-number">{question.number}</div>
+            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
           </div>
           <div className="reading-test__matching-select">
-            <select
-              className="reading-test__select"
-              value={answers[question.id] || ''}
-              onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
-            >
+            <select className="reading-test__select" value={answers[question.id] || ''} onChange={(e) => handleAnswerSelect(question.id, e.target.value)}>
               <option value="">Select...</option>
-              {group.options.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+              {(group.options || []).map((option) => (
+                <option key={option} value={option}>{option}</option>
               ))}
             </select>
           </div>
@@ -502,37 +526,30 @@ export default function ReadingTest() {
       ));
     }
 
-    // Mặc định fallback
+    // 4. DẠNG CÒN LẠI - Render radio buttons với group.options
+    // Áp dụng cho: yes_no_not_given, true_false_not_given, và các loại khác
     return group.questions.map((question) => (
       <div key={question.id} className="reading-test__question-item">
         <div className="reading-test__question-row">
-          <div className="reading-test__question-number">
-            {question.number}
+          <div className="reading-test__question-number">{question.number}</div>
+          <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
+        </div>
+        {group.options && group.options.length > 0 && (
+          <div className="reading-test__options">
+            {group.options.map((option) => (
+              <label key={option} className={`reading-test__option ${answers[question.id] === option ? 'selected' : ''}`}>
+                <input
+                  type="radio"
+                  name={`question-${question.id}`}
+                  value={option}
+                  checked={answers[question.id] === option}
+                  onChange={() => handleAnswerSelect(question.id, option)}
+                />
+                <span className="reading-test__option-text">{option}</span>
+              </label>
+            ))}
           </div>
-          <div
-            className="reading-test__question-text"
-            dangerouslySetInnerHTML={{ __html: question.content }}
-          />
-        </div>
-        <div className="reading-test__options">
-          {(group.options || []).map((option) => (
-            <label
-              key={option}
-              className={`reading-test__option ${
-                answers[question.id] === option ? 'selected' : ''
-              }`}
-            >
-              <input
-                type="radio"
-                name={`question-${question.id}`}
-                value={option}
-                checked={answers[question.id] === option}
-                onChange={() => handleAnswerSelect(question.id, option)}
-              />
-              <span className="reading-test__option-text">{option}</span>
-            </label>
-          ))}
-        </div>
+        )}
       </div>
     ));
   };
