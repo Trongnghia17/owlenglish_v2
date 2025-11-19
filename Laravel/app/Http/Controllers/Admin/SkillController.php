@@ -56,7 +56,7 @@ class SkillController extends Controller
     public function create()
     {
         $exams = Exam::with('tests')->orderBy('name')->get();
-        
+
         return view('admin.skills.create', compact('exams'));
     }
 
@@ -89,7 +89,7 @@ class SkillController extends Controller
 
         // Remove exam_id from validated data as it's not in the database table
         unset($validated['exam_id']);
-        
+
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
@@ -105,7 +105,7 @@ class SkillController extends Controller
     public function show(ExamSkill $skill)
     {
         $skill->load(['examTest.exam', 'sections.questionGroups.questions']);
-        
+
         return view('admin.skills.show', compact('skill'));
     }
 
@@ -116,11 +116,11 @@ class SkillController extends Controller
     {
         $exams = Exam::with('tests')->orderBy('name')->get();
         $skill->load([
-            'sections.questionGroups.questions', 
+            'sections.questionGroups.questions',
             'sections.questions', // Load direct questions
             'examTest.exam'
         ]);
-        
+
         return view('admin.skills.edit', compact('skill', 'exams'));
     }
 
@@ -173,7 +173,8 @@ class SkillController extends Controller
             'sections.*.direct_questions.*.feedback' => 'nullable|string',
             'sections.*.direct_questions.*.hint' => 'nullable|string',
         ]);
-
+        // Log validated data
+        Log::info('Validated Data:', $validated);
         // Verify that exam_test_id belongs to the selected exam_id
         $examTest = ExamTest::where('id', $validated['exam_test_id'])
             ->where('exam_id', $validated['exam_id'])
@@ -185,7 +186,7 @@ class SkillController extends Controller
             if ($skill->image && Storage::disk('public')->exists($skill->image)) {
                 Storage::disk('public')->delete($skill->image);
             }
-            
+
             $image = $request->file('image');
             $imagePath = $image->store('skills', 'public');
             $validated['image'] = $imagePath;
@@ -193,7 +194,7 @@ class SkillController extends Controller
 
         // Remove exam_id from validated data as it's not in the database table
         unset($validated['exam_id']);
-        
+
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
@@ -220,7 +221,7 @@ class SkillController extends Controller
 
         foreach ($sectionsData as $index => $sectionData) {
             $sectionId = $sectionData['id'] ?? null;
-            
+
             // Prepare section data
             $sectionInfo = [
                 'exam_skill_id' => $skill->id,
@@ -247,7 +248,7 @@ class SkillController extends Controller
             // Process question groups
             $groupsData = $sectionData['groups'] ?? [];
             $this->processQuestionGroups($section, $groupsData);
-            
+
             // Process direct questions (for speaking/writing)
             $directQuestionsData = $sectionData['direct_questions'] ?? [];
             $this->processDirectQuestions($section, $directQuestionsData);
@@ -266,7 +267,7 @@ class SkillController extends Controller
 
         foreach ($groupsData as $index => $groupData) {
             $groupId = $groupData['id'] ?? null;
-            
+
             $groupInfo = [
                 'exam_section_id' => $section->id,
                 'content' => $groupData['content'] ?? '',
@@ -306,28 +307,39 @@ class SkillController extends Controller
 
         foreach ($questionsData as $questionData) {
             $questionId = $questionData['id'] ?? null;
-            
+
             // Prepare metadata with answers array and other question-specific data
             $metadata = [
                 'question_type' => $questionData['question_type'] ?? 'multiple_choice',
                 'answer_label' => $questionData['answer_label'] ?? null,
             ];
-            
+
             // Store answers in metadata if provided
             if (isset($questionData['answers']) && is_array($questionData['answers'])) {
                 $metadata['answers'] = $questionData['answers'];
             }
-            
+
+            // Build question payload conservatively to avoid overwriting with empty values when keys are missing
             $questionInfo = [
                 'exam_question_group_id' => $group->id,
                 'exam_section_id' => null, // Belongs to group, not section
-                'content' => $questionData['content'] ?? '',
-                'answer_content' => $questionData['answer_content'] ?? '', // Keep for backward compatibility
-                'feedback' => $questionData['feedback'] ?? null,
-                'point' => $questionData['point'] ?? 1,
                 'metadata' => $metadata,
                 'is_active' => true,
             ];
+
+            // Only set fields if they are actually present in request payload
+            if (array_key_exists('content', $questionData)) {
+                $questionInfo['content'] = $questionData['content'];
+            }
+            if (array_key_exists('answer_content', $questionData)) {
+                $questionInfo['answer_content'] = $questionData['answer_content']; // Backward compatibility
+            }
+            if (array_key_exists('feedback', $questionData)) {
+                $questionInfo['feedback'] = $questionData['feedback'];
+            }
+            if (array_key_exists('point', $questionData)) {
+                $questionInfo['point'] = $questionData['point'];
+            }
 
             if ($questionId) {
                 $question = $group->questions()->findOrFail($questionId);
@@ -352,21 +364,34 @@ class SkillController extends Controller
 
         foreach ($questionsData as $questionData) {
             $questionId = $questionData['id'] ?? null;
-            
+
+            // Build conservatively to avoid wiping existing values when inputs are missing
             $questionInfo = [
                 'exam_section_id' => $section->id,
                 'exam_question_group_id' => null, // Direct to section, not group
-                'content' => $questionData['content'] ?? '',
-                'answer_content' => $questionData['answer_content'] ?? '',
-                'point' => $questionData['point'] ?? 1,
-                'feedback' => $questionData['feedback'] ?? null,
-                'hint' => $questionData['hint'] ?? null,
                 'metadata' => [],
                 'is_active' => true,
             ];
 
+            if (array_key_exists('content', $questionData)) {
+                $questionInfo['content'] = $questionData['content'];
+            }
+            if (array_key_exists('answer_content', $questionData)) {
+                $questionInfo['answer_content'] = $questionData['answer_content'];
+            }
+            if (array_key_exists('point', $questionData)) {
+                $questionInfo['point'] = $questionData['point'];
+            }
+            if (array_key_exists('feedback', $questionData)) {
+                $questionInfo['feedback'] = $questionData['feedback'];
+            }
+            if (array_key_exists('hint', $questionData)) {
+                $questionInfo['hint'] = $questionData['hint'];
+            }
+
             if ($questionId) {
-                $question = $section->questions()->findOrFail($questionId);
+                // Find only direct questions (not belonging to any group)
+                $question = $section->questions()->whereNull('exam_question_group_id')->findOrFail($questionId);
                 $question->update($questionInfo);
                 $existingQuestionIds[] = $questionId;
             } else {
@@ -375,8 +400,8 @@ class SkillController extends Controller
             }
         }
 
-        // Delete direct questions that are not in the request
-        $section->questions()->whereNotIn('id', $existingQuestionIds)->delete();
+        // Delete direct questions that are not in the request (only direct questions, not group questions)
+        $section->questions()->whereNull('exam_question_group_id')->whereNotIn('id', $existingQuestionIds)->delete();
     }
 
     /**
@@ -408,7 +433,7 @@ class SkillController extends Controller
     public function getTestsByExam(Request $request)
     {
         $examId = $request->get('exam_id');
-        
+
         $tests = ExamTest::where('exam_id', $examId)
             ->orderBy('name')
             ->get(['id', 'name']);

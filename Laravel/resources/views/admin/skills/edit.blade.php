@@ -100,7 +100,7 @@
                                 @error('image')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                
+
                                 <!-- Current Image -->
                                 @if($skill->image)
                                     <div class="mt-2">
@@ -113,7 +113,7 @@
                                         </div>
                                     </div>
                                 @endif
-                                
+
                                 <!-- Image Preview -->
                                 <div id="imagePreview" class="mt-2" style="display: none;">
                                     <label class="form-label">Xem trước hình mới:</label>
@@ -412,7 +412,7 @@
                                                                 </div>
 
                                                                 <div class="collapse show"
-                                                                    id="direct-question-content-{{ $sectionIndex }}-{{ $qIndex }}">
+                                                                    >
                                                                     <input type="hidden"
                                                                         name="sections[{{ $sectionIndex }}][direct_questions][{{ $qIndex }}][id]"
                                                                         value="{{ $question->id }}">
@@ -881,13 +881,13 @@
                     initializeAllEditors();
                     initImagePreview();
                 });
-                
+
                 // Initialize image preview
                 function initImagePreview() {
                     const imageInput = document.getElementById('image');
                     const imagePreview = document.getElementById('imagePreview');
                     const currentImage = document.getElementById('currentImage');
-                    
+
                     if (imageInput) {
                         imageInput.addEventListener('change', function(e) {
                             const file = e.target.files[0];
@@ -1489,7 +1489,7 @@
 
                     if (!editorDiv || editorDiv.classList.contains('ql-container')) return;
 
-                    console.log('Initializing Quill for:', elementId, 'Value:', hiddenInput?.value?.substring(0, 100));
+                   console.log ('Initializing Quill for:', elementId, 'Value:', hiddenInput?.value?.substring(0, 100));
 
                     const quill = new Quill(`#${elementId}-editor`, {
                         theme: 'snow',

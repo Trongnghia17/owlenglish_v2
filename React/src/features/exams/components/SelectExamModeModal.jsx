@@ -46,13 +46,20 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
   };
 
   const handleFullTestClick = () => {
+    // Xác định skill type từ skill name
+    const skillType = skill.name.toLowerCase().includes('reading') ? 'reading' :
+                     skill.name.toLowerCase().includes('writing') ? 'writing' :
+                     skill.name.toLowerCase().includes('speaking') ? 'speaking' :
+                     skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
+    
     // Tạo exam data cho full test
     const examData = {
       name: `${skill.name} - Full Test`,
       duration: getTotalQuestions(),
       questionCount: sections.length,
       timeLimit: skill.time_limit || 60,
-      questionTypes: 'True / False / Not given, Short Answer, Matching Heading, Yes / No / Not Given, Flowchart Answer, Single Answer'
+      questionTypes: 'True / False / Not given, Short Answer, Matching Heading, Yes / No / Not Given, Flowchart Answer, Single Answer',
+      skillType: skillType
     };
 
     // Navigate đến trang hướng dẫn với state
@@ -62,13 +69,20 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
   };
 
   const handleSectionClick = (section) => {
+    // Xác định skill type từ skill name
+    const skillType = skill.name.toLowerCase().includes('reading') ? 'reading' :
+                     skill.name.toLowerCase().includes('writing') ? 'writing' :
+                     skill.name.toLowerCase().includes('speaking') ? 'speaking' :
+                     skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
+    
     // Tạo exam data cho section
     const examData = {
       name: `${skill.name} - ${section.title || 'Section'}`,
       duration: getSectionQuestionCount(section),
       questionCount: 1,
       timeLimit: Math.round((skill.time_limit || 60) / sections.length),
-      questionTypes: 'True / False / Not given, Short Answer, Matching Heading, Yes / No / Not Given, Flowchart Answer, Single Answer'
+      questionTypes: 'True / False / Not given, Short Answer, Matching Heading, Yes / No / Not Given, Flowchart Answer, Single Answer',
+      skillType: skillType
     };
 
     // Navigate đến trang hướng dẫn với state
