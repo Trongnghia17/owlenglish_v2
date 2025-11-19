@@ -371,9 +371,9 @@
 }
 
 .test-layout__question-number-item.answered {
-    background: #DCFCE7;
-    border-color: #10B981;
-    color: #065F46;
+    background: white;
+    border-color: #045CCE;
+    color: #045CCE;
     font-weight: 600;
 }
 

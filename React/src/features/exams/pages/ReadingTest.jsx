@@ -104,6 +104,325 @@ const GroupContentWithInlineInputs = ({ content, questions = [], answers = {}, o
   );
 };
 
+// Component to parse ONLY Group Content with @selection (List of Headings)
+const GroupContentWithDragItems = ({ content }) => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!content) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let processedContent = content;
+
+    // Replace @selection[[letter ;; content]] with draggable items
+    const selectionRegex = /@selection\[\[\s*([A-Z0-9a-z]+)\s*;;\s*(.*?)\s*\]\]/g;
+    processedContent = processedContent.replace(selectionRegex, (match, letter, labelContent) => {
+      return `<span class="reading-test__draggable-answer-inline" draggable="true" data-drag-value="${letter}">${labelContent.trim()}</span>`;
+    });
+
+    container.innerHTML = processedContent;
+
+    // Make all draggable items functional
+    const draggableItems = container.querySelectorAll('.reading-test__draggable-answer-inline');
+    draggableItems.forEach((item) => {
+      const dragValue = item.dataset.dragValue;
+      
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', dragValue);
+        e.dataTransfer.effectAllowed = 'copy';
+        item.style.opacity = '0.5';
+      });
+
+      item.addEventListener('dragend', (e) => {
+        item.style.opacity = '1';
+      });
+    });
+  }, [content]);
+
+  return (
+    <div
+      className="reading-test__group-content-parsed"
+      ref={containerRef}
+    />
+  );
+};
+
+// Component to parse ONLY Section Content with {{ a }} inputs
+const SectionContentWithInputs = ({ content, questions = [], answers = {}, onAnswerChange }) => {
+  const containerRef = useRef(null);
+  const placeholdersMetaRef = useRef([]);
+  const latestHandlerRef = useRef(onAnswerChange);
+
+  useEffect(() => {
+    latestHandlerRef.current = onAnswerChange;
+  }, [onAnswerChange]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!content) {
+      container.innerHTML = '';
+      placeholdersMetaRef.current = [];
+      return;
+    }
+
+    let processedContent = content;
+
+    // Replace {{ a }} placeholders with input boxes
+    const placeholderRegex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
+    const placeholderMeta = [];
+    let questionIndex = 0;
+
+    processedContent = processedContent.replace(placeholderRegex, (match) => {
+      const question = questions[questionIndex];
+      questionIndex += 1;
+
+      if (!question) {
+        return match;
+      }
+
+      const placeholderId = `section-input-${question.id}`;
+      placeholderMeta.push({ placeholderId, question });
+      return `<span class="reading-test__section-input-placeholder" data-placeholder-id="${placeholderId}"></span>`;
+    });
+
+    container.innerHTML = processedContent;
+
+    // Replace placeholders with input boxes
+    placeholderMeta.forEach((meta) => {
+      const placeholderElement = container.querySelector(`[data-placeholder-id="${meta.placeholderId}"]`);
+      if (!placeholderElement) return;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'reading-test__drag-drop-input';
+      input.dataset.questionId = meta.question.id;
+      input.maxLength = 10;
+      input.placeholder = '';
+
+      const handleInput = (event) => {
+        latestHandlerRef.current?.(meta.question.id, event.target.value.toUpperCase());
+      };
+
+      const handleDragOver = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        input.classList.add('drag-over');
+      };
+
+      const handleDragLeave = (event) => {
+        event.stopPropagation();
+        input.classList.remove('drag-over');
+      };
+
+      const handleDrop = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        input.classList.remove('drag-over');
+        const droppedText = event.dataTransfer.getData('text/plain');
+        latestHandlerRef.current?.(meta.question.id, droppedText);
+      };
+
+      const stopPropagation = (event) => event.stopPropagation();
+
+      input.addEventListener('input', handleInput);
+      input.addEventListener('dragover', handleDragOver);
+      input.addEventListener('dragleave', handleDragLeave);
+      input.addEventListener('drop', handleDrop);
+      input.addEventListener('focus', stopPropagation);
+      input.addEventListener('click', stopPropagation);
+
+      placeholderElement.replaceWith(input);
+
+      meta.input = input;
+      meta.cleanup = () => {
+        input.removeEventListener('input', handleInput);
+        input.removeEventListener('dragover', handleDragOver);
+        input.removeEventListener('dragleave', handleDragLeave);
+        input.removeEventListener('drop', handleDrop);
+        input.removeEventListener('focus', stopPropagation);
+        input.removeEventListener('click', stopPropagation);
+      };
+    });
+
+    placeholdersMetaRef.current = placeholderMeta;
+
+    return () => {
+      placeholderMeta.forEach((meta) => meta.cleanup?.());
+    };
+  }, [content, questions]);
+
+  useEffect(() => {
+    placeholdersMetaRef.current.forEach(({ question, input }) => {
+      if (!input) return;
+      const nextValue = answers?.[question.id] || '';
+      
+      if (input.value !== nextValue) {
+        input.value = nextValue;
+      }
+    });
+  }, [answers]);
+
+  return (
+    <div
+      className="reading-test__section-content-parsed"
+      ref={containerRef}
+    />
+  );
+};
+
+const GroupContentWithDragDropZones = ({ content, questions = [], answers = {}, onAnswerChange }) => {
+  const containerRef = useRef(null);
+  const placeholdersMetaRef = useRef([]);
+  const latestHandlerRef = useRef(onAnswerChange);
+
+  useEffect(() => {
+    latestHandlerRef.current = onAnswerChange;
+  }, [onAnswerChange]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!content) {
+      container.innerHTML = '';
+      placeholdersMetaRef.current = [];
+      return;
+    }
+
+    let processedContent = content;
+
+    // Step 1: Replace @selection[[letter ;; content]] with draggable items
+    const selectionRegex = /@selection\[\[\s*([A-Z])\s*;;\s*(.*?)\s*\]\]/g;
+    processedContent = processedContent.replace(selectionRegex, (match, letter, labelContent) => {
+      return `<span class="reading-test__draggable-answer-inline" draggable="true" data-drag-value="${letter}">${labelContent.trim()}</span>`;
+    });
+
+    // Step 2: Replace {{ a }} placeholders with input boxes
+    const placeholderRegex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
+    const placeholderMeta = [];
+    let questionIndex = 0;
+
+    processedContent = processedContent.replace(placeholderRegex, (match) => {
+      const question = questions[questionIndex];
+      questionIndex += 1;
+
+      if (!question) {
+        return match;
+      }
+
+      const placeholderId = `inline-input-${question.id}`;
+      placeholderMeta.push({ placeholderId, question });
+      return `<span class="reading-test__inline-input-placeholder" data-placeholder-id="${placeholderId}"></span>`;
+    });
+
+    container.innerHTML = processedContent;
+
+    // Make all draggable items functional
+    const draggableItems = container.querySelectorAll('.reading-test__draggable-answer-inline');
+    draggableItems.forEach((item) => {
+      const dragValue = item.dataset.dragValue;
+      
+      item.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', dragValue);
+        e.dataTransfer.effectAllowed = 'copy';
+        item.style.opacity = '0.5';
+      });
+
+      item.addEventListener('dragend', (e) => {
+        item.style.opacity = '1';
+      });
+    });
+
+    // Replace placeholders with input boxes
+    placeholderMeta.forEach((meta) => {
+      const placeholderElement = container.querySelector(`[data-placeholder-id="${meta.placeholderId}"]`);
+      if (!placeholderElement) return;
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'reading-test__drag-drop-input';
+      input.dataset.questionId = meta.question.id;
+      input.maxLength = 10;
+      input.placeholder = '';
+
+      const handleInput = (event) => {
+        latestHandlerRef.current?.(meta.question.id, event.target.value.toUpperCase());
+      };
+
+      const handleDragOver = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        input.classList.add('drag-over');
+      };
+
+      const handleDragLeave = (event) => {
+        event.stopPropagation();
+        input.classList.remove('drag-over');
+      };
+
+      const handleDrop = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        input.classList.remove('drag-over');
+        const droppedText = event.dataTransfer.getData('text/plain');
+        latestHandlerRef.current?.(meta.question.id, droppedText);
+      };
+
+      const stopPropagation = (event) => event.stopPropagation();
+
+      input.addEventListener('input', handleInput);
+      input.addEventListener('dragover', handleDragOver);
+      input.addEventListener('dragleave', handleDragLeave);
+      input.addEventListener('drop', handleDrop);
+      input.addEventListener('focus', stopPropagation);
+      input.addEventListener('click', stopPropagation);
+
+      placeholderElement.replaceWith(input);
+
+      meta.input = input;
+      meta.cleanup = () => {
+        input.removeEventListener('input', handleInput);
+        input.removeEventListener('dragover', handleDragOver);
+        input.removeEventListener('dragleave', handleDragLeave);
+        input.removeEventListener('drop', handleDrop);
+        input.removeEventListener('focus', stopPropagation);
+        input.removeEventListener('click', stopPropagation);
+      };
+    });
+
+    placeholdersMetaRef.current = placeholderMeta;
+
+    return () => {
+      placeholderMeta.forEach((meta) => meta.cleanup?.());
+    };
+  }, [content, questions]);
+
+  useEffect(() => {
+    placeholdersMetaRef.current.forEach(({ question, input }) => {
+      if (!input) return;
+      const nextValue = answers?.[question.id] || '';
+      
+      if (input.value !== nextValue) {
+        input.value = nextValue;
+      }
+    });
+  }, [answers]);
+
+  return (
+    <div
+      className="reading-test__group-content-parsed reading-test__drag-drop-table"
+      ref={containerRef}
+    />
+  );
+};
+
 export default function ReadingTest() {
   const { skillId, sectionId } = useParams();
   const location = useLocation();
@@ -166,7 +485,47 @@ export default function ReadingTest() {
                 // Parse options based on question_type
                 let options = [];
                 let optionsWithContent = null;
+                let dragDropAnswers = null;
                 const questionType = (group.question_type || '').toLowerCase();
+                
+                // Check if this is a drag-drop type
+                const groupOptions = group.options || {};
+                const isDragDrop = groupOptions.allow_drag_drop === true || groupOptions.allow_drag_drop === 1;
+                const hasAnswersInContent = groupOptions.answer_inputs_inside_content === true || groupOptions.answer_inputs_inside_content === 1;
+                
+                // For drag-drop, get answers from first question's metadata OR from groupContent
+                if (isDragDrop && hasAnswersInContent) {
+                  // Try to parse @selection[[]] from groupContent first
+                  if (group.content) {
+                    const selectionRegex = /@selection\[\[(.*?);;\s*(.*?)\]\]/g;
+                    const matches = [...group.content.matchAll(selectionRegex)];
+                    
+                    if (matches.length > 0) {
+                      dragDropAnswers = matches.map((match, index) => ({
+                        id: `answer-${index}`,
+                        letter: match[1].trim(),
+                        content: match[2].trim()
+                      }));
+                    }
+                  }
+                  
+                  // If no @selection found, try to get from metadata
+                  if (!dragDropAnswers && group.questions && group.questions.length > 0) {
+                    const firstQuestion = group.questions[0];
+                    if (firstQuestion.metadata) {
+                      const metadata = typeof firstQuestion.metadata === 'string' 
+                        ? JSON.parse(firstQuestion.metadata) 
+                        : firstQuestion.metadata;
+                      
+                      if (metadata.answers && Array.isArray(metadata.answers)) {
+                        dragDropAnswers = metadata.answers.map((answer, index) => ({
+                          id: `answer-${index}`,
+                          content: typeof answer === 'string' ? answer : (answer.content || answer.text || '')
+                        }));
+                      }
+                    }
+                  }
+                }
                 
                 switch (questionType) {
                   case 'multiple_choice':
@@ -228,6 +587,9 @@ export default function ReadingTest() {
                   groupContent: group.content,
                   options: options,
                   optionsWithContent: optionsWithContent,
+                  isDragDrop: isDragDrop,
+                  hasAnswersInContent: hasAnswersInContent,
+                  dragDropAnswers: dragDropAnswers,
                   questions: questions,
                   startNumber: questions[0]?.number || 1,
                   endNumber: questions[questions.length - 1]?.number || 1
@@ -282,7 +644,47 @@ export default function ReadingTest() {
                     // Parse options based on question_type
                     let options = [];
                     let optionsWithContent = null;
+                    let dragDropAnswers = null;
                     const questionType = (group.question_type || '').toLowerCase();
+                    
+                    // Check if this is a drag-drop type
+                    const groupOptions = group.options || {};
+                    const isDragDrop = groupOptions.allow_drag_drop === true || groupOptions.allow_drag_drop === 1;
+                    const hasAnswersInContent = groupOptions.answer_inputs_inside_content === true || groupOptions.answer_inputs_inside_content === 1;
+                    
+                    // For drag-drop, get answers from first question's metadata OR from groupContent
+                    if (isDragDrop && hasAnswersInContent) {
+                      // Try to parse @selection[[]] from groupContent first
+                      if (group.content) {
+                        const selectionRegex = /@selection\[\[(.*?);;\s*(.*?)\]\]/g;
+                        const matches = [...group.content.matchAll(selectionRegex)];
+                        
+                        if (matches.length > 0) {
+                          dragDropAnswers = matches.map((match, index) => ({
+                            id: `answer-${index}`,
+                            letter: match[1].trim(),
+                            content: match[2].trim()
+                          }));
+                        }
+                      }
+                      
+                      // If no @selection found, try to get from metadata
+                      if (!dragDropAnswers && group.questions && group.questions.length > 0) {
+                        const firstQuestion = group.questions[0];
+                        if (firstQuestion.metadata) {
+                          const metadata = typeof firstQuestion.metadata === 'string' 
+                            ? JSON.parse(firstQuestion.metadata) 
+                            : firstQuestion.metadata;
+                          
+                          if (metadata.answers && Array.isArray(metadata.answers)) {
+                            dragDropAnswers = metadata.answers.map((answer, index) => ({
+                              id: `answer-${index}`,
+                              content: typeof answer === 'string' ? answer : (answer.content || answer.text || '')
+                            }));
+                          }
+                        }
+                      }
+                    }
                     
                     switch (questionType) {
                       case 'multiple_choice':
@@ -344,6 +746,9 @@ export default function ReadingTest() {
                       groupContent: group.content,
                       options: options,
                       optionsWithContent: optionsWithContent,
+                      isDragDrop: isDragDrop,
+                      hasAnswersInContent: hasAnswersInContent,
+                      dragDropAnswers: dragDropAnswers,
                       questions: questions,
                       startNumber: questions[0]?.number || questionNumber,
                       endNumber: questions[questions.length - 1]?.number || questionNumber
@@ -435,6 +840,18 @@ export default function ReadingTest() {
   // Render câu hỏi dựa trên loại question type
   const renderQuestionsByType = (group, answers, handleAnswerSelect) => {
     const questionType = (group.type || '').toLowerCase();
+
+    // 0. DẠNG DRAG-DROP - Kéo thả đáp án từ Group Content (List of Headings)
+    // Inputs {{ a }} sẽ ở trong Section Content (passage)
+    if (group.isDragDrop && group.hasAnswersInContent) {
+      return (
+        <div className="reading-test__drag-drop-container">
+          <GroupContentWithDragItems
+            content={group.groupContent}
+          />
+        </div>
+      );
+    }
 
     // 1. DẠNG SHORT_TEXT - Điền vào chỗ trống inline (có {{ placeholders }})
     const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
@@ -581,10 +998,32 @@ export default function ReadingTest() {
               <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
             )}
           </div>
-          <div 
-            className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
-            dangerouslySetInnerHTML={{ __html: currentPassage.content }}
-          />
+          {(() => {
+            // Check if we have drag-drop groups with answers in content
+            const dragDropGroup = currentPartGroups.find(g => g.isDragDrop && g.hasAnswersInContent);
+            
+            if (dragDropGroup && containsInlinePlaceholders(currentPassage.content)) {
+              // Parse passage content with {{ a }} inputs
+              return (
+                <div className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}>
+                  <SectionContentWithInputs
+                    content={currentPassage.content}
+                    questions={dragDropGroup.questions}
+                    answers={answers}
+                    onAnswerChange={handleAnswerSelect}
+                  />
+                </div>
+              );
+            } else {
+              // Normal passage display
+              return (
+                <div 
+                  className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
+                  dangerouslySetInnerHTML={{ __html: currentPassage.content }}
+                />
+              );
+            }
+          })()}
         </div>
 
         {/* Questions Panel */}
@@ -603,7 +1042,7 @@ export default function ReadingTest() {
               </div>
 
               {/* Group Content */}
-              {group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
+              {group.groupContent && !containsInlinePlaceholders(group.groupContent) && !(group.isDragDrop && group.hasAnswersInContent) && (
                 <div
                   className="reading-test__group-content"
                   dangerouslySetInnerHTML={{ __html: group.groupContent }}
