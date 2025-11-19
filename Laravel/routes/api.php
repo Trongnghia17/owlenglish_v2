@@ -29,7 +29,8 @@ Route::prefix('public')->group(function () {
     // Lấy danh sách exams public
     Route::get('/exams', [ExamController::class, 'index']);
     Route::get('/exams/{id}', [ExamController::class, 'show']);
-    
+    Route::get('exams_detail/{examId}', [ExamController::class, 'getExamDetails']);
+    Route::get('get_listening/{skillId}/{sectionId?}', [ExamController::class, 'getListeningContent']);
     // Lấy test details
     Route::get('/tests/{id}', [ExamTestController::class, 'show']);
     

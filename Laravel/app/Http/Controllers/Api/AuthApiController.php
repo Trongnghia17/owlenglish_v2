@@ -68,6 +68,7 @@ class AuthApiController extends Controller
                                 'avatar_url' => $avatar,
                                 'email_verified_at' => now(), // OAuth coi như verified
                                 'password' => null,            // social only
+                                'role_id' => 6,
                             ]);
                         }
 
@@ -86,6 +87,7 @@ class AuthApiController extends Controller
                             'name'  => $name ?: 'Google User',
                             'avatar_url' => $avatar,
                             'password' => null,
+                            'role_id' => 6,
                         ]);
                     }
 
@@ -169,6 +171,7 @@ class AuthApiController extends Controller
                                 'avatar_url' => $avatar,
                                 'email_verified_at' => now(),
                                 'password' => null,
+                                'role_id' => 6,
                             ]);
                         }
 
@@ -184,6 +187,7 @@ class AuthApiController extends Controller
                             'name'  => $name ?: 'Facebook User',
                             'avatar_url' => $avatar,
                             'password' => null,
+                            'role_id' => 6,
                         ]);
                     }
 
@@ -273,6 +277,7 @@ class AuthApiController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'email_verified_at' => now(),
+                'role_id' => 6,
             ]);
         } else {
             $user->update([

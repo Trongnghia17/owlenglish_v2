@@ -3,7 +3,9 @@ import api from '@/lib/axios';
 // Lấy danh sách exams
 export const getExams = (params) => 
   api.get('/api/public/exams', { params });
-
+// lấy ra chi tiết bộ đề
+export const getExamsDetail = (id) => 
+  api.get(`/api/public/exams_detail/${id}`);
 // Lấy chi tiết exam
 export const getExamById = (id, params) => 
   api.get(`/api/public/exams/${id}`, { params });

@@ -10,6 +10,8 @@ import VerifyOtp from '@/features/auth/pages/VerifyOtp';
 import OAuthCallback from '@/features/auth/pages/OAuthCallback';
 import Home from '../features/home/pages/Home';
 import OnlineExamLibrary from '../features/exams/pages/OnlineExamLibrary';
+import ExamPackage from '../features/exams/pages/ExamPackage';
+import ExamPackageDetail from '../features/exams/pages/ExamPackageDetail';
 import ExamInstructions from '../features/exams/pages/ExamInstructions';
 import ReadingTest from '../features/exams/pages/ReadingTest';
 import WritingTest from '../features/exams/pages/WritingTest';
@@ -19,6 +21,7 @@ import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
 import LoginHistory from '../features/users/pages/LoginHistory';
+import ListeningToeic from '../features/toeic/pages/Listening';
 const PublicShell = (
   <MainLayout />
 );
@@ -30,6 +33,8 @@ export const router = createBrowserRouter([
     element: PublicShell, children: [
       { path: '/', element: <Home /> },
       { path: '/de-thi-online', element: <OnlineExamLibrary /> },
+      { path: '/bo-de/:examType', element: <ExamPackage /> },
+      { path: '/bo-de/:examType/:examId', element: <ExamPackageDetail /> },
     ]
   },
 
@@ -83,6 +88,10 @@ export const router = createBrowserRouter([
     path: '/exam/full/:skillId/test/listening',
     element: <ListeningTest />,
   },
+
+  // phần thi TOEIC
+  { path: '/toeic-listening/:skillId', element: <ListeningToeic /> },
+  { path: '/toeic-listening/:skillId/:sectionId', element: <ListeningToeic /> },
 
   {
     element: <GuestRoute><AuthLayout /></GuestRoute>,

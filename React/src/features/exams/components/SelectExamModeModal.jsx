@@ -2,13 +2,20 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSkillById } from '../api/exams.api';
 import './SelectExamModeModal.css';
-import speakingIcon from '../../../assets/images/Speaking.png';
-
+import readingIcon from '@/assets/images/exam-reading.png';
+import listeningIcon from '@/assets/images/exam-listening.png';
+import writingIcon from '@/assets/images/exam-writing.png';
+import speakingIcon from '@/assets/images/exam-speaking.png';
 export default function SelectExamModeModal({ isOpen, onClose, skill }) {
   const navigate = useNavigate();
   const [skillDetails, setSkillDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const SKILL_ICONS = {
+    'reading': readingIcon,
+    'listening': listeningIcon,
+    'writing': writingIcon,
+    'speaking': speakingIcon,
+  };
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -121,6 +128,8 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
     return groupQuestions + directQuestions;
   };
 
+  const currentSkillIcon = SKILL_ICONS[skill.skill_type] || speakingIcon;
+
   return (
     <div className="select-exam-modal-overlay" onClick={handleOverlayClick}>
       <div className="select-exam-modal">
@@ -132,7 +141,11 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
 
         <div className="select-exam-modal__header">
           <div className="select-exam-modal__title-wrapper">
-            <img src={speakingIcon} alt={skill.name} className="select-exam-modal__title-icon" />
+            <img
+              src={currentSkillIcon}
+              alt={skill.name}
+              className="select-exam-modal__title-icon"
+            />
             <div className="select-exam-modal__title-content">
               <h2 className="select-exam-modal__title">{skill.name}</h2>
               <p className="select-exam-modal__subtitle">Hãy chọn chế độ bạn muốn làm</p>
@@ -149,11 +162,11 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
               <div className="select-exam-modal__section">
                 <div className="select-exam-modal__section-header">
                   <div>
-                  <h3 className="select-exam-modal__section-title">Mô phỏng thi thật</h3>
-                  <p className="select-exam-modal__section-description">
-                  Bạn sẽ làm 1 lần toàn bộ bài thi
-                </p>
-                </div>
+                    <h3 className="select-exam-modal__section-title">Mô phỏng thi thật</h3>
+                    <p className="select-exam-modal__section-description">
+                      Bạn sẽ làm 1 lần toàn bộ bài thi
+                    </p>
+                  </div>
                   <button
                     className="select-exam-modal__button"
                     onClick={handleFullTestClick}
@@ -164,7 +177,7 @@ export default function SelectExamModeModal({ isOpen, onClose, skill }) {
                     </svg>
                   </button>
                 </div>
-                
+
               </div>
 
               {/* Practice Mode */}

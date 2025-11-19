@@ -577,6 +577,7 @@
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
+    background-color: #F8F8F8;
 }
 
 .online-exam-library__card-button {

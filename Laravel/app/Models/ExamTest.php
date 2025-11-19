@@ -54,4 +54,9 @@ class ExamTest extends Model
     {
         return $query->where('is_active', true);
     }
+
+    public function examSkills()
+    {
+        return $this->hasMany(ExamSkill::class, 'exam_test_id');
+    }
 }
