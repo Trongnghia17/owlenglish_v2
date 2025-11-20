@@ -18,7 +18,7 @@ class ExamSection extends Model
         'feedback',
         'content_format',
         'audio_file',
-        'video_file',
+        'ui_layer',
         'metadata',
         'is_active',
     ];
@@ -85,11 +85,19 @@ class ExamSection extends Model
     }
 
     /**
-     * Check if section has video content
+     * Check if section has UI layer
      */
-    public function hasVideo(): bool
+    public function hasUiLayer(): bool
     {
-        return $this->content_format === 'video' && !empty($this->video_file);
+        return !empty($this->ui_layer) && in_array($this->ui_layer, ['1', '2']);
+    }
+    
+    /**
+     * Get UI layer value
+     */
+    public function getUiLayer(): ?string
+    {
+        return $this->ui_layer;
     }
 
     /**
