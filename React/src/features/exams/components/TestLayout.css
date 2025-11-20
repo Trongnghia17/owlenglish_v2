@@ -263,7 +263,7 @@
 /* Main Content */
 .test-layout__content {
     flex: 1;
-    overflow: hidden;
+    overflow-y: auto;
     display: flex;
     padding-bottom: 120px;
     /* Space for fixed footer */
@@ -273,6 +273,7 @@
 .test-layout__content--normal {
     font-size: 15px;
     line-height: 1.6;
+    background: #F8F8F8;
 }
 
 .test-layout__content--large {

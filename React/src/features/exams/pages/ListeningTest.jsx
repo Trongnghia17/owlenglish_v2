@@ -543,12 +543,17 @@ const ListeningTest = () => {
           </div>
         )}
 
+     
+
         {/* Questions */}
         {currentPartGroups.map((group) => (
+          
           <div key={group.id} id={`question-group-${group.id}`} className="listening-test__question-group">
             {/* Group Header */}
+             <h2>Listening Part {currentPartTab}</h2> 
             <div className="listening-test__group-header">
-              <h3>Questions {group.startNumber} - {group.endNumber}</h3>
+              
+              <h3>Question {group.startNumber} - {group.endNumber}</h3>
               {group.instructions && (
                 <div 
                   className="listening-test__group-instructions"
