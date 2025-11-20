@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
+import nutx from '@/assets/images/nutx.svg';
+import logo from '@/assets/images/logo.png';
+import clock from '@/assets/images/clock.svg';
 import './Toeic.css';
 
 export default function ListeningToeic() {
@@ -405,9 +408,9 @@ export default function ListeningToeic() {
       <div className="lt-header">
         <div className="lt-header__left">
           <button className="lt-close" onClick={() => navigate(-1)}>
-            <img src="/src/assets/images/nutx.svg" alt="" />
+            <img src={nutx} alt="" />
           </button>
-          <img src="/src/assets/images/logo.png" alt="OWL IELTS" className="lt-logo" />
+          <img src={logo} alt="OWL IELTS" className="lt-logo" />
           <div className="lt-header__text">
             <div className="lt-header__label">Listening Test - Part {currentPartTab}</div>
             <div className="lt-header__name">{examData?.name || skillData?.name || sectionData?.title || 'Listening Test'}</div>
@@ -416,7 +419,7 @@ export default function ListeningToeic() {
 
         <div className="lt-header__center">
           <div className="lt-timer">
-            <img src="/src/assets/images/clock.svg" alt="" />
+            <img src={clock} alt="" />
             <p>{formatTime(timeRemaining)}</p>
           </div>
         </div>

@@ -7,6 +7,7 @@
     <meta name="author" content="Codescandy">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-M8S4MT3EYG"></script>
+    <meta name="robots" content="noindex, nofollow" />
     <script>
         window.dataLayer = window.dataLayer || [];
 
