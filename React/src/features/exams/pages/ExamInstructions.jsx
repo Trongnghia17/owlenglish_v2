@@ -1,6 +1,10 @@
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import './ExamInstructions.css';
-
+import logo from '@/assets/images/logo.png';
+import readingIcon from '@/assets/images/exam-reading.png';
+import listeningIcon from '@/assets/images/exam-listening.png';
+import writingIcon from '@/assets/images/exam-writing.png';
+import speakingIcon from '@/assets/images/exam-speaking.png';
 export default function ExamInstructions() {
   const navigate = useNavigate();
   const { skillId, sectionId } = useParams();
@@ -10,27 +14,54 @@ export default function ExamInstructions() {
   const handleBack = () => {
     navigate(-1);
   };
+  const SKILL_ICONS = {
+    'reading': readingIcon,
+    'listening': listeningIcon,
+    'writing': writingIcon,
+    'speaking': speakingIcon,
+  };
 
   // Thay đổi tên biến trong tham số để tránh nhầm lẫn
-const handleStartExam = (skillId, section_id = null) => { 
+  const handleStartExam = (skillId, section_id = null) => {
     const skillType = examData?.skillType?.toLowerCase() || 'reading';
     const type = examType?.toLowerCase() || '';
 
     if (type === 'toeic') {
+      if (skillType === 'writing') {
         if (section_id) {
-            navigate(`/toeic-listening/${skillId}/${section_id}`);
+          navigate(`/toeic-writing/${skillId}/${section_id}`);
         } else {
-            navigate(`/toeic-listening/${skillId}`);
+          navigate(`/toeic-writing/${skillId}`);
         }
-    } else {
+      } else if (skillType === 'listening') {
         if (section_id) {
-            navigate(`/exam/section/${skillId}/${section_id}/test/${skillType}`);
+          navigate(`/toeic-listening/${skillId}/${section_id}`);
         } else {
-            navigate(`/exam/full/${skillId}/test/${skillType}`);
+          navigate(`/toeic-listening/${skillId}`);
         }
-    }
-};
+      } else if (skillType === 'reading') {
+        if (section_id) {
+          navigate(`/toeic-reading/${skillId}/${section_id}`);
+        } else {
+          navigate(`/toeic-reading/${skillId}`);
+        }
+      }else{
+        if (section_id) {
+          navigate(`/toeic-speaking/${skillId}/${section_id}`);
+        } else {
+          navigate(`/toeic-speaking/${skillId}`);
+        }
+      }
 
+    } else {
+      if (section_id) {
+        navigate(`/exam/section/${skillId}/${section_id}/test/${skillType}`);
+      } else {
+        navigate(`/exam/full/${skillId}/test/${skillType}`);
+      }
+    }
+  };
+  const currentSkillIcon = SKILL_ICONS[examData?.skillType] || readingIcon;
   // Chuyển đổi phút sang giờ:phút
   const formatTime = (minutes) => {
     if (!minutes) return '0 phút';
@@ -69,7 +100,7 @@ const handleStartExam = (skillId, section_id = null) => {
           </svg>
         </button>
         <div className="exam-instructions-page__header-title">
-          <img src="/src/assets/images/logo.png" alt="OWL IELTS" className="exam-instructions-page__logo" />
+          <img src={logo} alt="OWL IELTS" className="exam-instructions-page__logo" />
           <div className="exam-instructions-page__header-text">
             <div className="exam-instructions-page__header-label">Làm bài passage 1</div>
             <div className="exam-instructions-page__header-name">{examData.name}</div>
@@ -83,7 +114,7 @@ const handleStartExam = (skillId, section_id = null) => {
           {/* Title với icon */}
           <div className="exam-instructions-page__title-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div className="exam-instructions-page__icon">
-              <img src="/src/assets/images/huongdan.png" alt="OWL IELTS" className="exam-instructions-page__logo" />
+              <img src={currentSkillIcon} alt="OWL IELTS" className="exam-instructions-page__logo" />
             </div>
             <h1 className="exam-instructions-page__title">{examData.name}</h1>
           </div>

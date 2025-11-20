@@ -39,6 +39,7 @@ export default function ExamDetailView() {
     // State cho Modal
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState(null);
+    const bgColors = ["#FAF9FE", "#FEFFFA", "#F5FFFC", "#FCFBF9"];
 
     useEffect(() => {
         if (!examId) return;
@@ -146,9 +147,9 @@ export default function ExamDetailView() {
         <div className="exam-detail-view">
             {renderHeader()} 
             <div className="exam-detail__tests-list">
-                {examData.tests.map((test) => (
+                {examData.tests.map((test, index) => (
                     <div key={test.id} className="exam-test-section">
-                        <h2 className="exam-test-section__title">{test.name}</h2>
+                        <h2 className="exam-test-section__title" style={{ backgroundColor: bgColors[index % bgColors.length] }}>{test.name}</h2>
                         <div className="exam-test-section__skills-grid">
                             {test.skills.map((skill) => (
                                 <div key={skill.id} className="skill-card">
