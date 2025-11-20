@@ -1,17 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
-import nutx from '@/assets/images/nutx.svg';
-import logo from '@/assets/images/logo.png';
-import clock from '@/assets/images/clock.svg';
 import './Toeic.css';
+import Header from '../components/Header';
 
 export default function ListeningToeic() {
   const navigate = useNavigate();
   const { skillId, sectionId } = useParams();
   const location = useLocation();
   const examData = location.state?.examData;
-
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
@@ -26,6 +23,9 @@ export default function ListeningToeic() {
   const [questionGroups, setQuestionGroups] = useState([]);
   const [passages, setPassages] = useState([]);
   const [parts, setParts] = useState([]);
+
+  const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
+  const [fontSize, setFontSize] = useState("normal");
 
   useEffect(() => {
     const fetchExamData = async () => {
@@ -255,16 +255,23 @@ export default function ListeningToeic() {
     const group = questionGroups.find(g =>
       g.questions.some(q => q.number === questionNumber)
     );
-    if (group) {
-      if (group.part !== currentPartTab) {
-        setCurrentPartTab(group.part);
-      }
+
+    if (group && group.part !== currentPartTab) {
+      setCurrentPartTab(group.part);
       setTimeout(() => {
-        const groupElement = document.getElementById(`question-group-${group.id}`);
-        if (groupElement) groupElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+        const element = document.getElementById(`question-${questionNumber}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 120);
+    } else {
+      const element = document.getElementById(`question-${questionNumber}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   };
+
 
   const handleSubmit = () => {
     const result = {
@@ -284,7 +291,7 @@ export default function ListeningToeic() {
     const type = (group.type || '').toLowerCase();
 
     const renderMCQ = (q) => (
-      <div key={q.id} className="lt-question">
+      <div key={q.id} id={`question-${q.number}`} className="lt-question">
         <div className="lt-question__number">Câu {q.number}:</div>
         <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
         <div className="lt-question__options">
@@ -309,7 +316,7 @@ export default function ListeningToeic() {
     );
 
     const renderTF = (q) => (
-      <div key={q.id} className="lt-question">
+      <div key={q.id} id={`question-${q.number}`} className="lt-question">
         <div className="lt-question__number">Câu {q.number}.</div>
         <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
         <div className="lt-question__options">
@@ -330,7 +337,7 @@ export default function ListeningToeic() {
     );
 
     const renderFill = (q) => (
-      <div key={q.id} className="lt-question">
+      <div key={q.id} id={`question-${q.number}`} className="lt-question">
         <div className="lt-question__number">Câu {q.number}.</div>
         <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
         <input
@@ -344,7 +351,7 @@ export default function ListeningToeic() {
     );
 
     const renderMatch = (q) => (
-      <div key={q.id} className="lt-question">
+      <div key={q.id} id={`question-${q.number}`} className="lt-question">
         <div className="lt-question__number">Câu {q.number}.</div>
         <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
         <select
@@ -405,28 +412,17 @@ export default function ListeningToeic() {
 
   return (
     <div className="lt-page">
-      <div className="lt-header">
-        <div className="lt-header__left">
-          <button className="lt-close" onClick={() => navigate(-1)}>
-            <img src={nutx} alt="" />
-          </button>
-          <img src={logo} alt="OWL IELTS" className="lt-logo" />
-          <div className="lt-header__text">
-            <div className="lt-header__label">Listening Test - Part {currentPartTab}</div>
-            <div className="lt-header__name">{examData?.name || skillData?.name || sectionData?.title || 'Listening Test'}</div>
-          </div>
-        </div>
-
-        <div className="lt-header__center">
-          <div className="lt-timer">
-            <img src={clock} alt="" />
-            <p>{formatTime(timeRemaining)}</p>
-          </div>
-        </div>
-        <div className='lt-header__right'>
-          <button className="lt-submit" onClick={handleSubmit}>Nộp bài</button>
-        </div>
-      </div>
+      <Header
+        examData={examData}
+        skillData={skillData}
+        sectionData={sectionData}
+        currentPartTab={currentPartTab}
+        timeRemaining={timeRemaining}
+        showFontSizeMenu={showFontSizeMenu}
+        setShowFontSizeMenu={setShowFontSizeMenu}
+        handleSubmit={handleSubmit}
+        formatTime={formatTime}
+      />
 
       <div className='lt-grid-main'>
         <div className="lt-grid">
@@ -445,6 +441,16 @@ export default function ListeningToeic() {
               <div className="lt-left-instructions">
                 <h4>Part {currentPartTab}</h4>
               </div>
+              
+              
+              {currentPartGroups.map((group) => (
+                <div key={group.id} id={`question-group-${group.id}`} className="lt-question-group">
+                  {group.groupContent && !(/\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent)) && (
+                    <div className="lt-group__content" dangerouslySetInnerHTML={{ __html: group.groupContent }} />
+                  )}
+                </div>
+              ))}
+            
             </div>
           </aside>
 
@@ -479,10 +485,6 @@ export default function ListeningToeic() {
             <div className="lt-questions">
               {currentPartGroups.map((group) => (
                 <div key={group.id} id={`question-group-${group.id}`} className="lt-question-group">
-                  {group.groupContent && !(/\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent)) && (
-                    <div className="lt-group__content" dangerouslySetInnerHTML={{ __html: group.groupContent }} />
-                  )}
-
                   <div className="lt-questions-list">
                     {renderQuestionsByType(group)}
                   </div>
@@ -516,21 +518,69 @@ export default function ListeningToeic() {
         </div>
       </div>
 
-      <div className="lt-footer">
-        {parts.length > 1 && (
+      <aside className="lt-footer">
+        <div className='lt-footer-dflex'>
           <div className="lt-part-tabs">
-            {parts.map((part) => (
+            {parts.map((p) => (
               <button
-                key={part.part}
-                className={`lt-part-tab ${currentPartTab === part.part ? 'active' : ''}`}
-                onClick={() => setCurrentPartTab(part.part)}
+                key={p.part}
+                className={`lt-part-tab ${currentPartTab === p.part ? 'active' : ''}`}
+                onClick={() => setCurrentPartTab(p.part)}
               >
-                {part.title}
+                Part {p.part}
               </button>
             ))}
           </div>
-        )}
-      </div>
+
+          <div className="lt-footer__numbers">
+            {questionsByPart[currentPartTab]?.map((q) => (
+              <button
+                key={q.number}
+                className={`lt-footer__number-btn ${answers[q.id] ? 'answered' : ''}`}
+                onClick={() => handleQuestionClick(q.number)}
+              >
+                {q.number}
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {showFontSizeMenu && (
+        <div className="lt-fontsize-popup">
+          <h3>Cỡ chữ</h3>
+          <p>Chọn cỡ chữ phù hợp cho việc đọc</p>
+
+          <div
+            className={`lt-fontsize-option ${fontSize === "normal" ? "active" : ""}`}
+            onClick={() => setFontSize("normal")}
+          >
+            Bình thường
+          </div>
+
+          <div
+            className={`lt-fontsize-option ${fontSize === "large" ? "active" : ""}`}
+            onClick={() => setFontSize("large")}
+          >
+            Lớn
+          </div>
+
+          <div
+            className={`lt-fontsize-option ${fontSize === "xlarge" ? "active" : ""}`}
+            onClick={() => setFontSize("xlarge")}
+          >
+            Rất lớn
+          </div>
+
+          <button
+            className="lt-fontsize-close"
+            onClick={() => setShowFontSizeMenu(false)}
+          >
+            Đóng
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }

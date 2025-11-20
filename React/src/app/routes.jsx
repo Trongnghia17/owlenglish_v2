@@ -22,6 +22,9 @@ import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
 import LoginHistory from '../features/users/pages/LoginHistory';
 import ListeningToeic from '../features/toeic/pages/Listening';
+import WritingToeic from '../features/toeic/pages/Writing';
+import SpeakingToeic from '../features/toeic/pages/Speaking';
+import ReadingToeic from '../features/toeic/pages/Reading';
 const PublicShell = (
   <MainLayout />
 );
@@ -92,6 +95,12 @@ export const router = createBrowserRouter([
   // phần thi TOEIC
   { path: '/toeic-listening/:skillId', element: <ListeningToeic /> },
   { path: '/toeic-listening/:skillId/:sectionId', element: <ListeningToeic /> },
+  { path: '/toeic-writing/:skillId', element: <WritingToeic /> },
+  { path: '/toeic-writing/:skillId/:sectionId', element: <WritingToeic /> },
+  { path: '/toeic-speaking/:skillId', element: <SpeakingToeic /> },
+  { path: '/toeic-speaking/:skillId/:sectionId', element: <SpeakingToeic /> },
+  { path: '/toeic-reading/:skillId', element: <ReadingToeic /> },
+  { path: '/toeic-reading/:skillId/:sectionId', element: <ReadingToeic /> },
 
   {
     element: <GuestRoute><AuthLayout /></GuestRoute>,

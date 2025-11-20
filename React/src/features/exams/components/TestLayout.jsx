@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '@/assets/images/logo.png'
 import './TestLayout.css';
 
 export default function TestLayout({
@@ -122,7 +123,7 @@ export default function TestLayout({
           </svg>
         </button>
         <div className="test-layout__header-info">
-          <img src="/src/assets/images/logo.png" alt="OWL IELTS" className="test-layout__logo" />
+          <img src={logo} alt="OWL IELTS" className="test-layout__logo" />
           <div className="test-layout__header-text">
             <div className="test-layout__header-label">
               Làm bài {parts.length > 1 ? `passage ${currentPartTab}` : ''}
