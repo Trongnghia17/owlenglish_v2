@@ -348,21 +348,15 @@
                                                 @endif
                                             </div>
 
-                                            <!-- Video File Upload (for Listening with video) -->
+                                            <!-- UI Layer Selection (for Listening) -->
                                             <div class="mb-3 skill-specific-field listening-field">
-                                                <label class="form-label">Video File (Optional)</label>
-                                                <input type="file" class="form-control"
-                                                    name="sections[{{ $sectionIndex }}][video_file]" accept="video/*">
-                                                @if($section->metadata['video_file'] ?? false)
-                                                    <div class="mt-2">
-                                                        <small class="text-muted">Current:
-                                                            {{ $section->metadata['video_file'] }}</small>
-                                                        <video controls class="w-100 mt-1" style="max-height: 300px;">
-                                                            <source src="{{ asset('storage/' . $section->metadata['video_file']) }}"
-                                                                type="video/mp4">
-                                                        </video>
-                                                    </div>
-                                                @endif
+                                                <label class="form-label">UI Layer (Optional)</label>
+                                                <select class="form-select" name="sections[{{ $sectionIndex }}][ui_layer]">
+                                                    <option value="">Default UI</option>
+                                                    <option value="1" {{ old('sections.' . $sectionIndex . '.ui_layer', $section->ui_layer ?? '') == '1' ? 'selected' : '' }}>UI Layer 1</option>
+                                                    <option value="2" {{ old('sections.' . $sectionIndex . '.ui_layer', $section->ui_layer ?? '') == '2' ? 'selected' : '' }}>UI Layer 2</option>
+                                                </select>
+                                                <small class="form-text text-muted">Select UI layout layer for displaying content (Layer 1 or Layer 2)</small>
                                             </div>
 
                                             <!-- Answer Inputs Inside Content -->
@@ -1144,8 +1138,13 @@
                                 <input type="file" class="form-control" name="sections[${sectionIndex}][audio_file]" accept="audio/*">
                             </div>
                             <div class="mb-3 skill-specific-field listening-field">
-                                <label class="form-label">Video File (Optional)</label>
-                                <input type="file" class="form-control" name="sections[${sectionIndex}][video_file]" accept="video/*">
+                                <label class="form-label">UI Layer (Optional)</label>
+                                <select class="form-select" name="sections[${sectionIndex}][ui_layer]">
+                                    <option value="">Default UI</option>
+                                    <option value="1">UI Layer 1</option>
+                                    <option value="2">UI Layer 2</option>
+                                </select>
+                                <small class="form-text text-muted">Select UI layout layer for displaying content (Layer 1 or Layer 2)</small>
                             </div>
 
                             <div class="mb-3">

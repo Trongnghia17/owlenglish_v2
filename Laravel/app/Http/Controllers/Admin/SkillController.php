@@ -144,10 +144,13 @@ class SkillController extends Controller
             'sections.*.feedback' => 'nullable|string',
             'sections.*.content_format' => 'nullable|in:text,audio,video',
             'sections.*.answer_inputs_inside_content' => 'nullable|string',
+            'sections.*.audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:102400', // 100MB
+            'sections.*.ui_layer' => 'nullable|in:1,2',
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
             'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,fill_in_blank,matching,table_selection,essay,speaking',
+            'sections.*.groups.*.number_of_options' => 'nullable|integer|min:2|max:10',
             'sections.*.groups.*.answer_inputs_inside_content' => 'nullable|string',
             'sections.*.groups.*.split_questions_side_by_side' => 'nullable|string',
             'sections.*.groups.*.allow_drag_drop' => 'nullable|string',
@@ -206,7 +209,7 @@ class SkillController extends Controller
         $skill->update($validated);
 
         // Process sections
-        $this->processSections($skill, $sectionsData);
+        $this->processSections($skill, $sectionsData, $request);
 
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill đã được cập nhật thành công!');
@@ -215,12 +218,36 @@ class SkillController extends Controller
     /**
      * Process sections, question groups, and questions
      */
-    private function processSections(ExamSkill $skill, array $sectionsData)
+    private function processSections(ExamSkill $skill, array $sectionsData, Request $request)
     {
         $existingSectionIds = [];
 
         foreach ($sectionsData as $index => $sectionData) {
             $sectionId = $sectionData['id'] ?? null;
+
+            // Get existing section to preserve old files if needed
+            $existingSection = $sectionId ? $skill->sections()->find($sectionId) : null;
+            $metadata = [
+                'answer_inputs_inside_content' => ($sectionData['answer_inputs_inside_content'] ?? '0') === '1',
+            ];
+
+            // Handle audio file upload
+            if ($request->hasFile("sections.{$index}.audio_file")) {
+                $audioFile = $request->file("sections.{$index}.audio_file");
+                
+                // Delete old audio file if exists
+                if ($existingSection && isset($existingSection->metadata['audio_file'])) {
+                    Storage::disk('public')->delete($existingSection->metadata['audio_file']);
+                }
+                
+                $audioPath = $audioFile->store('sections/audio', 'public');
+                $metadata['audio_file'] = $audioPath;
+            } else {
+                // Keep existing audio file
+                if ($existingSection && isset($existingSection->metadata['audio_file'])) {
+                    $metadata['audio_file'] = $existingSection->metadata['audio_file'];
+                }
+            }
 
             // Prepare section data
             $sectionInfo = [
@@ -229,9 +256,10 @@ class SkillController extends Controller
                 'content' => $sectionData['content'] ?? '',
                 'feedback' => $sectionData['feedback'] ?? '',
                 'content_format' => $sectionData['content_format'] ?? 'text',
-                'metadata' => [
-                    'answer_inputs_inside_content' => ($sectionData['answer_inputs_inside_content'] ?? '0') === '1',
-                ],
+                'ui_layer' => isset($sectionData['ui_layer']) && in_array($sectionData['ui_layer'], ['1', '2']) 
+                    ? $sectionData['ui_layer'] 
+                    : null,
+                'metadata' => $metadata,
                 'is_active' => true,
             ];
 
@@ -268,15 +296,22 @@ class SkillController extends Controller
         foreach ($groupsData as $index => $groupData) {
             $groupId = $groupData['id'] ?? null;
 
+            $options = [
+                'answer_inputs_inside_content' => ($groupData['answer_inputs_inside_content'] ?? '0') === '1',
+                'split_questions_side_by_side' => ($groupData['split_questions_side_by_side'] ?? '0') === '1',
+                'allow_drag_drop' => ($groupData['allow_drag_drop'] ?? '0') === '1',
+            ];
+            
+            // Add number_of_options for table_selection type
+            if (isset($groupData['number_of_options'])) {
+                $options['number_of_options'] = (int) $groupData['number_of_options'];
+            }
+
             $groupInfo = [
                 'exam_section_id' => $section->id,
                 'content' => $groupData['content'] ?? '',
                 'question_type' => $groupData['question_type'] ?? 'multiple_choice',
-                'options' => [
-                    'answer_inputs_inside_content' => ($groupData['answer_inputs_inside_content'] ?? '0') === '1',
-                    'split_questions_side_by_side' => ($groupData['split_questions_side_by_side'] ?? '0') === '1',
-                    'allow_drag_drop' => ($groupData['allow_drag_drop'] ?? '0') === '1',
-                ],
+                'options' => $options,
                 'is_active' => true,
             ];
 
