@@ -242,9 +242,8 @@ export default function TestLayout({
               <div className="test-layout__part-tabs">
                 {parts.map((part) => {
                   const partGroups = questionGroups.filter(g => g.part === part.part);
-                  const partQuestions = partGroups.flatMap(g => g.questions);
-                  const firstQuestion = partQuestions[0]?.number || 1;
-                  const lastQuestion = partQuestions[partQuestions.length - 1]?.number || 1;
+                  const partQuestions = partGroups.flatMap(g => g.questions || []);
+                  const questionCount = partQuestions.length;
                   
                   return (
                     <button
@@ -252,7 +251,7 @@ export default function TestLayout({
                       className={`test-layout__part-tab ${currentPartTab === part.part ? 'active' : ''}`}
                       onClick={() => handlePartChange(part.part)}
                     >
-                      Part {part.part} - {firstQuestion}/{lastQuestion}
+                      Part {part.part} - 1/{questionCount}
                     </button>
                   );
                 })}
@@ -261,15 +260,15 @@ export default function TestLayout({
             
             {/* Question Numbers Grid */}
             <div className="test-layout__question-numbers">
-              {allQuestionsInPart.map((q) => (
+              {allQuestionsInPart.map((q, index) => (
                 <button
                   key={q.id}
                   className={`test-layout__question-number-item ${
                     answers[q.id] ? 'answered' : ''
                   }`}
-                  onClick={() => handleQuestionClick(q.number)}
+                  onClick={() => handleQuestionClick(q.number || index + 1)}
                 >
-                  {q.number}
+                  {q.number || index + 1}
                 </button>
               ))}
             </div>

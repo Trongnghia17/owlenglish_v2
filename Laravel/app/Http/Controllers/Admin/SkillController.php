@@ -329,7 +329,7 @@ class SkillController extends Controller
 
             // Only set fields if they are actually present in request payload
             if (array_key_exists('content', $questionData)) {
-                $questionInfo['content'] = $questionData['content'];
+                $questionInfo['content'] = $questionData['content'] ?? '';
             }
             if (array_key_exists('answer_content', $questionData)) {
                 $questionInfo['answer_content'] = $questionData['answer_content']; // Backward compatibility
@@ -346,6 +346,10 @@ class SkillController extends Controller
                 $question->update($questionInfo);
                 $existingQuestionIds[] = $questionId;
             } else {
+                // For new questions, ensure content is set
+                if (!isset($questionInfo['content'])) {
+                    $questionInfo['content'] = '';
+                }
                 $question = $group->questions()->create($questionInfo);
                 $existingQuestionIds[] = $question->id;
             }
@@ -374,7 +378,7 @@ class SkillController extends Controller
             ];
 
             if (array_key_exists('content', $questionData)) {
-                $questionInfo['content'] = $questionData['content'];
+                $questionInfo['content'] = $questionData['content'] ?? '';
             }
             if (array_key_exists('answer_content', $questionData)) {
                 $questionInfo['answer_content'] = $questionData['answer_content'];
@@ -395,6 +399,10 @@ class SkillController extends Controller
                 $question->update($questionInfo);
                 $existingQuestionIds[] = $questionId;
             } else {
+                // For new questions, ensure content is set
+                if (!isset($questionInfo['content'])) {
+                    $questionInfo['content'] = '';
+                }
                 $question = $section->questions()->create($questionInfo);
                 $existingQuestionIds[] = $question->id;
             }

@@ -162,7 +162,44 @@
                         <!-- Pagination -->
                         @if($exams->hasPages())
                             <div class="d-flex justify-content-center mt-4">
-                                {{ $exams->links() }}
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination">
+                                        {{-- Previous Page Link --}}
+                                        @if ($exams->onFirstPage())
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&lsaquo;</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $exams->previousPageUrl() }}" rel="prev">&lsaquo;</a>
+                                            </li>
+                                        @endif
+
+                                        {{-- Pagination Elements --}}
+                                        @foreach ($exams->getUrlRange(1, $exams->lastPage()) as $page => $url)
+                                            @if ($page == $exams->currentPage())
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ $page }}</span>
+                                                </li>
+                                            @else
+                                                <li class="page-item">
+                                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                                </li>
+                                            @endif
+                                        @endforeach
+
+                                        {{-- Next Page Link --}}
+                                        @if ($exams->hasMorePages())
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $exams->nextPageUrl() }}" rel="next">&rsaquo;</a>
+                                            </li>
+                                        @else
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&rsaquo;</span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </nav>
                             </div>
                         @endif
                     </div>
@@ -182,6 +219,7 @@
                 min-height: 200px;
                 font-size: 14px;
             }
+
         </style>
     @endpush
 

@@ -195,8 +195,45 @@
         </div>
 
         @if($skills->hasPages())
-            <div class="card-footer">
-                {{ $skills->links() }}
+            <div class="card-footer d-flex justify-content-center">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        {{-- Previous Page Link --}}
+                        @if ($skills->onFirstPage())
+                            <li class="page-item disabled">
+                                <span class="page-link">&lsaquo;</span>
+                            </li>
+                        @else
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $skills->previousPageUrl() }}" rel="prev">&lsaquo;</a>
+                            </li>
+                        @endif
+
+                        {{-- Pagination Elements --}}
+                        @foreach ($skills->getUrlRange(1, $skills->lastPage()) as $page => $url)
+                            @if ($page == $skills->currentPage())
+                                <li class="page-item active">
+                                    <span class="page-link">{{ $page }}</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                </li>
+                            @endif
+                        @endforeach
+
+                        {{-- Next Page Link --}}
+                        @if ($skills->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $skills->nextPageUrl() }}" rel="next">&rsaquo;</a>
+                            </li>
+                        @else
+                            <li class="page-item disabled">
+                                <span class="page-link">&rsaquo;</span>
+                            </li>
+                        @endif
+                    </ul>
+                </nav>
             </div>
         @endif
     </div>

@@ -27,7 +27,7 @@ const WritingTest = () => {
         let data;
         
         if (sectionId) {
-          response = await getSectionById(sectionId);
+          response = await getSectionById(sectionId, { with_questions: true });
           data = response.data?.data || response.data;
           setSectionData(data);
         } else {
@@ -40,15 +40,32 @@ const WritingTest = () => {
         
         // Xử lý sections - Writing có sections nhưng không có question_groups
         let allGroups = [];
-        if (data?.sections && data.sections.length > 0) {
+        
+        // Nếu fetch single section (sectionId provided)
+        if (sectionId && data?.id) {
+          // Data is a single section object
+          allGroups.push({
+            id: data.id,
+            part: 1,
+            content: data.content,
+            instructions: '', // Không set instructions để content hiển thị
+            questions: data.questions || [], // Writing có questions riêng lẻ
+            title: data.title || `Task 1`
+          });
+          setQuestionGroups(allGroups);
+          setParts([{ part: 1, name: 'Task 1' }]);
+          setCurrentPartTab(1);
+        } 
+        // Nếu fetch skill với sections (skillId provided)
+        else if (data?.sections && data.sections.length > 0) {
           // Với Writing, mỗi section là một task
           data.sections.forEach((section, index) => {
             allGroups.push({
               id: section.id,
               part: index + 1,
               content: section.content,
-              instructions: section.content, // Content chứa instructions
-              questions: [], // Writing thường không có questions cố định
+              instructions: '', // Không set instructions để content hiển thị
+              questions: section.questions || [], // Writing có questions riêng lẻ
               title: section.title || `Task ${index + 1}`
             });
           });
@@ -150,9 +167,7 @@ const WritingTest = () => {
                 <h2 className="writing-test__task-title">
                   Writing Task {group.part}
                 </h2>
-                <div className="writing-test__task-info">
-                  You should spend {group.part === 1 ? '20' : '40'} minutes on this task.
-                </div>
+                
               </div>
 
               {/* Task Instructions & Content */}
@@ -163,11 +178,28 @@ const WritingTest = () => {
                 />
               )}
 
-              {group.content && group.content !== group.instructions && (
+              {/* Section Content - Hướng dẫn thời gian */}
+              {group.content && (
                 <div 
                   className="writing-test__task-content"
                   dangerouslySetInnerHTML={{ __html: group.content }}
                 />
+              )}
+
+              {/* Question Content - ĐÂY LÀ ĐỀ BÀI CHÍNH */}
+              {group.questions && group.questions.length > 0 && (
+                <div className="writing-test__questions">
+                  {group.questions.map((question, qIndex) => (
+                    <div key={question.id} className="writing-test__question">
+                      {question.content && (
+                        <div 
+                          className="writing-test__question-content"
+                          dangerouslySetInnerHTML={{ __html: question.content }}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -177,9 +209,6 @@ const WritingTest = () => {
                 <span className="writing-test__answer-label">
                   {group.part}. Your article
                 </span>
-                <span className="writing-test__word-count">
-                  Số từ: {(answers[group.id] || '').trim().split(/\s+/).filter(Boolean).length}/{group.part === 1 ? 150 : 250}
-                </span>
               </div>
               
               <textarea
@@ -188,6 +217,22 @@ const WritingTest = () => {
                 value={answers[group.id] || ''}
                 onChange={(e) => handleAnswerChange(group.id, e.target.value)}
               />
+              
+              <div className="writing-test__word-count-footer">
+                {(() => {
+                  const wordCount = (answers[group.id] || '').trim().split(/\s+/).filter(Boolean).length;
+                  const targetWords = group.part === 1 ? 150 : 250;
+                  return (
+                    <>
+                      <span>{wordCount} từ: </span>
+                      <span className={wordCount < targetWords ? 'text-red' : 'text-green'}>
+                        {wordCount}
+                      </span>
+                      <span>/{targetWords}</span>
+                    </>
+                  );
+                })()}
+              </div>
             </div>
           </div>
         ))}
