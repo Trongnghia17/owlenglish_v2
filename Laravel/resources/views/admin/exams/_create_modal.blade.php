@@ -57,7 +57,6 @@
                             <option value="">-- Chọn loại --</option>
                             <option value="ielts" {{ old('type') == 'ielts' ? 'selected' : '' }}>IELTS</option>
                             <option value="toeic" {{ old('type') == 'toeic' ? 'selected' : '' }}>TOEIC</option>
-                            <option value="online" {{ old('type') == 'online' ? 'selected' : '' }}>Online</option>
                         </select>
                         @error('type')
                             <div class="invalid-feedback">{{ $message }}</div>

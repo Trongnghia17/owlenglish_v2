@@ -73,6 +73,7 @@ class SkillController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'time_limit' => 'required|integer|min:1',
+            'is_online' => 'nullable|boolean',
         ]);
 
         // Verify that exam_test_id belongs to the selected exam_id
@@ -92,6 +93,9 @@ class SkillController extends Controller
 
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
+        
+        // Ensure is_online is boolean
+        $validated['is_online'] = $request->has('is_online') ? true : false;
 
         $skill = ExamSkill::create($validated);
 
@@ -137,6 +141,7 @@ class SkillController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'time_limit' => 'required|integer|min:1',
+            'is_online' => 'nullable|boolean',
             'sections' => 'nullable|array',
             'sections.*.id' => 'nullable|integer',
             'sections.*.title' => 'nullable|string|max:255',
@@ -200,6 +205,9 @@ class SkillController extends Controller
 
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
+        
+        // Ensure is_online is boolean
+        $validated['is_online'] = $request->has('is_online') ? true : false;
 
         // Extract sections data before updating skill
         $sectionsData = $validated['sections'] ?? [];

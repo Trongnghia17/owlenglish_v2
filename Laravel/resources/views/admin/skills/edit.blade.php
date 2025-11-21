@@ -173,6 +173,17 @@
                                 </div>
                             </div>
 
+                            <!-- Is Online -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_online" name="is_online"
+                                        value="1" {{ old('is_online', $skill->is_online) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_online">
+                                        Online Mode
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Exam Selection -->
                             <div class="mb-3">
                                 <label for="exam_id" class="form-label">Quiz Collection <span

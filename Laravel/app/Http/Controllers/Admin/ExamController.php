@@ -46,7 +46,7 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:online,ielts,toeic',
+            'type' => 'required|in:ielts,toeic',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB
             'is_active' => 'boolean',
@@ -81,7 +81,7 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:online,ielts,toeic',
+            'type' => 'required|in:ielts,toeic',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB
             'is_active' => 'boolean',

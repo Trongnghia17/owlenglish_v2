@@ -25,6 +25,11 @@ class ExamSkillController extends Controller
             });
         }
 
+        // Filter by is_online status
+        if ($request->has('is_online')) {
+            $query->where('is_online', $request->boolean('is_online'));
+        }
+
         // Filter by skill type
         if ($request->has('skill_type')) {
             $query->where('skill_type', $request->skill_type);

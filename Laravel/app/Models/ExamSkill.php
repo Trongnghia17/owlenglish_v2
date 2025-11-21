@@ -19,10 +19,12 @@ class ExamSkill extends Model
         'image',
         'time_limit',
         'is_active',
+        'is_online',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_online' => 'boolean',
         'time_limit' => 'integer',
     ];
 

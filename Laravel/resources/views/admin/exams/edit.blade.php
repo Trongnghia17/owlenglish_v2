@@ -120,7 +120,6 @@
                                 <option value="">-- Chọn chương trình --</option>
                                 <option value="ielts" {{ old('type', $exam->type) == 'ielts' ? 'selected' : '' }}>IELTS</option>
                                 <option value="toeic" {{ old('type', $exam->type) == 'toeic' ? 'selected' : '' }}>TOEIC</option>
-                                <option value="online" {{ old('type', $exam->type) == 'online' ? 'selected' : '' }}>Online</option>
                             </select>
                             @error('type')
                                 <div class="invalid-feedback">{{ $message }}</div>

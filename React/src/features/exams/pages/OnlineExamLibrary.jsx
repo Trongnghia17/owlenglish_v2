@@ -55,9 +55,9 @@ export default function OnlineExamLibrary() {
   const fetchSkills = async () => {
     try {
       setLoading(true);
-      // Chỉ lấy skills từ exams có type = 'online'
+      // Chỉ lấy skills có is_online = true
       const response = await getSkills({ 
-        exam_type: 'online',
+        is_online: true,
         page: currentPage,
         per_page: perPage
       });
