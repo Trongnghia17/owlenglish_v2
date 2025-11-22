@@ -135,6 +135,9 @@ const ListeningTest = () => {
             
             setParts([{ id: section.id, part: 1, title: `Part 1 (1-${section.question_groups?.reduce((sum, g) => sum + (g.questions?.length || 0), 0) || 0})` }]);
             
+            // Get layout type from section
+            const sectionLayoutType = parseInt(section.ui_layer) || 1;
+            
             // Lấy question groups
             const allGroups = [];
             let questionNumber = 1;
@@ -217,7 +220,8 @@ const ListeningTest = () => {
                   optionsWithContent: optionsWithContent,
                   questions: questions,
                   startNumber: questions[0]?.number || 1,
-                  endNumber: questions[questions.length - 1]?.number || 1
+                  endNumber: questions[questions.length - 1]?.number || 1,
+                  layoutType: sectionLayoutType
                 });
               });
             }
@@ -239,6 +243,9 @@ const ListeningTest = () => {
               skill.sections.forEach((section, sectionIndex) => {
                 const partNumber = sectionIndex + 1;
                 const groupStartIndex = allGroups.length;
+                
+                // Get layout type from section
+                const sectionLayoutType = parseInt(section.ui_layer) || 1;
                 
                 // Lấy question groups
                 if (section.question_groups) {
@@ -320,7 +327,8 @@ const ListeningTest = () => {
                       optionsWithContent: optionsWithContent,
                       questions: questions,
                       startNumber: questions[0]?.number || questionNumber,
-                      endNumber: questions[questions.length - 1]?.number || questionNumber
+                      endNumber: questions[questions.length - 1]?.number || questionNumber,
+                      layoutType: sectionLayoutType
                     });
                   });
                 }
@@ -524,58 +532,97 @@ const ListeningTest = () => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''}`}>
-        {/* Audio Player - Fixed at top */}
-        {currentPartAudio && (
-          <div className="listening-test__audio-section">
-            <div className="listening-test__audio-label">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 16.5V7.5L16.5 12L9.5 16.5Z" fill="currentColor"/>
-              </svg>
-              Audio for Part {currentPartTab}
-            </div>
-            <audio
-              ref={audioRef}
-              controls
-              src={currentPartAudio}
-              className="listening-test__audio-player"
-            />
+      {/* Audio Player - Fixed at top */}
+      {currentPartAudio && (
+        <div className="listening-test__audio-section">
+          <div className="listening-test__audio-label">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM9.5 16.5V7.5L16.5 12L9.5 16.5Z" fill="currentColor"/>
+            </svg>
+            Audio for Part {currentPartTab}
           </div>
+          <audio
+            ref={audioRef}
+            controls
+            src={currentPartAudio}
+            className="listening-test__audio-player"
+          />
+        </div>
+      )}
+
+      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${currentPartGroups[0]?.layoutType === 2 ? 'listening-test__content--two-column' : ''}`}>
+        {/* Layout Type 2: Two Column Layout */}
+        {currentPartGroups[0]?.layoutType === 2 ? (
+          <>
+            {/* Left Column: Content/Images Only */}
+            <div className="listening-test__left-column">
+         
+              {currentPartGroups.map((group) => (
+                <div key={group.id} className="listening-test__content-section">
+                       <h2>Listening Part {currentPartTab}</h2> 
+                  {group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
+                    <div
+                      className="listening-test__group-content"
+                      dangerouslySetInnerHTML={{ __html: group.groupContent }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Right Column: Headers + Questions */}
+            <div className="listening-test__right-column">
+              {currentPartGroups.map((group) => (
+                <div key={group.id} id={`question-group-${group.id}`} className="listening-test__question-group">
+                  <div className="listening-test__group-header">
+                    <h3>Question {group.startNumber} - {group.endNumber}</h3>
+                    {group.instructions && (
+                      <div 
+                        className="listening-test__group-instructions"
+                        dangerouslySetInnerHTML={{ __html: group.instructions }}
+                      />
+                    )}
+                  </div>
+                  <div className="listening-test__questions-list">
+                    {renderQuestionsByType(group, answers, handleAnswerSelect)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          /* Layout Type 1: Default Single Column Layout */
+          <>
+            {currentPartGroups.map((group) => (
+              <div key={group.id} id={`question-group-${group.id}`} className="listening-test__question-group">
+                {/* Group Header */}
+                <h2>Listening Part {currentPartTab}</h2> 
+                <div className="listening-test__group-header">
+                  <h3>Question {group.startNumber} - {group.endNumber}</h3>
+                  {group.instructions && (
+                    <div 
+                      className="listening-test__group-instructions"
+                      dangerouslySetInnerHTML={{ __html: group.instructions }}
+                    />
+                  )}
+                </div>
+
+                {/* Group Content */}
+                {group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
+                  <div
+                    className="listening-test__group-content"
+                    dangerouslySetInnerHTML={{ __html: group.groupContent }}
+                  />
+                )}
+
+                {/* Questions */}
+                <div className="listening-test__questions-list">
+                  {renderQuestionsByType(group, answers, handleAnswerSelect)}
+                </div>
+              </div>
+            ))}
+          </>
         )}
-
-     
-
-        {/* Questions */}
-        {currentPartGroups.map((group) => (
-          
-          <div key={group.id} id={`question-group-${group.id}`} className="listening-test__question-group">
-            {/* Group Header */}
-             <h2>Listening Part {currentPartTab}</h2> 
-            <div className="listening-test__group-header">
-              
-              <h3>Question {group.startNumber} - {group.endNumber}</h3>
-              {group.instructions && (
-                <div 
-                  className="listening-test__group-instructions"
-                  dangerouslySetInnerHTML={{ __html: group.instructions }}
-                />
-              )}
-            </div>
-
-            {/* Group Content */}
-            {group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
-              <div
-                className="listening-test__group-content"
-                dangerouslySetInnerHTML={{ __html: group.groupContent }}
-              />
-            )}
-
-            {/* Questions */}
-            <div className="listening-test__questions-list">
-              {renderQuestionsByType(group, answers, handleAnswerSelect)}
-            </div>
-          </div>
-        ))}
       </div>
     </TestLayout>
   );
