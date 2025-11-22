@@ -17,7 +17,6 @@ export default function PaymentHistory() {
         setRows(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         if (!mounted) return;
-        setError('Không thể tải dữ liệu từ API, dùng dữ liệu mẫu.');
         setRows([
           { id: '1236645', time: '11:17 · 23/06/2025', eggs: 150, note: 'Gói chấm bài Writing - Speaking 1 tháng', status: 'done' },
           { id: '3215946', time: '11:17 · 23/06/2025', eggs: 250, note: 'Gói chấm bài Writing - Speaking 3 tháng', status: 'pending' },

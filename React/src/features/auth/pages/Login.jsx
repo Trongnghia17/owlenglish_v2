@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from "react-toastify";
+import ButtonLoading from '../../../components/common/ButtonLoading';
 import useAuth from '@/features/auth/store/auth.store';
 import api from '@/lib/axios';
 import logo from "../../../assets/images/logo.png";
@@ -21,6 +22,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const socialRedirect = (provider) => {
     const map = {
       google: `${import.meta.env.VITE_API_BASE_URL}/oauth/google/redirect`,
@@ -31,6 +33,24 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!email.trim()) {
+      toast.error("Vui lòng nhập email");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Email không hợp lệ");
+      return;
+    }
+    if (!password.trim()) {
+      toast.error("Vui lòng nhập mật khẩu");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+    setLoading(true);
     try {
       const res = await api.post("api/login", {
         username: email,
@@ -45,6 +65,8 @@ export default function Login() {
       nav("/dashboard");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,7 +74,7 @@ export default function Login() {
   return (
     <div className="login-wrapper">
       <div className="login-imgleftmain">
-       
+
       </div>
       <div className="login-cardmain">
         <div className='login-card'>
@@ -68,7 +90,7 @@ export default function Login() {
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+
               />
               <img className='key-logo-input' src={emailimg} alt="email-img" />
             </div>
@@ -79,7 +101,7 @@ export default function Login() {
                 placeholder="Mật khẩu"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+
               />
               <img className='key-logo-input' src={passwordimg} alt="passwordimg-img" />
               <img
@@ -90,7 +112,14 @@ export default function Login() {
                 style={{ cursor: "pointer" }}
               />
             </div>
-            <button className="login-primaryBtn" type="submit">Đăng nhập</button>
+            <ButtonLoading
+              type="primary"
+              className="login-primaryBtn"
+              block
+              loading={loading}
+            >
+              Đăng nhập
+            </ButtonLoading>
           </form>
 
           <div className='login-option'>

@@ -6,6 +6,7 @@ import readingIcon from '@/assets/images/exam-reading.png';
 import listeningIcon from '@/assets/images/exam-listening.png';
 import writingIcon from '@/assets/images/exam-writing.png';
 import speakingIcon from '@/assets/images/exam-speaking.png';
+import Loading from '../../../components/common/Loading';
 export default function SelectExamModeModal({ isOpen, onClose, skill, examType }) {
   const navigate = useNavigate();
   const [skillDetails, setSkillDetails] = useState(null);
@@ -155,7 +156,7 @@ export default function SelectExamModeModal({ isOpen, onClose, skill, examType }
 
         <div className="select-exam-modal__content">
           {loading ? (
-            <div className="select-exam-modal__loading">Đang tải dữ liệu...</div>
+             <Loading />
           ) : (
             <>
               {/* Full Test Mode */}

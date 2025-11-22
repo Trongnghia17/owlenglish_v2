@@ -15,11 +15,12 @@ import nextright from "../../../assets/images/nextright.svg";
 import eye from "../../../assets/images/eye.svg";
 import eyeSlash from "../../../assets/images/eye-slash.svg";
 import './Login.css';
+import ButtonLoading from '../../../components/common/ButtonLoading';
 
 export default function Register() {
   const nav = useNavigate();
   const { setToken, setUser } = useAuth();
-
+  const [loadingSend, setLoadingSend] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -54,6 +55,7 @@ export default function Register() {
   };
 
   const handleSendCode = async (method) => {
+    setLoadingSend(true);
     try {
       await api.post("api/otp/send", {
         channel: method,
@@ -61,6 +63,7 @@ export default function Register() {
         email,
         purpose: "register",
       });
+
       toast.success(
         `Mã xác nhận đã được gửi qua ${method === "email" ? "Email" : "Zalo OA"}`
       );
@@ -72,14 +75,15 @@ export default function Register() {
           password,
           channel: method,
           destination: method === "email" ? email : phone,
-          password,
         },
       });
     } catch (error) {
       toast.error(error?.response?.data?.message || "Gửi OTP thất bại");
-      setIsModalOpen(false);
+    } finally {
+      setLoadingSend(false);
     }
   };
+
 
 
   const socialRedirect = (provider) => {
@@ -207,9 +211,15 @@ export default function Register() {
         className='modal-register'
       >
         <Space direction="vertical" style={{ width: "100%" }}>
-          <Button type="primary" className='btn-select-register' block onClick={() => handleSendCode("email")}>
+          <ButtonLoading
+            type="primary"
+            className="btn-select-register btn-select-register-email"
+            block
+            onClick={() => handleSendCode("email")}
+            loading={loadingSend}
+          >
             Gửi mã qua Email
-          </Button>
+          </ButtonLoading>
           <Button type="default" className='btn-select-register' block onClick={() => handleSendCode("zalo_oa")}>
             Gửi mã qua Zalo OA
           </Button>

@@ -32,7 +32,6 @@ export default function ExamHistory() {
         setExams(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         if (!mounted) return;
-        setError('Không thể load dữ liệu từ API, dùng dữ liệu thử nghiệm.');
         // mock data for testing
         setExams([
           {
