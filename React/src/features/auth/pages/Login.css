@@ -59,6 +59,7 @@
 /* Button chính */
 .login-primaryBtn {
   height: 55px;
+  width: 150px;
   border: none;
   border-radius: 30px;
   background: #045CCE;
@@ -86,8 +87,13 @@
   height: 55px;
   border: none;
   font-size: 14px;
-  border-radius: 10px;
+  border-radius: 5px;
   padding: 17px 35px;
+  cursor: pointer;
+}
+.btn-select-register-email{
+  background-color: #045CCE;
+  color: #fff;
 }
 .title-login {
   font-size: 40px;

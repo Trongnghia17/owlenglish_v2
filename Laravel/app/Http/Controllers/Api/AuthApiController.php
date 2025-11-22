@@ -47,6 +47,7 @@ class AuthApiController extends Controller
 
             /** Tìm/ tạo user + link user_identities */
             $user = DB::transaction(function () use ($googleId, $email, $name, $avatar, $googleUser) {
+                return 2;
                 // 1) Tìm theo user_identities (provider=google)
                 $identity = UserIdentity::where('provider', 'google')
                     ->where('provider_user_id', $googleId)
@@ -92,7 +93,7 @@ class AuthApiController extends Controller
                     }
 
                     // 4) Tạo identity google
-                    UserIdentity::create([
+                    UserIdentity::firstOrCreate([
                         'user_id'          => $user->id,
                         'provider'         => 'google',
                         'provider_user_id' => $googleId,
@@ -278,6 +279,23 @@ class AuthApiController extends Controller
                 'password' => Hash::make($request->password),
                 'email_verified_at' => now(),
                 'role_id' => 6,
+            ]);
+
+            UserContact::create([
+                'user_id' => $user->id,
+                'type' => 'email',
+                'value' => $user->email,
+                'is_primary' => true,
+                'verified_at' => now(),
+            ]);
+
+            UserIdentity::create([
+                'user_id' => $user->id,
+                'provider' => 'local_email',
+                'provider_user_id' => $user->email,
+                'email_at_signup' => $user->email,
+                'is_primary' => true,
+                'verified_at' => now(),
             ]);
         } else {
             $user->update([

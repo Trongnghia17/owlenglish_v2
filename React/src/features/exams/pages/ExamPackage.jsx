@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getExams } from '../api/exams.api'; 
 import './ExamPackage.css';
+import Loading from '../../../components/common/Loading';
+
 export default function ExamPackage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -200,7 +202,7 @@ export default function ExamPackage() {
         {/* Main Content */}
         <main className="online-exam-library__main">
           {loading ? (
-            <div className="online-exam-library__loading">Đang tải dữ liệu...</div>
+            <Loading />
           ) : sortedSkills.length === 0 ? (
             <div className="online-exam-library__empty">Không có bài thi nào</div>
           ) : (

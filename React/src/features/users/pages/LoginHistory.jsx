@@ -16,7 +16,6 @@ export default function LoginHistory() {
         setRows(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         if (!mounted) return;
-        setError('Không thể tải dữ liệu từ API. Hiển thị dữ liệu mẫu.');
         setRows([
           {
             id: '1',

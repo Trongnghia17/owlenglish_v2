@@ -8,9 +8,13 @@ use App\Http\Controllers\Api\ExamTestController;
 use App\Http\Controllers\Api\ExamSkillController;
 use App\Http\Controllers\Api\ExamSectionController;
 use App\Http\Controllers\Api\ExamQuestionController;
+use App\Http\Controllers\Api\StudentController;
 
-Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', function (Request $request) {
+        return $request->user();
+    });
+    Route::post('/user/profile', [StudentController::class, 'updateProfile']);
 });
 
 Route::prefix('otp')->group(function () {

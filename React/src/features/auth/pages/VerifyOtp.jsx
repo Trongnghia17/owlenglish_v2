@@ -5,16 +5,21 @@ import api from "@/lib/axios";
 import logo_otp from "../../../assets/images/logo-otp.png";
 import imgleftlogin from "../../../assets/images/imgleftlogin.png";
 import icon_otp from "../../../assets/images/icon-otp.png";
+import ButtonLoading from '../../../components/common/ButtonLoading';
 import './Login.css';
 
 export default function VerifyOtp() {
     const location = useLocation();
     const nav = useNavigate();
     const { channel, destination, password, email } = location.state || {};
-
+    const [loading, setLoading] = useState(false);
     const [otp, setOtp] = useState("");
-    console.log("222", location.state);
     const handleVerify = async () => {
+        if (!otp.trim()) {
+            toast.error("Vui lòng nhập mã OTP");
+            return;
+        }
+        setLoading(true);
         try {
             const res = await api.post("api/otp/verify", {
                 email,
@@ -29,13 +34,15 @@ export default function VerifyOtp() {
             nav("/login");
         } catch (error) {
             toast.error(error?.response?.data?.message || "Xác thực OTP thất bại");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="login-wrapper register-wrapper">
             <div className="login-imgleftmain">
-            
+
             </div>
             <div className="login-cardmain">
                 <div className='login-card'>
@@ -57,9 +64,15 @@ export default function VerifyOtp() {
                         />
                         <img className='key-logo-input' src={icon_otp} alt="email-img" />
                     </div>
-                   <div className="otp-action-group">
-                     <button className="otp-submit login-primaryBtn" onClick={handleVerify}>Xác thực</button>
-                   </div>
+                    <div className="otp-action-group">
+                        <ButtonLoading
+                            className="otp-submit login-primaryBtn"
+                            onClick={handleVerify}
+                            loading={loading}
+                        >
+                            Xác thực
+                        </ButtonLoading>
+                    </div>
                 </div>
             </div>
         </div>
