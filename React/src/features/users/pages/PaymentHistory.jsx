@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '@/lib/axios';
 import cong from '@/assets/images/cong.svg';
 import './PaymentHistory.css';
+import { Link } from 'react-router-dom';
 
 export default function PaymentHistory() {
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,10 @@ export default function PaymentHistory() {
       <div className="ph-header">
         <h3 className="ph-title">LỊCH SỬ THANH TOÁN</h3>
         <div className="ph-actions">
-          <button className="ph-btn ph-btn--primary"><img src={cong} alt="" /> <p className='ph-btn-text'>Nạp OWL</p></button>
+          <Link to="/goi-nap-tien" className="ph-btn ph-btn--primary">
+            <img src={cong} alt="Nạp tiền" />
+            <p className="ph-btn-text">Nạp tiền</p>
+          </Link>
         </div>
       </div>
 

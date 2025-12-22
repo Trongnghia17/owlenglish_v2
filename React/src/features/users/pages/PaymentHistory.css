@@ -28,6 +28,10 @@
     gap: 10px;
 }
 
+.ph-actions a{
+    text-decoration: none;
+}
+
 .ph-btn {
     padding: 8px 12px;
     height: 40px;

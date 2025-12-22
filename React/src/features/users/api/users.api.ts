@@ -16,4 +16,19 @@ export const updateProfile = async (formData: FormData) => {
   return response.data;
 };
 
+export const getDeviceInfo = async () => {  
+  const response = await axios.get(
+    `${VITE_API_LARAVEL_SERVER}/api/user/login-history`
+  );
+  return response.data;
+};
+
+export const deviceAction = async (data) => {  
+  const response = await axios.post(
+    `${VITE_API_LARAVEL_SERVER}/api/user/device/action`,
+    data
+  );
+  return response.data;
+};
+
 

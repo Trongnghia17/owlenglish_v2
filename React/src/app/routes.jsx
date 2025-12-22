@@ -25,6 +25,7 @@ import ListeningToeic from '../features/toeic/pages/Listening';
 import WritingToeic from '../features/toeic/pages/Writing';
 import SpeakingToeic from '../features/toeic/pages/Speaking';
 import ReadingToeic from '../features/toeic/pages/Reading';
+import PackageList from '../features/payment-packages/pages/PackageList';
 const PublicShell = (
   <MainLayout />
 );
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: '/de-thi-online', element: <OnlineExamLibrary /> },
       { path: '/bo-de/:examType', element: <ExamPackage /> },
       { path: '/bo-de/:examType/:examId', element: <ExamPackageDetail /> },
+      { path: '/goi-nap-tien', element: <PackageList /> },
     ]
   },
 

@@ -1,0 +1,88 @@
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import './Package.css';
+import { getPaymentPackages } from '../api/packages.api';
+import Loading from '../../../components/common/Loading';
+
+export default function PackageList() {
+    const [packages, setPackages] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchPackages();
+    }, []);
+
+    const fetchPackages = async () => {
+        try {
+            const res = await getPaymentPackages();
+            setPackages(res || []);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="pk-container">
+            <div className="pk-breadcrumb">
+                <Link to="/">Trang chủ</Link> &gt; <span className='active-text'>Nạp trứng cũ</span>
+            </div>
+            {loading && (
+                <div className="pk-loading">
+                    <Loading />
+                </div>
+            )}
+
+            {/* ✅ CONTENT */}
+            {!loading && (
+                <>
+                    {packages.length === 0 ? (
+                        <div className="pk-empty">
+                            Hiện chưa có gói nạp nào
+                        </div>
+                    ) : (
+                        <div className="pk-list">
+                            {packages.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className={`pk-card ${item.is_featured ? 'pk-featured' : ''}`}
+                                >
+                                    <div className="pk-card-header">
+                                        <h3>{item.name}</h3>
+
+                                        {item.discount_percent > 0 && (
+                                            <span className="pk-discount">
+                                                GIẢM {item.discount_percent}%
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="pk-price">
+                                        <span className="pk-price-main">
+                                            {Number(item.final_price).toLocaleString()}đ
+                                        </span>
+                                        <span className="pk-price-unit"> / tháng</span>
+                                    </div>
+
+                                    {item.discount_percent > 0 && (
+                                        <div className="pk-price-old">
+                                            {Number(item.price).toLocaleString()}đ
+                                        </div>
+                                    )}
+
+                                    <Link
+                                        to={`/payment/${item.id}`}
+                                        className={`pk-btn ${item.is_featured ? 'pk-btn-white' : ''}`}
+                                    >
+                                        Đăng ký ngay
+                                    </Link>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+}

@@ -58,7 +58,7 @@ export default function Topbar() {
           <>
             <button title="Trứng cú" className="topbar__egg" aria-label="egg">
               <img className="topbar__egg-img" src={Capa_1} alt="trứng cú" />
-              150 trứng Cú
+              {user?.coin || 0} trứng Cú
             </button>
 
             <button title="Thông báo" className="topbar__icon" aria-label="notifications">

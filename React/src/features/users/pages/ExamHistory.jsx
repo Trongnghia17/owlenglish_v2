@@ -3,11 +3,11 @@ import api from '@/lib/axios';
 import listening from '@/assets/images/writing.svg';
 import listening_active from '@/assets/images/listening_active.svg';
 import speaking from '@/assets/images/speaking.svg';
-import speaking_active from '@/assets/images/listening_active.svg';
-import reading from '@/assets/images/writing.svg';
-import reading_active from '@/assets/images/listening_active.svg';
+import speaking_active from '@/assets/images/icon_mic.svg';
+import reading from '@/assets/images/speaking.svg';
+import reading_active from '@/assets/images/icon_book.svg';
 import writing from '@/assets/images/writing.svg';
-import writing_active from '@/assets/images/listening_active.svg';
+import writing_active from '@/assets/images/icon_edit.svg';
 import './ExamHistory.css';
 
 const TABS = [
