@@ -1,0 +1,119 @@
+.pk-container {
+  margin: 0px auto;
+}
+.pk-container .active-text{
+    color: #0537A5;
+    font-weight: 600;
+}
+.pk-breadcrumb {
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.pk-breadcrumb a {
+  color: #6D6D6D;
+  text-decoration: none;
+}
+
+.pk-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+/* Card */
+.pk-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+.pk-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Featured */
+.pk-featured {
+  background: #0b5ed7;
+  color: #fff;
+}
+
+.pk-featured .pk-price-old {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Header */
+.pk-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pk-card-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Discount badge */
+.pk-discount {
+  background: #2dbd3a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+/* Price */
+.pk-price {
+  margin-top: 20px;
+}
+
+.pk-price-main {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.pk-price-unit {
+  font-size: 14px;
+}
+
+.pk-price-old {
+  margin-top: 8px;
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+/* Button */
+.pk-btn {
+  margin-top: auto;
+  text-align: center;
+  padding: 12px;
+  border-radius: 999px;
+  border: 2px solid #0b5ed7;
+  color: #0b5ed7;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.pk-btn:hover {
+  background: #0b5ed7;
+  color: #fff;
+}
+
+/* Button for featured */
+.pk-btn-white {
+  background: #fff;
+  color: #0b5ed7;
+}
+
+.pk-btn-white:hover {
+  background: #e5e7eb;
+}

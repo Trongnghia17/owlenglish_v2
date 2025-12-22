@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import api from '@/lib/axios';
 import './LoginHistory.css';
+import { getDeviceInfo } from '../api/users.api';
+import Loading from '../../../components/common/Loading';
 
 export default function LoginHistory() {
   const [loading, setLoading] = useState(true);
@@ -9,52 +10,27 @@ export default function LoginHistory() {
 
   useEffect(() => {
     let mounted = true;
+
     (async () => {
       try {
-        const res = await api.get('/user/login-history'); // optional backend endpoint
+        const res = await getDeviceInfo();
         if (!mounted) return;
-        setRows(Array.isArray(res.data) ? res.data : []);
+
+        setRows(Array.isArray(res) ? res : []);
       } catch (err) {
         if (!mounted) return;
-        setRows([
-          {
-            id: '1',
-            device: 'Ipad Air',
-            actionLabel: 'Đăng xuất',
-            loginAt: '11:17 · 23/06/2025',
-            lastActive: '11:17 · 23/06/2025',
-            location: 'Ho Chi Minh, Ho Chi Minh City, Vietnam',
-            status: 'active',
-          },
-          {
-            id: '2',
-            device: 'Ipad Pro 11',
-            actionLabel: 'Xóa khỏi thiết bị',
-            loginAt: '11:17 · 23/06/2025',
-            lastActive: '11:17 · 23/06/2025',
-            location: 'Ho Chi Minh, Ho Chi Minh City, Vietnam',
-            status: 'signed_out',
-          },
-          {
-            id: '3',
-            device: 'DESKTOP 2',
-            actionLabel: 'Xóa khỏi thiết bị',
-            loginAt: '11:17 · 23/06/2025',
-            lastActive: '11:17 · 23/06/2025',
-            location: 'Ho Chi Minh, Ho Chi Minh City, Vietnam',
-            status: 'signed_out',
-          },
-        ]);
+        setError('Không thể tải dữ liệu thiết bị');
       } finally {
         if (mounted) setLoading(false);
       }
     })();
+
     return () => { mounted = false; };
   }, []);
 
   const badge = (s) => {
     if (s === 'active') return <span className="hl-badge hl-badge--active">ĐANG HOẠT ĐỘNG</span>;
-    if (s === 'signed_out') return <span className="hl-badge hl-badge--signedout">ĐÃ ĐĂNG XUẤT</span>;
+    if (s === 'logged_out') return <span className="hl-badge hl-badge--signedout">ĐÃ ĐĂNG XUẤT</span>;
     return <span className="hl-badge">--</span>;
   };
 
@@ -67,11 +43,12 @@ export default function LoginHistory() {
     <div className="history-login">
       <h3 className="hl-title">LỊCH SỬ ĐĂNG NHẬP</h3>
 
-      <div className="hl-card">
+      <div className="">
         {loading ? (
-          <div className="hl-loading">Đang tải...</div>
+          <Loading />
         ) : (
           <>
+          <div className="hl-card">
             {error && <div className="hl-error">{error}</div>}
 
             <div className="hl-table-wrap">
@@ -104,6 +81,7 @@ export default function LoginHistory() {
                   ))}
                 </tbody>
               </table>
+            </div>
             </div>
           </>
         )}

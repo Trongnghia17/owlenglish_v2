@@ -18,7 +18,7 @@ import './Login.css';
 
 export default function Login() {
   const nav = useNavigate();
-  const { setToken, setUser } = useAuth();
+  const { setToken, setUser , setDeviceId  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -61,6 +61,7 @@ export default function Login() {
       setToken(token);
       const me = await getMe();
       setUser(me.data);
+      setDeviceId(res.data.device_id);
       toast.success("Đăng nhập thành công");
       nav("/dashboard");
     } catch (error) {
