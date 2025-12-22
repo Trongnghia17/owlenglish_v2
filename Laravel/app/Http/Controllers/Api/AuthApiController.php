@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Facades\Socialite;
+use Jenssegers\Agent\Agent;
+use Stevebauman\Location\Facades\Location;
+use Carbon\Carbon;
 
 class AuthApiController extends Controller
 {
@@ -47,7 +50,6 @@ class AuthApiController extends Controller
 
             /** Tìm/ tạo user + link user_identities */
             $user = DB::transaction(function () use ($googleId, $email, $name, $avatar, $googleUser) {
-                return 2;
                 // 1) Tìm theo user_identities (provider=google)
                 $identity = UserIdentity::where('provider', 'google')
                     ->where('provider_user_id', $googleId)
@@ -334,11 +336,53 @@ class AuthApiController extends Controller
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
-
+        $device = $this->logDevice($request, $user, $token);
         return response()->json([
             'message' => 'Đăng nhập thành công',
             'user'    => $user,
             'token'   => $token,
+            'device_id' => $device->id,
+        ]);
+    }
+
+    private function logDevice(Request $request, $user, $token)
+    {
+        $ua = $request->userAgent();
+        $agent = new Agent();
+        $agent->setUserAgent($ua);
+
+        // Parse thông tin thiết bị
+        $deviceName = $agent->device() ?: 'Unknown Device';
+        $deviceType = $agent->isDesktop() ? 'Desktop' : ($agent->isTablet() ? 'Tablet' : ($agent->isPhone() ? 'Phone' : 'Other'));
+
+        $platform = $agent->platform() ?: null;
+        $browser  = $agent->browser() ?: null;
+
+        $deviceHash = hash('sha256', $request->ip() . '|' . $ua);
+        $location = Location::get($request->ip());
+        $locationStr = $location ? $location->cityName . ', ' . $location->regionName . ', ' . $location->countryName : 'Không xác định';
+
+        // Unique hash theo IP + UA
+        $deviceHash = hash('sha256', $request->ip() . '|' . $ua);
+
+        return \App\Models\UserDevice::create([
+            'user_id'           => $user->id,
+
+            'device_name'       => $deviceName,
+            'device_type'       => $deviceType,
+            'platform'          => $platform,
+            'browser'           => $browser,
+
+            'ip'                => $request->ip(),
+            'user_agent'        => $ua,
+            'device_hash'       => $deviceHash,
+
+            'logged_in_at'     => Carbon::now()->addHours(7),
+            'last_activity_at' => Carbon::now()->addHours(7),
+            'status'            => 'active',
+
+            'session_id'        => $token,
+            'location'          => $locationStr,
         ]);
     }
 }

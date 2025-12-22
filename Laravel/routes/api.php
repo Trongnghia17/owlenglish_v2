@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ExamTestController;
 use App\Http\Controllers\Api\ExamSkillController;
 use App\Http\Controllers\Api\ExamSectionController;
 use App\Http\Controllers\Api\ExamQuestionController;
+use App\Http\Controllers\Api\PaymentPackageController;
 use App\Http\Controllers\Api\StudentController;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -15,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     Route::post('/user/profile', [StudentController::class, 'updateProfile']);
+    Route::get('/user/login-history', [StudentController::class, 'loginHistory']);
+    Route::post('/user/device/action', [StudentController::class, 'deviceAction']);
 });
 
 Route::prefix('otp')->group(function () {
@@ -26,9 +29,7 @@ Route::prefix('otp')->group(function () {
 
 Route::post('/login', [AuthApiController::class, 'login']);
 
-// ==================== EXAM MANAGEMENT ROUTES ====================
-
-// Public routes (không cần auth) - cho học viên xem và làm bài
+// Public routes (không cần auth) - cho học viên xem và làm bài , xem gói cú
 Route::prefix('public')->group(function () {
     // Lấy danh sách exams public
     Route::get('/exams', [ExamController::class, 'index']);
@@ -50,6 +51,9 @@ Route::prefix('public')->group(function () {
     // Lấy question group và questions
     Route::get('/question-groups/{id}', [ExamQuestionController::class, 'showGroup']);
     Route::get('/question-groups/{groupId}/questions', [ExamQuestionController::class, 'indexQuestions']);
+
+    // Lấy danh sách gói nạp tiền
+    Route::get('/payment-packages', [PaymentPackageController::class, 'index']);
 });
 
 // Protected routes (cần auth) - REMOVED - Admin uses Blade views, not API

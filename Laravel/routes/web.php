@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ExamController as AdminExamController;
 use App\Http\Controllers\Admin\ExamTestController;
 use App\Http\Controllers\Admin\ImageUploadController;
+use App\Http\Controllers\Admin\PaymentPackageController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SkillController;
 
@@ -17,6 +18,7 @@ use App\Http\Controllers\Admin\SkillController;
 | Home Route
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', [AuthController::class, 'home'])->name('home');
 
 /*
@@ -55,17 +57,21 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
         Route::patch('students/{student}/toggle-status', [StudentController::class, 'toggleStatus'])->name('students.toggleStatus');
         Route::post('students/{student}/restore', [StudentController::class, 'restore'])->name('students.restore');
         Route::delete('students/{student}/force-delete', [StudentController::class, 'forceDelete'])->name('students.forceDelete');
+
+        // gói nạp cú
+        Route::resource('payment-packages', PaymentPackageController::class);
+        Route::patch('payment-packages/{paymentPackage}/toggle-status', [PaymentPackageController::class, 'toggleStatus'])->name('payment-packages.toggleStatus');
     });
 
     // Exam Management Routes
     Route::resource('exams', AdminExamController::class);
     Route::patch('exams/{exam}/toggle-active', [AdminExamController::class, 'toggleActive'])->name('exams.toggle-active');
-    
+
     // Skills Management Routes (Independent)
     Route::resource('skills', SkillController::class);
     Route::patch('skills/{skill}/toggle-active', [SkillController::class, 'toggleActive'])->name('skills.toggle-active');
     Route::get('api/tests-by-exam', [SkillController::class, 'getTestsByExam'])->name('api.tests-by-exam');
-    
+
     // Exam Test Management Routes
     Route::prefix('exams/{exam}')->name('exams.')->group(function () {
         Route::resource('tests', ExamTestController::class);
@@ -73,7 +79,7 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
     });
 
     // Admin Settings (placeholder)
-    Route::get('/settings', function() {
+    Route::get('/settings', function () {
         return view('admin.settings.index');
     })->name('settings');
 });
