@@ -154,6 +154,33 @@
                         </ul>
                     </div>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link has-arrow {{ request()->routeIs('admin.payment-packages.*') ? '' : 'collapsed' }}"
+                       href="#!" data-bs-toggle="collapse" data-bs-target="#navPayment"
+                       aria-expanded="{{ request()->routeIs('admin.payment-packages.*') ? 'true' : 'false' }}"
+                       aria-controls="navPayment">
+                        <i data-feather="dollar-sign" class="nav-icon me-2 icon-xxs"></i>
+                        Quản lý thanh toán
+                    </a>
+                    <div id="navPayment" class="collapse {{ request()->routeIs('admin.payment-packages.*') ? 'show' : '' }}"
+                         data-bs-parent="#sideNavbar">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.payment-packages.index') && !request('role') ? 'active' : '' }}"
+                                   href="{{ route('admin.payment-packages.index') }}">
+                                    Gói thanh toán
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.payment-packages.create') && !request('role') ? 'active' : '' }}"
+                                   href="{{ route('admin.payment-packages.create') }}">
+                                    Thêm gói thanh toán
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
             @endif
             <style>
                 .navbar-vertical .navbar-nav .nav .nav-item .nav-link.active {

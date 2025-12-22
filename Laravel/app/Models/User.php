@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'coin',
         'role_id',
         'is_active',
         'email_verified_at',
