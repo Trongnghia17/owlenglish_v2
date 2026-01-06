@@ -167,6 +167,12 @@
                          data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.payment-history') && !request('role') ? 'active' : '' }}"
+                                   href="{{ route('admin.payment-history') }}">
+                                    Lịch sử thanh toán
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.payment-packages.index') && !request('role') ? 'active' : '' }}"
                                    href="{{ route('admin.payment-packages.index') }}">
                                     Gói thanh toán

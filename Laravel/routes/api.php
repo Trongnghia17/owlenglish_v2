@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ExamSkillController;
 use App\Http\Controllers\Api\ExamSectionController;
 use App\Http\Controllers\Api\ExamQuestionController;
 use App\Http\Controllers\Api\PaymentPackageController;
+use App\Http\Controllers\Api\PayosWebhookController;
 use App\Http\Controllers\Api\StudentController;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -18,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/profile', [StudentController::class, 'updateProfile']);
     Route::get('/user/login-history', [StudentController::class, 'loginHistory']);
     Route::post('/user/device/action', [StudentController::class, 'deviceAction']);
+    Route::post('/payments/create', [PaymentPackageController::class, 'create']);
 });
 
 Route::prefix('otp')->group(function () {
@@ -38,23 +40,25 @@ Route::prefix('public')->group(function () {
     Route::get('get_listening/{skillId}/{sectionId?}', [ExamController::class, 'getListeningContent']);
     // Lấy test details
     Route::get('/tests/{id}', [ExamTestController::class, 'show']);
-    
+
     // Lấy danh sách skills public
     Route::get('/skills', [ExamSkillController::class, 'index']);
-    
+
     // Lấy skill details
     Route::get('/skills/{id}', [ExamSkillController::class, 'show']);
-    
+
     // Lấy section details
     Route::get('/sections/{id}', [ExamSectionController::class, 'show']);
-    
+
     // Lấy question group và questions
     Route::get('/question-groups/{id}', [ExamQuestionController::class, 'showGroup']);
     Route::get('/question-groups/{groupId}/questions', [ExamQuestionController::class, 'indexQuestions']);
 
     // Lấy danh sách gói nạp tiền
     Route::get('/payment-packages', [PaymentPackageController::class, 'index']);
+    Route::post('/payos/webhook', [PayosWebhookController::class, 'handle']);
 });
-
+Route::get('/payment/success/{orderCode}', [PaymentPackageController::class, 'success']);
+Route::get('/payment/cancel/{orderCode}', [PaymentPackageController::class, 'cancel']);
 // Protected routes (cần auth) - REMOVED - Admin uses Blade views, not API
 // Students only need public read-only routes above

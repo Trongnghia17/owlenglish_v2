@@ -7,3 +7,24 @@ export const getPaymentPackages = async () => {
   );
   return response.data;
 };
+
+export const createPayment = async (packageId) => {
+  const response = await axios.post(
+    `${VITE_API_LARAVEL_SERVER}/api/payments/create`,
+    { package_id: packageId }
+  );
+  return response.data;
+};
+
+export const cancelPayment = (orderCode) => {
+    return axios.get(`${VITE_API_LARAVEL_SERVER}/api/payment/cancel/${orderCode}`);
+};
+
+export const successPayment = (orderCode) => {
+    return axios.get(
+        `${VITE_API_LARAVEL_SERVER}/api/payment/success/${orderCode}`
+    );
+};
+
+
+

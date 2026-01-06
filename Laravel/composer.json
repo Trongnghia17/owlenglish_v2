@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.2",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
+        "payos/payos": "^2.0",
         "stevebauman/location": "^7.6"
     },
     "require-dev": {

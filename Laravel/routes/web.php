@@ -60,6 +60,7 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
 
         // gói nạp cú
         Route::resource('payment-packages', PaymentPackageController::class);
+        Route::get('payment-history', [PaymentPackageController::class, 'paymentHistory'])->name('payment-history');
         Route::patch('payment-packages/{paymentPackage}/toggle-status', [PaymentPackageController::class, 'toggleStatus'])->name('payment-packages.toggleStatus');
     });
 

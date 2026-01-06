@@ -26,6 +26,8 @@ import WritingToeic from '../features/toeic/pages/Writing';
 import SpeakingToeic from '../features/toeic/pages/Speaking';
 import ReadingToeic from '../features/toeic/pages/Reading';
 import PackageList from '../features/payment-packages/pages/PackageList';
+import PaymentCancel from '../features/payment-packages/pages/PaymentCancel';
+import PaymentSuccess from '../features/payment-packages/pages/Paymentsuccess';
 const PublicShell = (
   <MainLayout />
 );
@@ -125,6 +127,8 @@ export const router = createBrowserRouter([
       { path: '/lich-su-thanh-toan', element: <PaymentHistory /> },
       { path: '/lich-su-giao-dich-owl', element: <ExamHistory /> },
       { path: '/lich-su-dang-nhap', element: <LoginHistory /> },
+      { path: '/payment/cancel/:orderCode', element: <PaymentCancel /> },
+      { path: '/payment/success/:orderCode', element: <PaymentSuccess /> },
     ],
   },
 

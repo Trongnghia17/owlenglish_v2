@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './Package.css';
-import { getPaymentPackages } from '../api/packages.api';
+import { getPaymentPackages, createPayment } from '../api/packages.api';
 import Loading from '../../../components/common/Loading';
+import { toast } from "react-toastify";
 
 export default function PackageList() {
     const [packages, setPackages] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    const location = useLocation();
+    const navigate = useNavigate();
     useEffect(() => {
         fetchPackages();
     }, []);
@@ -20,6 +22,16 @@ export default function PackageList() {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handlePay = async (packageId) => {
+        try {
+            const res = await createPayment(packageId);
+            window.location.href = res.checkoutUrl;
+        } catch (err) {
+            console.error(err);
+            toast.warning("Không thể tạo thanh toán, vui lòng thử lại");
         }
     };
 
@@ -71,12 +83,13 @@ export default function PackageList() {
                                         </div>
                                     )}
 
-                                    <Link
-                                        to={`/payment/${item.id}`}
+                                    <button
                                         className={`pk-btn ${item.is_featured ? 'pk-btn-white' : ''}`}
+                                        onClick={() => handlePay(item.id)}
                                     >
                                         Đăng ký ngay
-                                    </Link>
+                                    </button>
+
                                 </div>
                             ))}
                         </div>

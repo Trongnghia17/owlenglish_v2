@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\PaymentPackage;
 use Illuminate\Http\Request;
 
@@ -115,5 +116,57 @@ class PaymentPackageController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Cập nhật trạng thái thành công');
+    }
+
+    public function paymentHistory(Request $request)
+    {
+        $query = Payment::with(['user', 'package'])
+            ->orderByDesc('created_at');
+
+        // ===== FILTER =====
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('q')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->q . '%')
+                    ->orWhere('email', 'like', '%' . $request->q . '%');
+            });
+        }
+
+        if ($request->filled('from_date')) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $payments = $query->paginate(15)->withQueryString();
+
+        // ===== STATISTICS =====
+        $stats = [
+            'total_orders' => Payment::count(),
+            'success_orders' => Payment::where('status', 'success')->count(),
+            'pending_orders' => Payment::where('status', 'pending')->count(),
+            'failed_orders' => Payment::whereIn('status', ['failed', 'canceled', 'expired'])->count(),
+
+            'total_revenue' => Payment::where('status', 'success')->sum('amount'),
+
+            'today_revenue' => Payment::where('status', 'success')
+                ->whereDate('paid_at', now())
+                ->sum('amount'),
+
+            'month_revenue' => Payment::where('status', 'success')
+                ->whereMonth('paid_at', now()->month)
+                ->whereYear('paid_at', now()->year)
+                ->sum('amount'),
+        ];
+
+        return view('admin.payment-packages.payment-history', compact(
+            'payments',
+            'stats'
+        ));
     }
 }
