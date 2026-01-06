@@ -33,7 +33,7 @@ export default function Topbar() {
   }, []);
 
   const handleProfile = () => { setOpenMenu(false); nav('/trang-ca-nhan'); };
-  const handleHistory = () => { setOpenMenu(false); nav('/lich-su-lam-bai'); };
+  const handleHistory = () => { setOpenMenu(false); nav('/lich-su-thanh-toan'); };
   const handleLogout = () => { setOpenMenu(false); logout(); nav('/'); };
 
   return (
