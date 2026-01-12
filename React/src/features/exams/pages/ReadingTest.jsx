@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { getSkillById, getSectionById } from '../api/exams.api';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { getSkillById, getSectionById, submitTestResult, saveTestDraft } from '../api/exams.api';
 import TestLayout from '../components/TestLayout';
 import './ReadingTest.css';
 
@@ -426,6 +426,7 @@ const GroupContentWithDragDropZones = ({ content, questions = [], answers = {}, 
 export default function ReadingTest() {
   const { skillId, sectionId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const examData = location.state?.examData;
 
   // State để quản lý câu hỏi hiện tại và câu trả lời
@@ -799,16 +800,93 @@ export default function ReadingTest() {
   };
 
   // Xử lý nộp bài
-  const handleSubmit = () => {
-    // TODO: Gửi kết quả về server
-    const result = {
-      skillId,
-      sectionId,
-      answers,
-      timeSpent: (skillData?.time_limit * 60 || 1800) - timeRemaining
-    };
-    console.log('Submit result:', result);
+  const handleSubmit = async () => {
+    try {
+      // Xác nhận trước khi nộp
+      const unansweredCount = questionGroups.reduce((count, group) => {
+        return count + group.questions.filter(q => !answers[q.id]).length;
+      }, 0);
+
+      if (unansweredCount > 0) {
+        const confirmSubmit = window.confirm(
+          `Bạn còn ${unansweredCount} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?`
+        );
+        if (!confirmSubmit) return;
+      } else {
+        const confirmSubmit = window.confirm('Bạn có chắc chắn muốn nộp bài?');
+        if (!confirmSubmit) return;
+      }
+
+      // Chuẩn bị dữ liệu để submit
+      const timeSpent = (skillData?.time_limit * 60 || 1800) - timeRemaining;
+      
+      // Lấy tất cả question IDs
+      const allQuestionIds = questionGroups.flatMap(g => g.questions.map(q => q.id));
+      
+      // Chuyển đổi answers từ object sang array (bao gồm cả câu chưa trả lời)
+      const answersArray = allQuestionIds.map(questionId => ({
+        question_id: questionId,
+        answer: answers[questionId] || null
+      }));
+
+      const submitData = {
+        skill_id: skillId ? parseInt(skillId) : null,
+        section_id: sectionId ? parseInt(sectionId) : null,
+        test_id: examData?.id || null,
+        answers: answersArray,
+        all_question_ids: allQuestionIds,
+        time_spent: timeSpent, // Thời gian làm bài (giây)
+        total_questions: allQuestionIds.length,
+        answered_questions: Object.keys(answers).length
+      };
+
+      console.log('Submitting:', submitData);
+
+      // Gửi kết quả lên server
+      const response = await submitTestResult(submitData);
+
+      if (response.data.success) {
+        // Chuyển đến trang kết quả
+        navigate(`/test-result/${response.data.data.id}`);
+      } else {
+        throw new Error(response.data.message || 'Không thể nộp bài');
+      }
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
+    }
   };
+
+  // Auto-save câu trả lời mỗi 30 giây
+  useEffect(() => {
+    if (Object.keys(answers).length === 0) return;
+
+    const autoSaveInterval = setInterval(async () => {
+      try {
+        const timeSpent = (skillData?.time_limit * 60 || 1800) - timeRemaining;
+        
+        const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
+          question_id: parseInt(questionId),
+          answer: answer
+        }));
+
+        const draftData = {
+          skill_id: skillId ? parseInt(skillId) : null,
+          section_id: sectionId ? parseInt(sectionId) : null,
+          test_id: examData?.id || null,
+          answers: answersArray,
+          time_spent: timeSpent
+        };
+
+        await saveTestDraft(draftData);
+        console.log('Auto-saved at:', new Date().toLocaleTimeString());
+      } catch (error) {
+        console.error('Auto-save error:', error);
+      }
+    }, 30000); // 30 giây
+
+    return () => clearInterval(autoSaveInterval);
+  }, [answers, skillId, sectionId, examData, timeRemaining, skillData, questionGroups]);
 
   // Loading state
   if (loading) {

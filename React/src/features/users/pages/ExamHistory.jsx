@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import api from '@/lib/axios';
+import { useNavigate } from 'react-router-dom';
+import { getExamHistory } from '@/features/exams/api/exams.api';
 import listening from '@/assets/images/writing.svg';
 import listening_active from '@/assets/images/listening_active.svg';
 import speaking from '@/assets/images/speaking.svg';
@@ -18,6 +19,7 @@ const TABS = [
 ];
 
 export default function ExamHistory() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [exams, setExams] = useState([]);
   const [activeTab, setActiveTab] = useState('Listening');
@@ -25,55 +27,48 @@ export default function ExamHistory() {
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    const fetchHistory = async () => {
       try {
-        const res = await api.get('/user/exams'); // backend endpoint expected
+        setLoading(true);
+        setError(null);
+        
+        // Gọi API với skill type
+        const skillTypeMap = {
+          'Listening': 'listening',
+          'Speaking': 'speaking',
+          'Reading': 'reading',
+          'Writing': 'writing',
+        };
+        
+        const response = await getExamHistory(skillTypeMap[activeTab]);
+        
+        console.log('Exam history response:', response.data);
+        
         if (!mounted) return;
-        setExams(Array.isArray(res.data) ? res.data : []);
+        
+        if (response.data.success) {
+          setExams(response.data.data || []);
+          console.log('Loaded exams:', response.data.data);
+        } else {
+          setError('Không thể tải lịch sử làm bài');
+        }
       } catch (err) {
         if (!mounted) return;
-        // mock data for testing
-        setExams([
-          {
-            id: 1,
-            section: 'Listening',
-            title: 'Reading - Test 6 - Trainer 2',
-            duration: '01:00:32',
-            date: '2025-08-23',
-            correct: 30,
-            wrong: 5,
-            skipped: 0,
-          },
-          {
-            id: 2,
-            section: 'Listening',
-            title: 'Actual Test 1 - 2025 - Reading',
-            duration: '01:00:32',
-            date: '2025-08-20',
-            correct: 25,
-            wrong: 10,
-            skipped: 0,
-          },
-          {
-            id: 3,
-            section: 'Reading',
-            title: 'Actual Test 9 - 2025 - Reading',
-            duration: '00:50:10',
-            date: '2025-07-12',
-            correct: 40,
-            wrong: 2,
-            skipped: 0,
-          },
-        ]);
+        console.error('Error fetching exam history:', err);
+        console.error('Error response:', err.response?.data);
+        setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải dữ liệu');
+        setExams([]);
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    };
+
+    fetchHistory();
 
     return () => { mounted = false; };
-  }, []);
+  }, [activeTab]); // Reload when tab changes
 
-  const rows = exams.filter((e) => e.section === activeTab);
+  const rows = exams;
 
   return (
     <div className="exam-history">
@@ -132,12 +127,19 @@ export default function ExamHistory() {
                       return (
                         <tr key={r.id}>
                           <td className="eh-title-cell">
-                            <a className="eh-link" href="#!" onClick={(e) => e.preventDefault()}>
+                            <a 
+                              className="eh-link" 
+                              href="#!" 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                navigate(`/test-result/${r.id}`);
+                              }}
+                            >
                               {r.title}
                             </a>
                           </td>
                           <td>{r.duration}</td>
-                          <td>{new Date(r.date).toLocaleDateString()}</td>
+                          <td>{new Date(r.date).toLocaleDateString('vi-VN')}</td>
                           <td>{r.correct ?? 0}</td>
                           <td>{r.wrong ?? 0}</td>
                           <td>{r.skipped ?? 0}</td>

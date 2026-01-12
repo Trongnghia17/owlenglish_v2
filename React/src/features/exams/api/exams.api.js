@@ -32,3 +32,21 @@ export const getQuestionGroup = (id, params) =>
 
 export const getQuestionsByGroup = (groupId, params) => 
   api.get(`/api/public/question-groups/${groupId}/questions`, { params });
+
+// Submit test result
+export const submitTestResult = (data) => 
+  api.post('/api/test-results/submit', data);
+
+// Save test draft (auto-save)
+export const saveTestDraft = (data) => 
+  api.post('/api/test-results/draft', data);
+
+// Get test result by ID
+export const getTestResult = (id) => 
+  api.get(`/api/test-results/${id}`);
+
+// Get exam history
+export const getExamHistory = (skillType) => 
+  api.get('/api/test-results', { 
+    params: skillType ? { skill_type: skillType } : {} 
+  });
