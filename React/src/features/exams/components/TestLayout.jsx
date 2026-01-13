@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/images/logo.png'
 import './TestLayout.css';
@@ -31,21 +31,8 @@ export default function TestLayout({
   const fontSize = externalFontSize !== undefined ? externalFontSize : internalFontSize;
   const setFontSize = onFontSizeChange || setInternalFontSize;
 
-  // Timer countdown
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [setTimeRemaining]);
+  // Keep latest handleSubmit without forcing timer effect to re-run.
+  const handleSubmitRef = useRef(null);
 
   // Format thời gian
   const formatTime = (seconds) => {
@@ -65,6 +52,26 @@ export default function TestLayout({
     setIsTestComplete(isComplete);
     setShowSubmitModal(true);
   };
+
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  }, [handleSubmit]);
+
+  // Timer countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 0) {
+          clearInterval(timer);
+          handleSubmitRef.current?.();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [setTimeRemaining]);
 
   // Xác nhận nộp bài
   const confirmSubmit = () => {
