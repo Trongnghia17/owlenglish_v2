@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { getSkillById, getSectionById, submitTestResult, saveTestDraft } from '../api/exams.api';
 import TestLayout from '../components/TestLayout';
@@ -423,6 +423,53 @@ const GroupContentWithDragDropZones = ({ content, questions = [], answers = {}, 
   );
 };
 
+const PassageContent = memo(function PassageContent({
+  fontSize,
+  content,
+  dragDropGroup,
+  answers,
+  onAnswerChange
+}) {
+  if (dragDropGroup && containsInlinePlaceholders(content)) {
+    return (
+      <div className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}>
+        <SectionContentWithInputs
+          content={content}
+          questions={dragDropGroup.questions}
+          answers={answers}
+          onAnswerChange={onAnswerChange}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if these actually change
+  // For drag-drop mode, we need to compare answers for passage questions only
+  if (prevProps.fontSize !== nextProps.fontSize) return false;
+  if (prevProps.content !== nextProps.content) return false;
+  if (prevProps.dragDropGroup?.id !== nextProps.dragDropGroup?.id) return false;
+  
+  // If it's drag-drop mode, compare answers only for questions in this passage
+  if (nextProps.dragDropGroup) {
+    const questionIds = nextProps.dragDropGroup.questions.map(q => q.id);
+    for (const qId of questionIds) {
+      if (prevProps.answers[qId] !== nextProps.answers[qId]) {
+        return false; // answers changed for passage questions
+      }
+    }
+  }
+  
+  // No relevant changes, skip re-render
+  return true;
+});
+
 export default function ReadingTest() {
   const { skillId, sectionId } = useParams();
   const location = useLocation();
@@ -440,6 +487,23 @@ export default function ReadingTest() {
   const [passages, setPassages] = useState([]); // Nhiều passages theo part
   const [parts, setParts] = useState([]); // Danh sách các parts
   const [fontSize, setFontSize] = useState('normal'); // Font size
+
+  // Keep latest values for interval callbacks without recreating intervals.
+  const timeRemainingRef = useRef(timeRemaining);
+  const answersRef = useRef(answers);
+  const skillDataRef = useRef(skillData);
+
+  useEffect(() => {
+    timeRemainingRef.current = timeRemaining;
+  }, [timeRemaining]);
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    skillDataRef.current = skillData;
+  }, [skillData]);
 
   // Lấy dữ liệu từ API
   useEffect(() => {
@@ -863,9 +927,10 @@ export default function ReadingTest() {
 
     const autoSaveInterval = setInterval(async () => {
       try {
-        const timeSpent = (skillData?.time_limit * 60 || 1800) - timeRemaining;
+        const timeSpent = (skillDataRef.current?.time_limit * 60 || 1800) - (timeRemainingRef.current || 0);
         
-        const answersArray = Object.entries(answers).map(([questionId, answer]) => ({
+        const latestAnswers = answersRef.current || {};
+        const answersArray = Object.entries(latestAnswers).map(([questionId, answer]) => ({
           question_id: parseInt(questionId),
           answer: answer
         }));
@@ -879,14 +944,13 @@ export default function ReadingTest() {
         };
 
         await saveTestDraft(draftData);
-        console.log('Auto-saved at:', new Date().toLocaleTimeString());
       } catch (error) {
         console.error('Auto-save error:', error);
       }
     }, 30000); // 30 giây
 
     return () => clearInterval(autoSaveInterval);
-  }, [answers, skillId, sectionId, examData, timeRemaining, skillData, questionGroups]);
+  }, [answers, skillId, sectionId, examData]);
 
   // Loading state
   if (loading) {
@@ -916,6 +980,7 @@ export default function ReadingTest() {
 
   const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+  const dragDropGroupInPassage = currentPartGroups.find(g => g.isDragDrop && g.hasAnswersInContent) || null;
 
   // Render câu hỏi dựa trên loại question type
   const renderQuestionsByType = (group, answers, handleAnswerSelect) => {
@@ -1105,32 +1170,13 @@ export default function ReadingTest() {
               <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
             )}
           </div>
-          {(() => {
-            // Check if we have drag-drop groups with answers in content
-            const dragDropGroup = currentPartGroups.find(g => g.isDragDrop && g.hasAnswersInContent);
-            
-            if (dragDropGroup && containsInlinePlaceholders(currentPassage.content)) {
-              // Parse passage content with {{ a }} inputs
-              return (
-                <div className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}>
-                  <SectionContentWithInputs
-                    content={currentPassage.content}
-                    questions={dragDropGroup.questions}
-                    answers={answers}
-                    onAnswerChange={handleAnswerSelect}
-                  />
-                </div>
-              );
-            } else {
-              // Normal passage display
-              return (
-                <div 
-                  className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
-                  dangerouslySetInnerHTML={{ __html: currentPassage.content }}
-                />
-              );
-            }
-          })()}
+          <PassageContent
+            fontSize={fontSize}
+            content={currentPassage.content}
+            dragDropGroup={dragDropGroupInPassage}
+            answers={answers}
+            onAnswerChange={handleAnswerSelect}
+          />
         </div>
 
         {/* Questions Panel */}
