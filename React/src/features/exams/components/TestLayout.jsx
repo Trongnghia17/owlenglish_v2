@@ -720,11 +720,9 @@ export default function TestLayout({
             onClick={(e) => e.stopPropagation()}
             style={{
               display: 'flex',
-              
               padding: '24px',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '16px',
               borderRadius: '5px',
               border: '1px solid #E7E7E7',
               background: '#FFF',
