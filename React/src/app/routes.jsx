@@ -17,6 +17,7 @@ import ReadingTest from '../features/exams/pages/ReadingTest';
 import WritingTest from '../features/exams/pages/WritingTest';
 import SpeakingTest from '../features/exams/pages/SpeakingTest';
 import ListeningTest from '../features/exams/pages/ListeningTest';
+import TestResult from '../features/exams/pages/TestResult';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
@@ -105,6 +106,9 @@ export const router = createBrowserRouter([
   { path: '/toeic-speaking/:skillId/:sectionId', element: <SpeakingToeic /> },
   { path: '/toeic-reading/:skillId', element: <ReadingToeic /> },
   { path: '/toeic-reading/:skillId/:sectionId', element: <ReadingToeic /> },
+
+  // Test Result Page
+  { path: '/test-result/:resultId', element: <TestResult /> },
 
   {
     element: <GuestRoute><AuthLayout /></GuestRoute>,

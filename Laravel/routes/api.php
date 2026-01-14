@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ExamQuestionController;
 use App\Http\Controllers\Api\PaymentPackageController;
 use App\Http\Controllers\Api\PayosWebhookController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\TestResultController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', function (Request $request) {
@@ -22,6 +23,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/login-history', [StudentController::class, 'loginHistory']);
     Route::post('/user/device/action', [StudentController::class, 'deviceAction']);
     Route::post('/payments/create', [PaymentPackageController::class, 'create']);
+    
+    // Test Results
+    Route::post('/test-results/submit', [TestResultController::class, 'submit']);
+    Route::post('/test-results/draft', [TestResultController::class, 'saveDraft']);
+    Route::get('/test-results/{id}', [TestResultController::class, 'show']);
+    Route::get('/test-results', [TestResultController::class, 'history']);
 });
 
 Route::prefix('otp')->group(function () {
