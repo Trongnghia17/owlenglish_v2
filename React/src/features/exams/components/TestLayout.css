@@ -430,6 +430,7 @@
 }
 
 .test-layout__submit-modal-body {
+    margin-bottom: 24px;
 }
 
 .test-layout__submit-modal-title {
@@ -499,14 +500,14 @@
 /* Notes Sidebar */
 .test-layout__notes-sidebar {
     position: fixed;
-    top: 73px;
+    top: 0;
     right: 0;
     width: 381px;
     height: calc(100vh - 73px);
     background: #FFFFFF;
     border-left: 1px solid #E5E7EB;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
-    z-index: 90;
+    z-index: 900;
     display: flex;
     flex-direction: column;
     animation: slideInRight 0.3s ease-out;
