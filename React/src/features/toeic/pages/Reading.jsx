@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
+import TestLayout from '@/features/exams/components/TestLayout';
 import './Toeic.css';
-import Header from '../components/Header';
 
 export default function ReadingToeic() {
     const navigate = useNavigate();
@@ -24,7 +24,6 @@ export default function ReadingToeic() {
     const [passages, setPassages] = useState([]);
     const [parts, setParts] = useState([]);
 
-    const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
     const [fontSize, setFontSize] = useState("normal");
 
     useEffect(() => {
@@ -56,7 +55,8 @@ export default function ReadingToeic() {
                                             id: q.id,
                                             number: questionNumber++,
                                             content: q.content,
-                                            correctAnswer: q.answer_content
+                                            correctAnswer: q.answer_content,
+                                            metadata: q.metadata || null
                                         });
                                     });
                                 }
@@ -68,7 +68,7 @@ export default function ReadingToeic() {
                                     groupContent: group.content,
                                     options: Array.isArray(group.options)
                                         ? group.options
-                                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['A', 'B', 'C', 'D']) : ['A', 'B', 'C', 'D']),
+                                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : group.options) : []),
                                     questions: questions,
                                     startNumber: questions[0]?.number || 1,
                                     endNumber: questions[questions.length - 1]?.number || 1
@@ -110,7 +110,8 @@ export default function ReadingToeic() {
                                                     id: q.id,
                                                     number: questionNumber++,
                                                     content: q.content,
-                                                    correctAnswer: q.answer_content
+                                                    correctAnswer: q.answer_content,
+                                                    metadata: q.metadata || null
                                                 });
                                             });
                                         }
@@ -122,7 +123,7 @@ export default function ReadingToeic() {
                                             groupContent: group.content,
                                             options: Array.isArray(group.options)
                                                 ? group.options
-                                                : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['A', 'B', 'C', 'D']) : ['A', 'B', 'C', 'D']),
+                                                : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : group.options) : []),
                                             questions: questions,
                                             startNumber: questions[0]?.number || questionNumber,
                                             endNumber: questions[questions.length - 1]?.number || questionNumber
@@ -225,53 +226,9 @@ export default function ReadingToeic() {
         setAudioProgress(time);
     };
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeRemaining((prev) => {
-                if (prev <= 0) {
-                    clearInterval(timer);
-                    handleSubmit();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
     const handleAnswerSelect = (questionId, answer) => {
         setAnswers((prev) => ({ ...prev, [questionId]: answer }));
     };
-
-    const handleQuestionClick = (questionNumber) => {
-        const group = questionGroups.find(g =>
-            g.questions.some(q => q.number === questionNumber)
-        );
-
-        if (group && group.part !== currentPartTab) {
-            setCurrentPartTab(group.part);
-            setTimeout(() => {
-                const element = document.getElementById(`question-${questionNumber}`);
-                if (element) {
-                    element.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-            }, 120);
-        } else {
-            const element = document.getElementById(`question-${questionNumber}`);
-            if (element) {
-                element.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        }
-    };
-
 
     const handleSubmit = () => {
         const result = {
@@ -285,56 +242,88 @@ export default function ReadingToeic() {
         navigate('/lich-su-lam-bai');
     };
 
-    // helper: render questions by group type (class names prefixed with lt-)
+    // helper: render questions by group type
     const renderQuestionsByType = (group) => {
-        const opts = Array.isArray(group.options) ? group.options : (group.options || []);
         const type = (group.type || '').toLowerCase();
 
-        const renderMCQ = (q) => (
-            <div key={q.id} id={`question-${q.number}`} className="lt-question">
-                <div className="lt-question__number">Câu {q.number}:</div>
-                <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
-                <div className="lt-question__options">
-                    {opts.map((option, idx) => {
-                        const val = typeof option === 'object' ? (option.value ?? option.label ?? String(option)) : String(option);
-                        const labelHtml = typeof option === 'object' ? (option.label ?? val) : option;
-                        return (
-                            <label key={idx} className="lt-option">
-                                <input
-                                    type="radio"
-                                    name={`q-${q.id}`}
-                                    value={val}
-                                    checked={String(answers[q.id] ?? '') === String(val)}
-                                    onChange={() => handleAnswerSelect(q.id, val)}
-                                />
-                                <span dangerouslySetInnerHTML={{ __html: labelHtml }} />
-                            </label>
-                        );
-                    })}
-                </div>
-            </div>
-        );
+        const renderMCQ = (q) => {
+            // Lấy options từ metadata.answers của câu hỏi
+            let opts = [];
+            if (q.metadata && Array.isArray(q.metadata.answers)) {
+                opts = q.metadata.answers.map(ans => ({
+                    value: ans.content,
+                    label: ans.content,
+                    isCorrect: ans.is_correct === "1" || ans.is_correct === true
+                }));
+            } else if (Array.isArray(group.options)) {
+                opts = group.options.map(opt => ({
+                    value: typeof opt === 'object' ? (opt.value ?? opt.label ?? String(opt)) : String(opt),
+                    label: typeof opt === 'object' ? (opt.label ?? opt.value) : opt
+                }));
+            }
 
-        const renderTF = (q) => (
-            <div key={q.id} id={`question-${q.number}`} className="lt-question">
-                <div className="lt-question__number">Câu {q.number}.</div>
-                <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
-                <div className="lt-question__options">
-                    {(opts.length ? opts : ['True', 'False', 'Not given']).map((o, i) => (
-                        <label key={i} className="lt-option">
-                            <input
-                                type="radio"
-                                name={`q-${q.id}`}
-                                value={o}
-                                checked={String(answers[q.id] ?? '') === String(o)}
-                                onChange={() => handleAnswerSelect(q.id, o)}
-                            />
-                            <span>{o}</span>
-                        </label>
-                    ))}
+            return (
+                <div key={q.id} id={`question-${q.number}`} className="lt-question">
+                    <div className="lt-question__number">Câu {q.number}:</div>
+                    <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
+                    <div className="lt-question__options">
+                        {opts.map((option, idx) => {
+                            const val = option.value || option.label || '';
+                            const labelHtml = option.label || option.value || '';
+                            return (
+                                <label key={idx} className="lt-option">
+                                    <input
+                                        type="radio"
+                                        name={`q-${q.id}`}
+                                        value={val}
+                                        checked={String(answers[q.id] ?? '') === String(val)}
+                                        onChange={() => handleAnswerSelect(q.id, val)}
+                                    />
+                                    <span dangerouslySetInnerHTML={{ __html: labelHtml }} />
+                                </label>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        };
+
+        const renderTF = (q) => {
+            // Lấy options từ metadata.answers nếu có
+            let opts = [];
+            if (q.metadata && Array.isArray(q.metadata.answers)) {
+                opts = q.metadata.answers.map(ans => ans.content || ans);
+            } else if (Array.isArray(group.options)) {
+                opts = group.options;
+            } else {
+                opts = ['True', 'False', 'Not given'];
+            }
+
+            return (
+                <div key={q.id} id={`question-${q.number}`} className="lt-question">
+                    <div className="lt-question__number">Câu {q.number}.</div>
+                    <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
+                    <div className="lt-question__options">
+                        {opts.map((o, i) => {
+                            const optValue = typeof o === 'object' ? (o.value || o.label || o.content) : o;
+                            const optLabel = typeof o === 'object' ? (o.label || o.content || o.value) : o;
+                            return (
+                                <label key={i} className="lt-option">
+                                    <input
+                                        type="radio"
+                                        name={`q-${q.id}`}
+                                        value={optValue}
+                                        checked={String(answers[q.id] ?? '') === String(optValue)}
+                                        onChange={() => handleAnswerSelect(q.id, optValue)}
+                                    />
+                                    <span dangerouslySetInnerHTML={{ __html: optLabel }} />
+                                </label>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
 
         const renderFill = (q) => (
             <div key={q.id} id={`question-${q.number}`} className="lt-question">
@@ -350,24 +339,40 @@ export default function ReadingToeic() {
             </div>
         );
 
-        const renderMatch = (q) => (
-            <div key={q.id} id={`question-${q.number}`} className="lt-question">
-                <div className="lt-question__number">Câu {q.number}.</div>
-                <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
-                <select
-                    value={answers[q.id] ?? ''}
-                    onChange={(e) => handleAnswerSelect(q.id, e.target.value)}
-                    className="lt-match-select"
-                >
-                    <option value="">Chọn đáp án</option>
-                    {opts.map((o, idx) => {
-                        const val = typeof o === 'object' ? (o.value ?? o.label ?? String(o)) : String(o);
-                        const label = typeof o === 'object' ? (o.label ?? val) : o;
-                        return <option key={idx} value={val}>{label}</option>;
-                    })}
-                </select>
-            </div>
-        );
+        const renderMatch = (q) => {
+            // Lấy options từ metadata.answers nếu có
+            let opts = [];
+            if (q.metadata && Array.isArray(q.metadata.answers)) {
+                opts = q.metadata.answers.map(ans => ({
+                    value: ans.content || ans.value || ans,
+                    label: ans.content || ans.label || ans.value || ans
+                }));
+            } else if (Array.isArray(group.options)) {
+                opts = group.options.map(o => ({
+                    value: typeof o === 'object' ? (o.value ?? o.label ?? String(o)) : String(o),
+                    label: typeof o === 'object' ? (o.label ?? o.value) : o
+                }));
+            }
+
+            return (
+                <div key={q.id} id={`question-${q.number}`} className="lt-question">
+                    <div className="lt-question__number">Câu {q.number}.</div>
+                    <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
+                    <select
+                        value={answers[q.id] ?? ''}
+                        onChange={(e) => handleAnswerSelect(q.id, e.target.value)}
+                        className="lt-match-select"
+                    >
+                        <option value="">Chọn đáp án</option>
+                        {opts.map((o, idx) => (
+                            <option key={idx} value={o.value}>
+                                <span dangerouslySetInnerHTML={{ __html: o.label }} />
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            );
+        };
 
         return (
             <div className="lt-group-questions">
@@ -399,38 +404,38 @@ export default function ReadingToeic() {
 
     const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
     const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-    const allQuestions = questionGroups.flatMap(g => g.questions);
     const questionsByPart = questionGroups.reduce((acc, group) => {
         const part = group.part;
-
         if (!acc[part]) acc[part] = [];
         acc[part].push(...group.questions);
-
         return acc;
     }, {});
 
-
     return (
         <div className="lt-page">
-            <Header
+            <TestLayout
                 examData={examData}
                 skillData={skillData}
                 sectionData={sectionData}
-                currentPartTab={currentPartTab}
                 timeRemaining={timeRemaining}
-                showFontSizeMenu={showFontSizeMenu}
-                setShowFontSizeMenu={setShowFontSizeMenu}
-                handleSubmit={handleSubmit}
-                formatTime={formatTime}
-            />
-
-            <div className='lt-grid-main'>
+                setTimeRemaining={setTimeRemaining}
+                parts={parts}
+                currentPartTab={currentPartTab}
+                setCurrentPartTab={setCurrentPartTab}
+                questionGroups={questionGroups}
+                answers={answers}
+                onSubmit={handleSubmit}
+                fontSize={fontSize}
+                onFontSizeChange={setFontSize}
+                showQuestionNumbers={false}
+            >
+            <div className="lt-grid-main">
                 <div className="lt-grid">
                     <aside className="lt-col lt-col--left">
                         <div className="lt-left-box">
                             <div className="lt-questions">
                                 {currentPartGroups.map((group) => (
-                                    <div>
+                                    <div key={group.id}>
                                         <div className="lt-group__header">
                                             <h3>Questions {group.startNumber} - {group.endNumber}</h3>
                                             {group.instructions && <div className="lt-group__instructions" dangerouslySetInnerHTML={{ __html: group.instructions }} />}
@@ -505,7 +510,12 @@ export default function ReadingToeic() {
                                             <button
                                                 key={q.id}
                                                 className={`lt-qn-item ${answers[q.id] ? 'answered' : ''}`}
-                                                onClick={() => handleQuestionClick(q.number)}
+                                                onClick={() => {
+                                                    const element = document.getElementById(`question-${q.number}`);
+                                                    if (element) {
+                                                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                                                    }
+                                                }}
                                             >
                                                 {q.number}
                                             </button>
@@ -538,7 +548,12 @@ export default function ReadingToeic() {
                             <button
                                 key={q.number}
                                 className={`lt-footer__number-btn ${answers[q.id] ? 'answered' : ''}`}
-                                onClick={() => handleQuestionClick(q.number)}
+                                onClick={() => {
+                                    const element = document.getElementById(`question-${q.number}`);
+                                    if (element) {
+                                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                                    }
+                                }}
                             >
                                 {q.number}
                             </button>
@@ -546,42 +561,7 @@ export default function ReadingToeic() {
                     </div>
                 </div>
             </aside>
-
-            {showFontSizeMenu && (
-                <div className="lt-fontsize-popup">
-                    <h3>Cỡ chữ</h3>
-                    <p>Chọn cỡ chữ phù hợp cho việc đọc</p>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "normal" ? "active" : ""}`}
-                        onClick={() => setFontSize("normal")}
-                    >
-                        Bình thường
-                    </div>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "large" ? "active" : ""}`}
-                        onClick={() => setFontSize("large")}
-                    >
-                        Lớn
-                    </div>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "xlarge" ? "active" : ""}`}
-                        onClick={() => setFontSize("xlarge")}
-                    >
-                        Rất lớn
-                    </div>
-
-                    <button
-                        className="lt-fontsize-close"
-                        onClick={() => setShowFontSizeMenu(false)}
-                    >
-                        Đóng
-                    </button>
-                </div>
-            )}
-
+        </TestLayout>
         </div>
     );
 }

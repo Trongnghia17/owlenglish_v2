@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
+import TestLayout from '@/features/exams/components/TestLayout';
 import './Toeic.css';
-import Header from '../components/Header';
 
 export default function WritingToeic() {
     const navigate = useNavigate();
@@ -25,7 +25,6 @@ export default function WritingToeic() {
     const [passages, setPassages] = useState([]);
     const [parts, setParts] = useState([]);
 
-    const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
     const [fontSize, setFontSize] = useState("normal");
 
     const [writingAnswer, setWritingAnswer] = useState("");
@@ -293,53 +292,9 @@ export default function WritingToeic() {
         setAudioProgress(time);
     };
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeRemaining((prev) => {
-                if (prev <= 0) {
-                    clearInterval(timer);
-                    handleSubmit();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
     const handleAnswerSelect = (questionId, answer) => {
         setAnswers((prev) => ({ ...prev, [questionId]: answer }));
     };
-
-    const handleQuestionClick = (questionNumber) => {
-        const group = questionGroups.find(g =>
-            g.questions.some(q => q.number === questionNumber)
-        );
-
-        if (group && group.part !== currentPartTab) {
-            setCurrentPartTab(group.part);
-            setTimeout(() => {
-                const element = document.getElementById(`question-${questionNumber}`);
-                if (element) {
-                    element.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-            }, 120);
-        } else {
-            const element = document.getElementById(`question-${questionNumber}`);
-            if (element) {
-                element.scrollIntoView({ behavior: "smooth", block: "start" });
-            }
-        }
-    };
-
 
     const handleSubmit = () => {
         const result = {
@@ -467,31 +422,31 @@ export default function WritingToeic() {
 
     const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
     const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-    const allQuestions = questionGroups.flatMap(g => g.questions);
     const questionsByPart = questionGroups.reduce((acc, group) => {
         const part = group.part;
-
         if (!acc[part]) acc[part] = [];
         acc[part].push(...group.questions);
-
         return acc;
     }, {});
 
-
     return (
         <div className="lt-page">
-            <Header
+            <TestLayout
                 examData={examData}
                 skillData={skillData}
                 sectionData={sectionData}
-                currentPartTab={currentPartTab}
                 timeRemaining={timeRemaining}
-                showFontSizeMenu={showFontSizeMenu}
-                setShowFontSizeMenu={setShowFontSizeMenu}
-                handleSubmit={handleSubmit}
-                formatTime={formatTime}
-            />
-
+                setTimeRemaining={setTimeRemaining}
+                parts={parts}
+                currentPartTab={currentPartTab}
+                setCurrentPartTab={setCurrentPartTab}
+                questionGroups={questionGroups}
+                answers={answers}
+                onSubmit={handleSubmit}
+                fontSize={fontSize}
+                onFontSizeChange={setFontSize}
+                showQuestionNumbers={false}
+            >
             <div className='lt-grid-main'>
                 <div className="lt-grid">
                     <aside className="lt-col lt-col--left">
@@ -560,42 +515,7 @@ export default function WritingToeic() {
                     </div>
                 </div>
             </aside>
-
-            {showFontSizeMenu && (
-                <div className="lt-fontsize-popup">
-                    <h3>Cỡ chữ</h3>
-                    <p>Chọn cỡ chữ phù hợp cho việc đọc</p>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "normal" ? "active" : ""}`}
-                        onClick={() => setFontSize("normal")}
-                    >
-                        Bình thường
-                    </div>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "large" ? "active" : ""}`}
-                        onClick={() => setFontSize("large")}
-                    >
-                        Lớn
-                    </div>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "xlarge" ? "active" : ""}`}
-                        onClick={() => setFontSize("xlarge")}
-                    >
-                        Rất lớn
-                    </div>
-
-                    <button
-                        className="lt-fontsize-close"
-                        onClick={() => setShowFontSizeMenu(false)}
-                    >
-                        Đóng
-                    </button>
-                </div>
-            )}
-
+        </TestLayout>
         </div>
     );
 }
