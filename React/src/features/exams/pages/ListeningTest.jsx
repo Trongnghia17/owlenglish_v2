@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { getSkillById, getSectionById } from '../api/exams.api';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { getSkillById, getSectionById, submitTestResult } from '../api/exams.api';
 import TestLayout from '../components/TestLayout';
 import './ListeningTest.css';
 
@@ -108,6 +108,7 @@ const GroupContentWithInlineInputs = ({ content, questions = [], answers = {}, o
 const ListeningTest = () => {
   const { skillId, sectionId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const examData = location.state?.examData;
   
   const [answers, setAnswers] = useState({});
@@ -373,15 +374,61 @@ const ListeningTest = () => {
   };
 
   // Xử lý nộp bài
-  const handleSubmit = () => {
-    // TODO: Gửi kết quả về server
-    const result = {
-      skillId,
-      sectionId,
-      answers,
-      timeSpent: (skillData?.time_limit * 60 || 2400) - timeRemaining
-    };
-    console.log('Submit result:', result);
+  const handleSubmit = async () => {
+    try {
+      // Xác nhận trước khi nộp
+      const unansweredCount = questionGroups.reduce((count, group) => {
+        return count + group.questions.filter(q => !answers[q.id]).length;
+      }, 0);
+
+      if (unansweredCount > 0) {
+        const confirmSubmit = window.confirm(
+          `Bạn còn ${unansweredCount} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?`
+        );
+        if (!confirmSubmit) return;
+      } else {
+        const confirmSubmit = window.confirm('Bạn có chắc chắn muốn nộp bài?');
+        if (!confirmSubmit) return;
+      }
+
+      // Chuẩn bị dữ liệu để submit
+      const timeSpent = (skillData?.time_limit * 60 || 2400) - timeRemaining;
+      
+      // Lấy tất cả question IDs
+      const allQuestionIds = questionGroups.flatMap(g => g.questions.map(q => q.id));
+      
+      // Chuyển đổi answers từ object sang array (bao gồm cả câu chưa trả lời)
+      const answersArray = allQuestionIds.map(questionId => ({
+        question_id: questionId,
+        answer: answers[questionId] || null
+      }));
+
+      const submitData = {
+        skill_id: skillId ? parseInt(skillId) : null,
+        section_id: sectionId ? parseInt(sectionId) : null,
+        test_id: examData?.id || null,
+        answers: answersArray,
+        all_question_ids: allQuestionIds,
+        time_spent: timeSpent, // Thời gian làm bài (giây)
+        total_questions: allQuestionIds.length,
+        answered_questions: Object.keys(answers).length
+      };
+
+      console.log('Submitting:', submitData);
+
+      // Gửi kết quả lên server
+      const response = await submitTestResult(submitData);
+
+      if (response.data.success) {
+        // Chuyển đến trang kết quả
+        navigate(`/test-result/${response.data.data.id}`);
+      } else {
+        throw new Error(response.data.message || 'Không thể nộp bài');
+      }
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
+    }
   };
 
   // Loading state

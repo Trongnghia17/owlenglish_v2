@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\ExamQuestionController;
 use App\Http\Controllers\Api\PaymentPackageController;
 use App\Http\Controllers\Api\PayosWebhookController;
 use App\Http\Controllers\Api\StudentController;
+use App\Http\Controllers\Api\TestResultController;
+use App\Http\Controllers\Api\UserNoteController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', function (Request $request) {
@@ -22,6 +24,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/login-history', [StudentController::class, 'loginHistory']);
     Route::post('/user/device/action', [StudentController::class, 'deviceAction']);
     Route::post('/payments/create', [PaymentPackageController::class, 'create']);
+    
+    // Test Results
+    Route::post('/test-results/submit', [TestResultController::class, 'submit']);
+    Route::post('/test-results/draft', [TestResultController::class, 'saveDraft']);
+    Route::get('/test-results/{id}', [TestResultController::class, 'show']);
+    Route::get('/test-results', [TestResultController::class, 'history']);
+    
+    // User Notes
+    Route::get('/user-notes', [UserNoteController::class, 'index']);
+    Route::post('/user-notes', [UserNoteController::class, 'store']);
+    Route::get('/user-notes/{id}', [UserNoteController::class, 'show']);
+    Route::put('/user-notes/{id}', [UserNoteController::class, 'update']);
+    Route::delete('/user-notes/{id}', [UserNoteController::class, 'destroy']);
 });
 
 Route::prefix('otp')->group(function () {
