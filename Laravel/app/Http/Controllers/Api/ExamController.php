@@ -203,60 +203,79 @@ class ExamController extends Controller
 
     public function getSectionFilters(Request $request): JsonResponse
     {
-        $type          = $request->get('type');            // ielts / toeic
-        $filterIds     = (array) $request->get('filters'); // exam_filter ids
-        $collectionIds = (array) $request->get('collectionIds');
-        $level         = $request->get('level');            // easy|medium|hard
-        $search        = $request->get('search');
-        $perPage       = 18;
-        return response()->json($request->all());
-
         $query = ExamSection::query()
             ->with([
-                'skill',
-                'exam',
-                'exam.collection',
-                'filters'
-            ])
-            ->whereHas('exam', function ($q) use ($type) {
-                $q->where('exam_type', $type);
-            });
+                'filters',
+                'skill.examTest.exam'
+            ]);
 
-        /** 🔹 Lọc theo exam_filters */
-        if (!empty($filterIds)) {
+        if ($request->filled('filters')) {
+            $filterIds = is_array($request->filters)
+                ? $request->filters
+                : explode(',', $request->filters);
+
             $query->whereHas('filters', function ($q) use ($filterIds) {
                 $q->whereIn('exam_filters.id', $filterIds);
             });
         }
 
-        /** 🔹 Lọc theo collection */
-        if (!empty($collectionIds)) {
-            $query->whereHas('exam', function ($q) use ($collectionIds) {
-                $q->whereIn('collection_id', $collectionIds);
-            });
+        $query->whereHas('skill.examTest.exam', function ($q) use ($request) {
+
+            if ($request->filled('type')) {
+                $q->where('type', $request->type);
+            }
+
+            if ($request->filled('level')) {
+                $q->where('level', $request->level);
+            }
+
+            if ($request->filled('collectionIds')) {
+                $collectionIds = is_array($request->collectionIds)
+                    ? $request->collectionIds
+                    : explode(',', $request->collectionIds);
+
+                $q->whereIn('exam_collection_id', $collectionIds);
+            }
+        });
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        /** 🔹 Lọc theo level */
-        if ($level && $level !== 'all') {
-            $query->where('level', $level);
+        $sort = $request->get('sort', 'newest');
+
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+
+            case 'name':
+                $query->orderBy('title', 'asc');
+                break;
+
+            case 'newest':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
-        /** 🔹 Search */
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('exam', function ($ex) use ($search) {
-                        $ex->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
 
-        /** 🔹 Sort */
-        $query->orderByDesc('created_at');
+        $sections = $query
+            ->paginate(3)
+            ->appends($request->all());
+
+        $sections->getCollection()->transform(function ($section) {
+            $section->level = optional(
+                $section->skill?->examTest?->exam
+            )->level;
+
+            return $section;
+        });
+
 
         return response()->json([
             'success' => true,
-            'data' => $query->paginate($perPage),
+            'data' => $sections
         ]);
     }
 }

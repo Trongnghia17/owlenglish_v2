@@ -17,6 +17,7 @@ import Table from '@/assets/images/Table.svg';
 import Mixed_Graph from '@/assets/images/Mixed_Graph.svg';
 import Map from '@/assets/images/Map.svg';
 import Process from '@/assets/images/Process.svg';
+import img_default from '@/assets/images/img_default.png';
 
 export default function OnlineExamLibrary() {
   const navigate = useNavigate();
@@ -34,9 +35,20 @@ export default function OnlineExamLibrary() {
     last_page: 1,
   });
   const [collections, setCollections] = useState([]);
-
-
-
+  const LEVEL_META = {
+    easy: {
+      label: 'Dễ',
+      color: '#35A815',
+    },
+    medium: {
+      label: 'Trung bình',
+      color: '#F0A931',
+    },
+    hard: {
+      label: 'Khó',
+      color: '#F05052',
+    },
+  };
   const { examType } = useParams();
   const [filtersSidebar, setFiltersSidebar] = useState([]);
   const [collectionIds, setCollectionIds] = useState([]);
@@ -88,7 +100,14 @@ export default function OnlineExamLibrary() {
 
   useEffect(() => {
     fetchSkills(1);
-  }, [examType, collectionIds, selectedLevel, searchQuery]);
+  }, [
+    examType,
+    collectionIds,
+    selectedLevel,
+    searchQuery,
+    selectedFilterIds,
+    sortBy
+  ]);
 
   useEffect(() => {
     fetchFilters();
@@ -130,6 +149,7 @@ export default function OnlineExamLibrary() {
       const params = {
         type: examType,
         page,
+        sort: sortBy,
       };
 
       if (collectionIds.length > 0) {
@@ -168,44 +188,6 @@ export default function OnlineExamLibrary() {
   };
 
 
-  // Filter và Sort skills (giữ nguyên logic)
-  const filteredSkills = skills.filter(skill => {
-    const matchesSearch = skill.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      skill.exam_test?.exam?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesSkillType = filters.skillType.length === 0 ||
-      filters.skillType.includes(skill.skill_type);
-
-    if (selectedTask !== 'all') {
-      if (selectedTask === 'writing' && skill.skill_type !== 'writing') {
-        return false;
-      }
-      if (selectedTask === 'reading' && skill.skill_type !== 'reading') {
-        return false;
-      }
-      if (selectedTask === 'listening' && skill.skill_type !== 'listening') {
-        return false;
-      }
-      if (selectedTask === 'speaking' && skill.skill_type !== 'speaking') {
-        return false;
-      }
-    }
-    return matchesSearch && matchesSkillType;
-  });
-
-  const sortedSkills = [...filteredSkills].sort((a, b) => {
-    switch (sortBy) {
-      case 'newest':
-        return new Date(b.created_at) - new Date(a.created_at);
-      case 'oldest':
-        return new Date(a.created_at) - new Date(b.created_at);
-      case 'name':
-        return (a.name || '').localeCompare(b.name || '');
-      default:
-        return 0;
-    }
-  });
-
   const handleFilterChange = (filterType, value) => {
     setFilters(prev => ({
       ...prev,
@@ -237,15 +219,7 @@ export default function OnlineExamLibrary() {
     return `https://via.placeholder.com/280x180/${color}/ffffff?text=${skill.skill_type || 'Skill'}`;
   };
 
-  const getSkillTypeLabel = (skillType) => {
-    const labels = {
-      reading: 'Reading',
-      writing: 'Writing',
-      listening: 'Listening',
-      speaking: 'Speaking',
-    };
-    return labels[skillType] || skillType;
-  };
+
 
   return (
     <div className="online-exam-library online-exam-library--exam-package">
@@ -260,11 +234,11 @@ export default function OnlineExamLibrary() {
               d="M10.3602 7.52685L6.58682 3.76019C6.52484 3.6977 6.45111 3.64811 6.36987 3.61426C6.28863 3.58041 6.20149 3.56299 6.11348 3.56299C6.02548 3.56299 5.93834 3.58041 5.8571 3.61426C5.77586 3.64811 5.70213 3.6977 5.64015 3.76019C5.51598 3.8851 5.44629 4.05406 5.44629 4.23019C5.44629 4.40631 5.51598 4.57528 5.64015 4.70019L8.94015 8.03352L5.64015 11.3335C5.51598 11.4584 5.44629 11.6274 5.44629 11.8035C5.44629 11.9796 5.51598 12.1486 5.64015 12.2735C5.70189 12.3365 5.77552 12.3866 5.85677 12.421C5.93802 12.4553 6.02528 12.4732 6.11348 12.4735C6.20169 12.4732 6.28894 12.4553 6.37019 12.421C6.45144 12.3866 6.52507 12.3365 6.58682 12.2735L10.3602 8.50685C10.4278 8.44443 10.4818 8.36866 10.5188 8.28433C10.5557 8.19999 10.5748 8.10892 10.5748 8.01685C10.5748 7.92479 10.5557 7.83372 10.5188 7.74938C10.4818 7.66505 10.4278 7.58928 10.3602 7.52685Z"
               fill="#6D6D6D" />
           </svg></span>
-          <span className="online-exam-library__breadcrumb-item online-exam-library__breadcrumb-item--active">Bộ đề <span className="text-up-text">{examType}</span></span>
+          <span className="online-exam-library__breadcrumb-item online-exam-library__breadcrumb-item--active">Đề thi <span className="text-up-text">{examType}</span></span>
         </div>
 
         <div className="online-exam-library__header-top">
-          <h1 className="online-exam-library__title">Bộ đề <span className="text-up-text">{examType}</span></h1>
+          <h1 className="online-exam-library__title">Đề thi <span className="text-up-text">{examType}</span></h1>
           <div className="online-exam-library__header-controls">
             <div className="online-exam-library__search">
               <svg
@@ -387,7 +361,8 @@ export default function OnlineExamLibrary() {
                               {group.children.map(item => (
                                 <div
                                   key={item.id}
-                                  className="exam-group-item"
+                                  className={`exam-group-item ${selectedFilterIds.includes(item.id) ? 'active' : ''
+                                    }`}
                                   onClick={() => onSelectFilter(item.id)}
                                 >
                                   <span className="item-title">
@@ -421,29 +396,36 @@ export default function OnlineExamLibrary() {
                   <div className="online-exam-library__loading">
                     <Loading />
                   </div>
-                ) : sortedSkills.length === 0 ? (
+                ) : skills.length === 0 ? (
                   <div className="online-exam-library__empty">
                     Không có bài thi nào
                   </div>
                 ) : (
-                  sortedSkills.map(skill => (
+                  skills.map(skill => (
                     <div
                       key={skill.id}
                       className="online-exam-library__card"
                     >
                       <img
                         src={getSkillImage(skill)}
-                        alt={skill.name}
+                        alt={skill.title}
                         className="online-exam-library__card-image"
                         onError={(e) => {
-                          e.target.src = 'https://via.placeholder.com/280x180/6366f1/ffffff?text=No+Image';
+                          e.currentTarget.src = img_default;
                         }}
                       />
                       <div className="online-exam-library__card-content">
-                        <h3 className="online-exam-library__card-title">{skill.name}</h3>
+                        <h3 className="online-exam-library__card-title">{skill.title}</h3>
                         <div className="online-exam-library__card-subtitle">
-                          <strong>Tiến trình:</strong> <span> TOEIC Reading</span>
+                          <strong>Tiến trình:</strong> <span> <span className="text-up-text">{examType} {skill.skill?.skill_type} </span></span>
                         </div>
+                        {skill.level && (
+                          <div
+                            className="exam-level-badge"
+                          >
+                            <span className='level-mucdo'>Mức độ: </span>  <span className='level-label' style={{ color: LEVEL_META[skill.level]?.color }}>{LEVEL_META[skill.level]?.label}</span>
+                          </div>
+                        )}
                         <div className="online-exam-library__card-footer">
                           <button
                             className="online-exam-library__card-button"

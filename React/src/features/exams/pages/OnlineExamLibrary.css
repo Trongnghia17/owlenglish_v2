@@ -5,6 +5,16 @@
     background-color: #f8f9fa;
 }
 
+ .exam-level-badge .level-mucdo{
+    font-weight: 600;
+    font-size: 14px;
+    color: #5D5D5D;
+}
+
+.exam-level-badge .level-label{
+   font-weight: 600;
+   font-size: 14px;
+}
 .exam-sidebar {
     width: 280px;
     padding: 16px;
@@ -101,7 +111,15 @@
     background: #35A81512;
     border-left: 1px solid #35A815;
 }
+.sidebar-item__toggle--listening .exam-group-content .active {
+    background: #35A81512;
+    border-left: 1px solid #35A815;
+}
 .sidebar-item__toggle--reading .exam-group-content .exam-group-item:hover {
+    background: #FF420012;
+    border-left: 1px solid #FF4200;
+}
+.sidebar-item__toggle--reading .exam-group-content .active {
     background: #FF420012;
     border-left: 1px solid #FF4200;
 }
@@ -109,7 +127,17 @@
     background: #FEBE4017;
     border-left: 1px solid #FEBE40;
 }
+
+.sidebar-item__toggle--speaking .exam-group-content .active {
+    background: #FEBE4017;
+    border-left: 1px solid #FEBE40;
+}
 .sidebar-item__toggle--writing .exam-group-content .exam-group-item:hover {
+    background: #045CCE12;
+    border-left: 1px solid #045CCE;
+}
+
+.sidebar-item__toggle--writing .exam-group-content .active {
     background: #045CCE12;
     border-left: 1px solid #045CCE;
 }
@@ -622,7 +650,7 @@
     box-shadow: 3px 4px 1px 0 rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    height: 316px;
+    height: auto;
 }
 
 
@@ -647,18 +675,17 @@
     font-style: normal;
     font-weight: 600;
     line-height: 24px;
-    /* 150% */
     margin: 0px 0px 8px 0px;
 }
-
+.exam-level-badge{
+    margin-bottom: 10px;
+}
 .online-exam-library__card-subtitle {
     color: #5D5D5D;
     font-size: 14px;
     font-style: normal;
     font-weight: 600;
     line-height: 24px;
-    margin: 0px 0px 16px 0px !important;
-    /* 171.429% */
 }
 
 .online-exam-library__card-skill-type {

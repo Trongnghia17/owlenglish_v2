@@ -6,6 +6,8 @@ import Loading from '../../../components/common/Loading';
 import muiten from "../../../assets/images/u_len.svg";
 import trangdau from "../../../assets/images/u_arrow-left.svg";
 import trangcuoi from "../../../assets/images/u_arrow-right.svg";
+import img_default from '@/assets/images/img_default.png';
+
 export default function ExamPackage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -336,7 +338,7 @@ export default function ExamPackage() {
                       alt={skill.name}
                       className="online-exam-library__card-image"
                       onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/280x180/6366f1/ffffff?text=No+Image';
+                        e.currentTarget.src = img_default;
                       }}
                     />
                     <div className="online-exam-library__card-content">
