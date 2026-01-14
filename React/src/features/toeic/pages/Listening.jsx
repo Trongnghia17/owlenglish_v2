@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
+import { submitTestResult } from '@/features/exams/api/exams.api';
 import TestLayout from '@/features/exams/components/TestLayout';
 import './Toeic.css';
 
@@ -230,16 +231,53 @@ export default function ListeningToeic() {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
 
-  const handleSubmit = () => {
-    const result = {
-      skillId,
-      sectionId,
-      answers,
-      timeSpent: (skillData?.time_limit * 60 || 1800) - timeRemaining
-    };
-    console.log('Submit result:', result);
-    alert('Nộp bài thành công!');
-    navigate('/lich-su-lam-bai');
+  const handleSubmit = async () => {
+    try {
+      // Tính thời gian đã làm bài
+      const timeSpent = (skillData?.time_limit * 60 || sectionData?.time_limit * 60 || 1800) - timeRemaining;
+      
+      // Thu thập tất cả ID câu hỏi
+      const allQuestionIds = [];
+      questionGroups.forEach(group => {
+        if (group.questions) {
+          group.questions.forEach(q => {
+            allQuestionIds.push(q.id);
+          });
+        }
+      });
+
+      // Chuẩn bị dữ liệu câu trả lời
+      const answersArray = allQuestionIds.map(questionId => ({
+        question_id: questionId,
+        answer: answers[questionId] || null
+      }));
+
+      const submitData = {
+        skill_id: skillId ? parseInt(skillId) : null,
+        section_id: sectionId ? parseInt(sectionId) : null,
+        test_id: examData?.id || null,
+        answers: answersArray,
+        all_question_ids: allQuestionIds,
+        time_spent: timeSpent,
+        total_questions: allQuestionIds.length,
+        answered_questions: Object.keys(answers).length
+      };
+
+      console.log('Submitting:', submitData);
+
+      // Gửi kết quả lên server
+      const response = await submitTestResult(submitData);
+
+      if (response.data.success) {
+        // Chuyển đến trang kết quả
+        navigate(`/test-result/${response.data.data.id}`);
+      } else {
+        throw new Error(response.data.message || 'Không thể nộp bài');
+      }
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
+    }
   };
 
   // helper: render questions by group type

@@ -189,6 +189,17 @@ export default function TestResult() {
                   const questionNumber = answer.question_number;
                   const isUnanswered = !answer.user_answer || answer.user_answer.trim() === '';
                   
+                  // Helper function to strip HTML tags and get text content
+                  const stripHtml = (html) => {
+                    if (!html) return '';
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = html;
+                    return tmp.textContent || tmp.innerText || '';
+                  };
+                  
+                  const userAnswerText = stripHtml(answer.user_answer);
+                  const correctAnswerText = stripHtml(answer.correct_answer);
+                  
                   return (
                     <div 
                       key={answer.question_id} 
@@ -198,8 +209,8 @@ export default function TestResult() {
                       <div className="test-result__answer-content">
                         <div className="test-result__answer-label">
                           <span className={`test-result__user-answer ${answer.is_correct ? 'correct' : isUnanswered ? 'unanswered' : 'incorrect'}`}>
-                            {answer.user_answer || '-'}
-                          </span> | Đáp án: <span className="test-result__answer-value">{answer.correct_answer || 'N/A'}</span>
+                            {userAnswerText || '-'}
+                          </span> | Đáp án: <span className="test-result__answer-value">{correctAnswerText || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
