@@ -4,6 +4,72 @@ import { getSkillById, getSectionById, submitTestResult, saveTestDraft } from '.
 import TestLayout from '../components/TestLayout';
 import './ReadingTest.css';
 
+// Component hiển thị buttons và feedback trong review mode
+const ReviewButtons = ({ questionId, reviewAnswersMap, onToggleExplanation, showExplanation }) => {
+  const reviewData = reviewAnswersMap[questionId];
+  if (!reviewData) return null;
+
+  const { userAnswer, correctAnswer, isCorrect, feedback, hint } = reviewData;
+  const isUnanswered = !userAnswer || userAnswer.trim() === '';
+
+  return (
+    <div className="reading-test__review-section">
+      {/* Đáp án */}
+      <div className="reading-test__answer-display">
+        <span className="reading-test__answer-label-text">Đáp án:</span>
+        <div className="reading-test__answer-content">
+          <span className="reading-test__answer-correct">{correctAnswer || 'N/A'}</span>
+        </div>
+      </div>
+      
+      {/* Buttons */}
+      <div className="reading-test__action-buttons">
+        <button 
+          className="reading-test__action-btn reading-test__action-btn--locate"
+          onClick={() => {
+            // Scroll to top of passage
+            document.querySelector('.reading-test__passage')?.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2C5.24 2 3 4.24 3 7C3 10.25 8 14 8 14C8 14 13 10.25 13 7C13 4.24 10.76 2 8 2ZM8 8.5C7.17 8.5 6.5 7.83 6.5 7C6.5 6.17 7.17 5.5 8 5.5C8.83 5.5 9.5 6.17 9.5 7C9.5 7.83 8.83 8.5 8 8.5Z" fill="currentColor"/>
+          </svg>
+          Locate
+        </button>
+        <button 
+          className="reading-test__action-btn reading-test__action-btn--explain"
+          onClick={() => onToggleExplanation(questionId)}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+            <path d="M7 11H9V13H7V11ZM8 2C4.69 2 2 4.69 2 8C2 11.31 4.69 14 8 14C11.31 14 14 11.31 14 8C14 4.69 11.31 2 8 2ZM8 12C5.79 12 4 10.21 4 8C4 5.79 5.79 4 8 4C10.21 4 12 5.79 12 8C12 10.21 10.21 12 8 12ZM8 6C6.9 6 6 6.9 6 8H8V6Z" fill="currentColor"/>
+          </svg>
+          Giải thích
+        </button>
+      </div>
+
+      {/* Giải thích (expand/collapse) - Hiển thị sau buttons */}
+      {showExplanation && feedback && (
+        <div className="reading-test__explanation-expanded">
+          <div className="reading-test__explanation-label">Giải thích:</div>
+          <div 
+            className="reading-test__explanation-content"
+            dangerouslySetInnerHTML={{ __html: feedback }}
+          />
+          {hint && (
+            <>
+              <div className="reading-test__explanation-label">Gợi ý:</div>
+              <div 
+                className="reading-test__explanation-content"
+                dangerouslySetInnerHTML={{ __html: hint }}
+              />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
 
 const GroupContentWithInlineInputs = ({ content, questions = [], answers = {}, onAnswerChange }) => {
@@ -470,11 +536,20 @@ const PassageContent = memo(function PassageContent({
   return true;
 });
 
-export default function ReadingTest() {
-  const { skillId, sectionId } = useParams();
+export default function ReadingTest({ 
+  reviewMode = false, 
+  reviewData = null,
+  preloadedSkillId = null,
+  preloadedSectionId = null
+}) {
+  const { skillId: paramSkillId, sectionId: paramSectionId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const examData = location.state?.examData;
+  
+  // Sử dụng preloaded IDs nếu có, không thì dùng từ params
+  const skillId = preloadedSkillId || paramSkillId;
+  const sectionId = preloadedSectionId || paramSectionId;
 
   // State để quản lý câu hỏi hiện tại và câu trả lời
   const [answers, setAnswers] = useState({});
@@ -487,6 +562,10 @@ export default function ReadingTest() {
   const [passages, setPassages] = useState([]); // Nhiều passages theo part
   const [parts, setParts] = useState([]); // Danh sách các parts
   const [fontSize, setFontSize] = useState('normal'); // Font size
+  
+  // Review mode data
+  const [reviewAnswersMap, setReviewAnswersMap] = useState({});
+  const [expandedExplanations, setExpandedExplanations] = useState(new Set());
 
   // Keep latest values for interval callbacks without recreating intervals.
   const timeRemainingRef = useRef(timeRemaining);
@@ -504,6 +583,34 @@ export default function ReadingTest() {
   useEffect(() => {
     skillDataRef.current = skillData;
   }, [skillData]);
+  
+  // Process review data if in review mode
+  useEffect(() => {
+    if (reviewMode && reviewData && reviewData.answers) {
+      // Tạo map từ question_id -> answer data
+      const answerMap = {};
+      reviewData.answers.forEach(answer => {
+        answerMap[answer.question_id] = {
+          userAnswer: answer.user_answer,
+          correctAnswer: answer.correct_answer,
+          isCorrect: answer.is_correct,
+          feedback: answer.feedback,
+          hint: answer.hint,
+          questionContent: answer.question_content
+        };
+      });
+      setReviewAnswersMap(answerMap);
+      
+      // Set user's answers to display in inputs
+      const userAnswers = {};
+      reviewData.answers.forEach(answer => {
+        if (answer.user_answer) {
+          userAnswers[answer.question_id] = answer.user_answer;
+        }
+      });
+      setAnswers(userAnswers);
+    }
+  }, [reviewMode, reviewData]);
 
   // Lấy dữ liệu từ API
   useEffect(() => {
@@ -857,9 +964,23 @@ export default function ReadingTest() {
 
   // Xử lý chọn đáp án
   const handleAnswerSelect = (questionId, answer) => {
+    if (reviewMode) return; // Không cho chọn đáp án trong review mode
     setAnswers({
       ...answers,
       [questionId]: answer
+    });
+  };
+  
+  // Xử lý toggle giải thích (expand/collapse)
+  const handleToggleExplanation = (questionId) => {
+    setExpandedExplanations(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(questionId)) {
+        newSet.delete(questionId);
+      } else {
+        newSet.add(questionId);
+      }
+      return newSet;
     });
   };
 
@@ -1014,40 +1135,82 @@ export default function ReadingTest() {
         );
       }
       
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item reading-test__question-item--input">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">
-              {question.number}
+      return group.questions.map((question) => {
+        const reviewData = reviewMode ? reviewAnswersMap[question.id] : null;
+        const isCorrect = reviewData?.is_correct || false;
+        const isUnanswered = reviewData && !reviewData.user_answer;
+        
+        return (
+          <div key={question.id} className="reading-test__question-item reading-test__question-item--input">
+            <div className="reading-test__question-row">
+              <div className="reading-test__question-number">
+                {question.number}
+                {reviewMode && (
+                  <span 
+                    className={`reading-test__question-badge ${
+                      isUnanswered 
+                        ? 'reading-test__question-badge--unanswered' 
+                        : isCorrect 
+                        ? 'reading-test__question-badge--correct' 
+                        : 'reading-test__question-badge--incorrect'
+                    }`}
+                  >
+                    {isUnanswered ? 'Unanswered' : isCorrect ? 'True' : 'False'}
+                  </span>
+                )}
+              </div>
+              <div
+                className="reading-test__question-text"
+                dangerouslySetInnerHTML={{ __html: question.content }}
+              />
             </div>
-            <div
-              className="reading-test__question-text"
-              dangerouslySetInnerHTML={{ __html: question.content }}
-            />
+            <div className="reading-test__answer-input-wrapper">
+              <input
+                type="text"
+                className="reading-test__answer-input"
+                placeholder="Type your answer here..."
+                value={answers[question.id] || ''}
+                onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
+                maxLength={100}
+                disabled={reviewMode}
+              />
+            </div>
+            {reviewMode && (
+              <ReviewButtons 
+                questionId={question.id} 
+                reviewAnswersMap={reviewAnswersMap} 
+                onToggleExplanation={handleToggleExplanation}
+                showExplanation={expandedExplanations.has(question.id)}
+              />
+            )}
           </div>
-          <div className="reading-test__answer-input-wrapper">
-            <input
-              type="text"
-              className="reading-test__answer-input"
-              placeholder="Type your answer here..."
-              value={answers[question.id] || ''}
-              onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
-              maxLength={100}
-            />
-          </div>
-        </div>
-      ));
+        );
+      });
     }
 
     // 2. DẠNG MULTIPLE_CHOICE - Render với optionsWithContent
     if (questionType === 'multiple_choice') {
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">{question.number}</div>
-            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-          </div>
-          <div className="reading-test__options">
+      return group.questions.map((question) => {
+        const reviewData = reviewMode ? reviewAnswersMap[question.id] : null;
+        const isCorrect = reviewData?.isCorrect;
+        const isUnanswered = reviewData && (!reviewData.userAnswer || reviewData.userAnswer.trim() === '');
+        
+        return (
+          <div key={question.id} className="reading-test__question-item">
+            <div className="reading-test__question-row">
+              <div className="reading-test__question-number">
+                {question.number}
+                {reviewMode && reviewData && (
+                  <span className={`reading-test__question-badge ${
+                    isCorrect ? 'correct' : isUnanswered ? 'unanswered' : 'incorrect'
+                  }`}>
+                    {isCorrect ? 'True' : isUnanswered ? '-' : 'False'}
+                  </span>
+                )}
+              </div>
+              <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
+            </div>
+            <div className="reading-test__options">
             {(group.optionsWithContent || []).map((option) => (
               <label key={option.letter} className={`reading-test__option ${answers[question.id] === option.letter ? 'selected' : ''}`}>
                 <input
@@ -1056,6 +1219,7 @@ export default function ReadingTest() {
                   value={option.letter}
                   checked={answers[question.id] === option.letter}
                   onChange={() => handleAnswerSelect(question.id, option.letter)}
+                  disabled={reviewMode}
                 />
                 <span className="reading-test__option-text">
                   <strong style={{ marginRight: '8px' }}>{option.letter}.</strong>
@@ -1064,8 +1228,17 @@ export default function ReadingTest() {
               </label>
             ))}
           </div>
-        </div>
-      ));
+          {reviewMode && (
+            <ReviewButtons 
+              questionId={question.id} 
+              reviewAnswersMap={reviewAnswersMap} 
+              onToggleExplanation={handleToggleExplanation}
+              showExplanation={expandedExplanations.has(question.id)}
+            />
+          )}
+          </div>
+        );
+      });
     }
 
     // 3. DẠNG TABLE_SELECTION - Render table with checkboxes
@@ -1086,61 +1259,123 @@ export default function ReadingTest() {
           </div>
           
           {/* Rows */}
-          {group.questions.map((question) => (
-            <div key={question.id} className="reading-test__selection-row">
-              <div className="reading-test__selection-question">
-                <span className="reading-test__question-number">{question.number}</span>
-                <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
-              </div>
-              <div className="reading-test__selection-options">
-                {optionLetters.map((letter) => (
-                  <div key={letter} className="reading-test__selection-option-cell">
-                    <label className="reading-test__checkbox-wrapper">
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value={letter}
-                        checked={answers[question.id] === letter}
-                        onChange={() => handleAnswerSelect(question.id, letter)}
-                        className="reading-test__checkbox-input"
-                      />
-                      <span className="reading-test__checkbox-custom"></span>
-                    </label>
+          {group.questions.map((question) => {
+            const reviewData = reviewMode ? reviewAnswersMap[question.id] : null;
+            const isCorrect = reviewData?.is_correct || false;
+            const isUnanswered = reviewData && !reviewData.user_answer;
+            
+            return (
+              <div key={question.id}>
+                <div className="reading-test__selection-row">
+                  <div className="reading-test__selection-question">
+                    <span className="reading-test__question-number">
+                      {question.number}
+                      {reviewMode && (
+                        <span 
+                          className={`reading-test__question-badge ${
+                            isUnanswered 
+                              ? 'reading-test__question-badge--unanswered' 
+                              : isCorrect 
+                              ? 'reading-test__question-badge--correct' 
+                              : 'reading-test__question-badge--incorrect'
+                          }`}
+                        >
+                          {isUnanswered ? 'Unanswered' : isCorrect ? 'True' : 'False'}
+                        </span>
+                      )}
+                    </span>
+                    <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
                   </div>
-                ))}
+                  <div className="reading-test__selection-options">
+                    {optionLetters.map((letter) => (
+                      <div key={letter} className="reading-test__selection-option-cell">
+                        <label className="reading-test__checkbox-wrapper">
+                          <input
+                            type="radio"
+                            name={`question-${question.id}`}
+                            value={letter}
+                            checked={answers[question.id] === letter}
+                            onChange={() => handleAnswerSelect(question.id, letter)}
+                            className="reading-test__checkbox-input"
+                            disabled={reviewMode}
+                          />
+                          <span className="reading-test__checkbox-custom"></span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {reviewMode && (
+                  <ReviewButtons 
+                    questionId={question.id} 
+                    reviewAnswersMap={reviewAnswersMap} 
+                    onToggleExplanation={handleToggleExplanation}
+                    showExplanation={expandedExplanations.has(question.id)}
+                  />
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     }
 
     // 4. DẠNG CÒN LẠI - Render radio buttons với group.options
     // Áp dụng cho: yes_no_not_given, true_false_not_given, và các loại khác
-    return group.questions.map((question) => (
-      <div key={question.id} className="reading-test__question-item">
-        <div className="reading-test__question-row">
-          <div className="reading-test__question-number">{question.number}</div>
-          <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
-        </div>
-        {group.options && group.options.length > 0 && (
-          <div className="reading-test__options">
-            {group.options.map((option) => (
-              <label key={option} className={`reading-test__option ${answers[question.id] === option ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option}
-                  checked={answers[question.id] === option}
-                  onChange={() => handleAnswerSelect(question.id, option)}
-                />
-                <span className="reading-test__option-text">{option}</span>
-              </label>
-            ))}
+    return group.questions.map((question) => {
+      const reviewData = reviewMode ? reviewAnswersMap[question.id] : null;
+      const isCorrect = reviewData?.is_correct || false;
+      const isUnanswered = reviewData && !reviewData.user_answer;
+      
+      return (
+        <div key={question.id} className="reading-test__question-item">
+          <div className="reading-test__question-row">
+            <div className="reading-test__question-number">
+              {question.number}
+              {reviewMode && (
+                <span 
+                  className={`reading-test__question-badge ${
+                    isUnanswered 
+                      ? 'reading-test__question-badge--unanswered' 
+                      : isCorrect 
+                      ? 'reading-test__question-badge--correct' 
+                      : 'reading-test__question-badge--incorrect'
+                  }`}
+                >
+                  {isUnanswered ? 'Unanswered' : isCorrect ? 'True' : 'False'}
+                </span>
+              )}
+            </div>
+            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
           </div>
-        )}
-      </div>
-    ));
+          {group.options && group.options.length > 0 && (
+            <div className="reading-test__options">
+              {group.options.map((option) => (
+                <label key={option} className={`reading-test__option ${answers[question.id] === option ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name={`question-${question.id}`}
+                    value={option}
+                    checked={answers[question.id] === option}
+                    onChange={() => handleAnswerSelect(question.id, option)}
+                    disabled={reviewMode}
+                  />
+                  <span className="reading-test__option-text">{option}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          {reviewMode && (
+            <ReviewButtons 
+              questionId={question.id} 
+              reviewAnswersMap={reviewAnswersMap} 
+              onToggleExplanation={handleToggleExplanation}
+              showExplanation={expandedExplanations.has(question.id)}
+            />
+          )}
+        </div>
+      );
+    });
   };
   
   return (
@@ -1148,7 +1383,7 @@ export default function ReadingTest() {
       examData={examData}
       skillData={skillData}
       sectionData={sectionData}
-      timeRemaining={timeRemaining}
+      timeRemaining={reviewMode ? null : timeRemaining}
       setTimeRemaining={setTimeRemaining}
       parts={parts}
       currentPartTab={currentPartTab}

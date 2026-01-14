@@ -232,9 +232,47 @@ class TestResultController extends Controller
             ->where('user_id', auth()->id())
             ->findOrFail($id);
 
+        // Enrich answers with feedback, hint, and passage content
+        $enrichedAnswers = collect($result->answers)->map(function ($answer) {
+            $question = ExamQuestion::find($answer['question_id']);
+            
+            if (!$question) {
+                return $answer;
+            }
+
+            // Get passage content
+            $passageContent = null;
+            if ($question->exam_section_id) {
+                $section = $question->examSection;
+                $passageContent = $section ? $section->content : null;
+            } elseif ($question->exam_question_group_id) {
+                $group = $question->questionGroup;
+                if ($group) {
+                    // Try group content first, then section content
+                    $passageContent = $group->content;
+                    if (!$passageContent && $group->exam_section_id) {
+                        $section = $group->examSection;
+                        $passageContent = $section ? $section->content : null;
+                    }
+                }
+            }
+
+            return array_merge($answer, [
+                'feedback' => $question->feedback,
+                'hint' => $question->hint,
+                'question_content' => $question->content,
+                'passage_content' => $passageContent,
+                'image' => $question->image,
+                'audio_file' => $question->audio_file,
+            ]);
+        })->toArray();
+
+        $resultData = $result->toArray();
+        $resultData['answers'] = $enrichedAnswers;
+
         return response()->json([
             'success' => true,
-            'data' => $result,
+            'data' => $resultData,
         ]);
     }
 

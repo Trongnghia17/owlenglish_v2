@@ -168,10 +168,8 @@ export default function TestResult() {
             </div>
 
             <button className="test-result__review-btn" onClick={() => {
-              // Scroll to answers section
-              document.querySelector('.test-result__answers-section')?.scrollIntoView({ 
-                behavior: 'smooth' 
-              });
+              // Navigate to review page
+              navigate(`/test-review/${resultId}`);
             }}>
               Giải thích chi tiết
             </button>
