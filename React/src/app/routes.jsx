@@ -27,7 +27,7 @@ import SpeakingToeic from '../features/toeic/pages/Speaking';
 import ReadingToeic from '../features/toeic/pages/Reading';
 import PackageList from '../features/payment-packages/pages/PackageList';
 import PaymentCancel from '../features/payment-packages/pages/PaymentCancel';
-import PaymentSuccess from '../features/payment-packages/pages/Paymentsuccess';
+import PaymentSuccess from '../features/payment-packages/pages/PaymentSuccess';
 const PublicShell = (
   <MainLayout />
 );
