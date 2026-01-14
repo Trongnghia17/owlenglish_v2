@@ -38,7 +38,7 @@ export const router = createBrowserRouter([
     // phục vụ cho việc chưa đăng nhập vẫn xem dc trang
     element: PublicShell, children: [
       { path: '/', element: <Home /> },
-      { path: '/de-thi-online', element: <OnlineExamLibrary /> },
+      { path: '/de-thi/:examType', element: <OnlineExamLibrary /> },
       { path: '/bo-de/:examType', element: <ExamPackage /> },
       { path: '/bo-de/:examType/:examId', element: <ExamPackageDetail /> },
       { path: '/goi-nap-tien', element: <PackageList /> },

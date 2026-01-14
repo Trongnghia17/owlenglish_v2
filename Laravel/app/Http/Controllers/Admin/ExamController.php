@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\ExamCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,7 +37,9 @@ class ExamController extends Controller
             ->paginate(10)
             ->appends($request->except('page'));
 
-        return view('admin.exams.index', compact('exams'));
+        $collections = ExamCollection::where('status', 1)->get();
+
+        return view('admin.exams.index', compact('exams', 'collections'));
     }
 
     /**
@@ -50,6 +53,8 @@ class ExamController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB
             'is_active' => 'boolean',
+            'exam_collection_id' => 'required|exists:exam_collections,id',
+            'level' => 'nullable|string|max:100',
         ]);
 
         $validated['is_active'] = $request->has('is_active');
@@ -71,7 +76,8 @@ class ExamController extends Controller
      */
     public function edit(Exam $exam)
     {
-        return view('admin.exams.edit', compact('exam'));
+        $collections = ExamCollection::where('status', 1)->get();
+        return view('admin.exams.edit', compact('exam', 'collections'));
     }
 
     /**
@@ -86,6 +92,8 @@ class ExamController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB
             'is_active' => 'boolean',
             'remove_image' => 'nullable|in:0,1',
+            'exam_collection_id' => 'required|exists:exam_collections,id',
+            'level' => 'nullable|string|max:100',
         ]);
 
         $validated['is_active'] = $request->has('is_active');

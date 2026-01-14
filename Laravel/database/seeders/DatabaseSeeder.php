@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
              RolePermissionSeeder::class, // Temporarily disable to avoid conflicts
             AdminSeeder::class,
             UserSeeder::class,
-            
+            ExamCollectionsSeeder::class,
         ]);
     }
 }

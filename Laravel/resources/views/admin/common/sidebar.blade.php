@@ -2,11 +2,13 @@
     <div class="h-100" data-simplebar>
         <!-- Brand logo -->
         <a class="navbar-brand" href="">
-            <img src="{{ asset('assets/uploads/Logo.png') }}" alt="logo trung tâm" class="center-logo" style="   max-width: 80px;
+            <img src="{{ asset('assets/uploads/Logo.png') }}" alt="logo trung tâm" class="center-logo"
+                style="   max-width: 80px;
                             height: auto;
                             object-fit: contain;
                             margin: 0 auto;
-                            display: block;" width="80" height="80">
+                            display: block;"
+                width="80" height="80">
         </a>
         <!-- Navbar nav -->
         <ul class="navbar-nav flex-column" id="sideNavbar">
@@ -20,21 +22,21 @@
 
                 <div id="navDashboard" class="collapse " data-bs-parent="#sideNavbar">
                     <ul class="nav flex-column">
-{{--                        @if(Auth()->user()->role_id == 4)--}}
-{{--                            <li class="nav-item">--}}
-{{--                                <a class="nav-link" href="{{ route('admin.statistic.student') }}">--}}
-{{--                                    Thống kê--}}
-{{--                                </a>--}}
-{{--                            </li>--}}
-{{--                        @endif--}}
-{{--                        @if(Auth()->user()->role_id == 3)--}}
-{{--                            <li class="nav-item">--}}
-{{--                                <a class="nav-link" href="{{ route('admin.statistic.teacher') }}">--}}
-{{--                                    Thống kê--}}
-{{--                                </a>--}}
-{{--                            </li>--}}
-{{--                        @endif--}}
-                        @if(Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
+                        {{--                        @if (Auth()->user()->role_id == 4) --}}
+                        {{--                            <li class="nav-item"> --}}
+                        {{--                                <a class="nav-link" href="{{ route('admin.statistic.student') }}"> --}}
+                        {{--                                    Thống kê --}}
+                        {{--                                </a> --}}
+                        {{--                            </li> --}}
+                        {{--                        @endif --}}
+                        {{--                        @if (Auth()->user()->role_id == 3) --}}
+                        {{--                            <li class="nav-item"> --}}
+                        {{--                                <a class="nav-link" href="{{ route('admin.statistic.teacher') }}"> --}}
+                        {{--                                    Thống kê --}}
+                        {{--                                </a> --}}
+                        {{--                            </li> --}}
+                        {{--                        @endif --}}
+                        @if (Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('admin.dashboard') }}">
                                     Thống kê
@@ -50,22 +52,22 @@
                 <div class="navbar-heading">QUẢN LÝ</div>
             </li>
 
-            @if(Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
+            @if (Auth()->user()->role_id == 1 || Auth()->user()->role_id == 2)
                 <!-- Quản lý Exam -->
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.exams.*') ? '' : 'collapsed' }}"
-                       href="#!" data-bs-toggle="collapse" data-bs-target="#navExams"
-                       aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}"
-                       aria-controls="navExams">
+                        href="#!" data-bs-toggle="collapse" data-bs-target="#navExams"
+                        aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}"
+                        aria-controls="navExams">
                         <i data-feather="file-text" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý bộ đề thi
                     </a>
                     <div id="navExams" class="collapse {{ request()->routeIs('admin.exams.*') ? 'show' : '' }}"
-                         data-bs-parent="#sideNavbar">
+                        data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.exams.index') ? 'active' : '' }}"
-                                   href="{{ route('admin.exams.index') }}">
+                                    href="{{ route('admin.exams.index') }}">
                                     Danh sách bộ đề thi
                                 </a>
                             </li>
@@ -82,24 +84,24 @@
                 <!-- Quản lý Skills -->
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.skills.*') ? '' : 'collapsed' }}"
-                       href="#!" data-bs-toggle="collapse" data-bs-target="#navSkills"
-                       aria-expanded="{{ request()->routeIs('admin.skills.*') ? 'true' : 'false' }}"
-                       aria-controls="navSkills">
+                        href="#!" data-bs-toggle="collapse" data-bs-target="#navSkills"
+                        aria-expanded="{{ request()->routeIs('admin.skills.*') ? 'true' : 'false' }}"
+                        aria-controls="navSkills">
                         <i data-feather="book-open" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý đề thi
                     </a>
                     <div id="navSkills" class="collapse {{ request()->routeIs('admin.skills.*') ? 'show' : '' }}"
-                         data-bs-parent="#sideNavbar">
+                        data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.skills.index') ? 'active' : '' }}"
-                                   href="{{ route('admin.skills.index') }}">
+                                    href="{{ route('admin.skills.index') }}">
                                     Danh sách đề thi
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.skills.create') ? 'active' : '' }}"
-                                   href="{{ route('admin.skills.create') }}">
+                                    href="{{ route('admin.skills.create') }}">
                                     Thêm đề thi mới
                                 </a>
                             </li>
@@ -110,18 +112,18 @@
                 <!-- Quản lý người dùng -->
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.users.*') ? '' : 'collapsed' }}"
-                       href="#!" data-bs-toggle="collapse" data-bs-target="#navUsers"
-                       aria-expanded="{{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}"
-                       aria-controls="navUsers">
+                        href="#!" data-bs-toggle="collapse" data-bs-target="#navUsers"
+                        aria-expanded="{{ request()->routeIs('admin.users.*') ? 'true' : 'false' }}"
+                        aria-controls="navUsers">
                         <i data-feather="users" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý người dùng
                     </a>
                     <div id="navUsers" class="collapse {{ request()->routeIs('admin.users.*') ? 'show' : '' }}"
-                         data-bs-parent="#sideNavbar">
+                        data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.users.index') && !request('role') ? 'active' : '' }}"
-                                   href="{{ route('admin.users.index') }}">
+                                    href="{{ route('admin.users.index') }}">
                                     Tất cả người dùng
                                 </a>
                             </li>
@@ -130,24 +132,24 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.students.*') ? '' : 'collapsed' }}"
-                       href="#!" data-bs-toggle="collapse" data-bs-target="#navStudent"
-                       aria-expanded="{{ request()->routeIs('admin.students.*') ? 'true' : 'false' }}"
-                       aria-controls="navStudent">
+                        href="#!" data-bs-toggle="collapse" data-bs-target="#navStudent"
+                        aria-expanded="{{ request()->routeIs('admin.students.*') ? 'true' : 'false' }}"
+                        aria-controls="navStudent">
                         <i data-feather="user-check" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý học sinh
                     </a>
                     <div id="navStudent" class="collapse {{ request()->routeIs('admin.students.*') ? 'show' : '' }}"
-                         data-bs-parent="#sideNavbar">
+                        data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.students.index') && !request('role') ? 'active' : '' }}"
-                                   href="{{ route('admin.students.index') }}">
+                                    href="{{ route('admin.students.index') }}">
                                     Tất cả học sinh
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.students.create') && !request('role') ? 'active' : '' }}"
-                                   href="{{ route('admin.students.create') }}">
+                                    href="{{ route('admin.students.create') }}">
                                     Thêm học sinh
                                 </a>
                             </li>
@@ -157,33 +159,68 @@
 
                 <li class="nav-item">
                     <a class="nav-link has-arrow {{ request()->routeIs('admin.payment-packages.*') ? '' : 'collapsed' }}"
-                       href="#!" data-bs-toggle="collapse" data-bs-target="#navPayment"
-                       aria-expanded="{{ request()->routeIs('admin.payment-packages.*') ? 'true' : 'false' }}"
-                       aria-controls="navPayment">
+                        href="#!" data-bs-toggle="collapse" data-bs-target="#navPayment"
+                        aria-expanded="{{ request()->routeIs('admin.payment-packages.*') ? 'true' : 'false' }}"
+                        aria-controls="navPayment">
                         <i data-feather="dollar-sign" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý thanh toán
                     </a>
-                    <div id="navPayment" class="collapse {{ request()->routeIs('admin.payment-packages.*') ? 'show' : '' }}"
-                         data-bs-parent="#sideNavbar">
+                    <div id="navPayment"
+                        class="collapse {{ request()->routeIs('admin.payment-packages.*') ? 'show' : '' }}"
+                        data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.payment-history') && !request('role') ? 'active' : '' }}"
-                                   href="{{ route('admin.payment-history') }}">
+                                    href="{{ route('admin.payment-history') }}">
                                     Lịch sử thanh toán
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.payment-packages.index') && !request('role') ? 'active' : '' }}"
-                                   href="{{ route('admin.payment-packages.index') }}">
+                                    href="{{ route('admin.payment-packages.index') }}">
                                     Gói thanh toán
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('admin.payment-packages.create') && !request('role') ? 'active' : '' }}"
-                                   href="{{ route('admin.payment-packages.create') }}">
+                                    href="{{ route('admin.payment-packages.create') }}">
                                     Thêm gói thanh toán
                                 </a>
                             </li>
+                        </ul>
+                    </div>
+                </li>
+
+                @php
+                    $isSettingActive = request()->routeIs('admin.exam-collections.*', 'admin.exam-filters.*');
+                @endphp
+
+                <li class="nav-item">
+                    <a class="nav-link has-arrow {{ $isSettingActive ? '' : 'collapsed' }}" href="#!"
+                        data-bs-toggle="collapse" data-bs-target="#settings"
+                        aria-expanded="{{ $isSettingActive ? 'true' : 'false' }}" aria-controls="settings">
+                        <i data-feather="settings" class="nav-icon me-2 icon-xxs"></i>
+                        Cấu hình
+                    </a>
+
+                    <div id="settings" class="collapse {{ $isSettingActive ? 'show' : '' }}"
+                        data-bs-parent="#sideNavbar">
+                        <ul class="nav flex-column">
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.exam-collections.*') ? 'active' : '' }}"
+                                    href="{{ route('admin.exam-collections.index') }}">
+                                    Cấu hình bộ đề
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.exam-filters.*') ? 'active' : '' }}"
+                                    href="{{ route('admin.exam-filters.index') }}">
+                                    Cấu hình đề thi
+                                </a>
+                            </li>
+
                         </ul>
                     </div>
                 </li>
