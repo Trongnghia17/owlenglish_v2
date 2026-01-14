@@ -4,8 +4,10 @@ use App\Http\Controllers\Api\AuthApiController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\ExamCollectionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ExamController as AdminExamController;
+use App\Http\Controllers\Admin\ExamFilterController;
 use App\Http\Controllers\Admin\ExamTestController;
 use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\PaymentPackageController;
@@ -62,6 +64,17 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
         Route::resource('payment-packages', PaymentPackageController::class);
         Route::get('payment-history', [PaymentPackageController::class, 'paymentHistory'])->name('payment-history');
         Route::patch('payment-packages/{paymentPackage}/toggle-status', [PaymentPackageController::class, 'toggleStatus'])->name('payment-packages.toggleStatus');
+
+        // cấu hình bộ đề
+        Route::resource('exam-collections', ExamCollectionController::class);
+        Route::patch('exam-collections/{examCollection}/toggle-status', [ExamCollectionController::class, 'toggleStatus'])->name('exam-collections.toggleStatus');
+
+        // cấu hình bộ lọc đề thi
+        Route::resource('exam-filters', ExamFilterController::class);
+        Route::patch(
+            'exam-filters/{examFilter}/toggle-status',
+            [ExamFilterController::class, 'toggleStatus']
+        )->name('exam-filters.toggleStatus');
     });
 
     // Exam Management Routes

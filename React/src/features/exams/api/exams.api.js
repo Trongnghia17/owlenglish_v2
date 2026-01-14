@@ -32,3 +32,17 @@ export const getQuestionGroup = (id, params) =>
 
 export const getQuestionsByGroup = (groupId, params) => 
   api.get(`/api/public/question-groups/${groupId}/questions`, { params });
+
+// Lấy bộ đề exam collections
+export const getExamCollections = (params) => 
+  api.get('/api/public/exam-collections', { params });
+
+export const getCollections = (params) => 
+  api.get('/api/public/collections', { params });
+
+// Lấy bộ lọc đề thi
+export const getFilters = (params) => 
+  api.get('/api/public/filters', { params });
+
+export const getSectionFilters = (params) => 
+  api.get('/api/public/section-filters', { params });

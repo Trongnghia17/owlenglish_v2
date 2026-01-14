@@ -5,6 +5,128 @@
     background-color: #f8f9fa;
 }
 
+.exam-sidebar {
+    width: 280px;
+    padding: 16px;
+}
+
+/* ===== Skill ===== */
+.exam-skill {
+    margin-bottom: 24px;
+}
+
+.exam-skill-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.exam-skill-header img {
+    width: 30px;
+    height: 30px;
+}
+
+/* ===== Group ===== */
+.online-exam-library .exam-group {
+    margin-bottom: 8px;
+}
+
+.online-exam-library .exam-group-header {
+    width: 100%;
+    height: 50px;
+    border-radius: 8px;
+    padding: 10px 12px;
+    border: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.online-exam-library .exam-group-header span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #5D5D5D;
+}
+
+.sidebar-item__toggle--writing .exam-group-header {
+    background-color: #045CCE17;
+}
+
+.sidebar-item__toggle--listening .exam-group-header {
+    background-color: #35A81512;
+}
+
+.sidebar-item__toggle--reading .exam-group-header {
+    background-color: #FF420012;
+}
+
+.sidebar-item__toggle--speaking .exam-group-header {
+    background-color: #FEBE4017;
+    transition: transform 0.25s ease-in-out;
+}
+
+.online-exam-library.exam-group-header .arrow {
+    border: solid #333;
+    border-width: 0 2px 2px 0;
+    padding: 4px;
+    transform: rotate(45deg);
+    transition: transform 0.25s ease-in-out;
+}
+
+.online-exam-library .exam-group-header .arrow.up {
+    transform: rotate(-180deg);
+}
+
+.online-exam-library .exam-group-content {
+    margin-left: 20px;
+    border-left: 1px solid #e0e0e0;
+    margin-top: 8px;
+}
+
+.online-exam-library .exam-group-content .exam-group-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    height: 50px;
+    color: #4F4F4F;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.sidebar-item__toggle--listening .exam-group-content .exam-group-item:hover {
+    background: #35A81512;
+    border-left: 1px solid #35A815;
+}
+.sidebar-item__toggle--reading .exam-group-content .exam-group-item:hover {
+    background: #FF420012;
+    border-left: 1px solid #FF4200;
+}
+.sidebar-item__toggle--speaking .exam-group-content .exam-group-item:hover {
+    background: #FEBE4017;
+    border-left: 1px solid #FEBE40;
+}
+.sidebar-item__toggle--writing .exam-group-content .exam-group-item:hover {
+    background: #045CCE12;
+    border-left: 1px solid #045CCE;
+}
+.online-exam-library .exam-group-content .item-con-icon{
+    width: 20px;
+    height: 20px;
+}
+.online-exam-library .exam-group-content .item-title{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+}
+.text-up-text {
+    text-transform: uppercase;
+}
+
 /* Breadcrumb */
 .online-exam-library__breadcrumb {
     display: flex;
@@ -109,28 +231,6 @@
     /*margin-bottom: 8px;*/
     color: #5D5D5D;
 }
-
-/* Writing - Blue */
-.sidebar-section:has(.sidebar-section__title:contains("Writing")) .sidebar-item__toggle,
-.sidebar-item__toggle--writing {
-    background-color: rgba(4, 92, 206, 0.09);
-}
-
-/* Speaking - Yellow */
-.sidebar-item__toggle--speaking {
-    background-color: rgba(254, 190, 64, 0.07);
-}
-
-/* Listening - Green */
-.sidebar-item__toggle--listening {
-    background-color: rgba(53, 168, 21, 0.07);
-}
-
-/* Reading - Orange/Red */
-.sidebar-item__toggle--reading {
-    background-color: rgba(255, 66, 0, 0.07);
-}
-
 
 .sidebar-item__arrow {
     font-size: 12px;
@@ -522,7 +622,7 @@
     box-shadow: 3px 4px 1px 0 rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 316px;
 }
 
 

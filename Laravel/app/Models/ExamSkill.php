@@ -99,4 +99,5 @@ class ExamSkill extends Model
     {
         return $this->skill_type === 'speaking';
     }
+
 }

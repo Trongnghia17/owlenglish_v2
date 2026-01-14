@@ -91,7 +91,7 @@ class ExamSection extends Model
     {
         return !empty($this->ui_layer) && in_array($this->ui_layer, ['1', '2']);
     }
-    
+
     /**
      * Get UI layer value
      */
@@ -106,8 +106,8 @@ class ExamSection extends Model
      */
     public function useDirectQuestions(): bool
     {
-        return $this->examSkill && 
-               ($this->examSkill->isSpeaking() || $this->examSkill->isWriting());
+        return $this->examSkill &&
+            ($this->examSkill->isSpeaking() || $this->examSkill->isWriting());
     }
 
     /**
@@ -116,7 +116,27 @@ class ExamSection extends Model
      */
     public function useQuestionGroups(): bool
     {
-        return $this->examSkill && 
-               ($this->examSkill->isListening() || $this->examSkill->isReading());
+        return $this->examSkill &&
+            ($this->examSkill->isListening() || $this->examSkill->isReading());
+    }
+
+    public function skill()
+    {
+        return $this->belongsTo(ExamSkill::class, 'exam_skill_id');
+    }
+
+    public function filters()
+    {
+        return $this->belongsToMany(
+            ExamFilter::class,
+            'exam_section_filter',
+            'exam_section_id',
+            'exam_filter_id'
+        )->withTimestamps();
+    }
+
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
     }
 }

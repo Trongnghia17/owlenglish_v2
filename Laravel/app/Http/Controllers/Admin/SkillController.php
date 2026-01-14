@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ExamSkill;
 use App\Models\Exam;
+use App\Models\ExamFilter;
+use App\Models\ExamSection;
 use App\Models\ExamTest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SkillController extends Controller
 {
@@ -26,7 +29,7 @@ class SkillController extends Controller
 
         // Filter by exam
         if ($request->filled('exam_id')) {
-            $query->whereHas('examTest', function($q) use ($request) {
+            $query->whereHas('examTest', function ($q) use ($request) {
                 $q->where('exam_id', $request->exam_id);
             });
         }
@@ -55,6 +58,7 @@ class SkillController extends Controller
      */
     public function create()
     {
+
         $exams = Exam::with('tests')->orderBy('name')->get();
 
         return view('admin.skills.create', compact('exams'));
@@ -93,7 +97,7 @@ class SkillController extends Controller
 
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
-        
+
         // Ensure is_online is boolean
         $validated['is_online'] = $request->has('is_online') ? true : false;
 
@@ -119,13 +123,32 @@ class SkillController extends Controller
     public function edit(ExamSkill $skill)
     {
         $exams = Exam::with('tests')->orderBy('name')->get();
+
+        // mục đích để lấy ra type của exam
+        $exam_id = ExamTest::where('id', $skill->exam_test_id)->value('exam_id');
+        $examFirst = $exams->firstWhere('id', $exam_id);
         $skill->load([
             'sections.questionGroups.questions',
-            'sections.questions', // Load direct questions
-            'examTest.exam'
+            'sections.questions',
+            'examTest.exam',
+            'sections.filters'
         ]);
 
-        return view('admin.skills.edit', compact('skill', 'exams'));
+        $skillFilters = ExamFilter::where('type', 'skill')
+        ->where('exam_type', $examFirst->type)
+        ->whereNull('parent_id')
+        ->with([
+            'children' => function ($q) {
+                $q->where('type', 'group')
+                  ->with(['children' => function ($qq) {
+                      $qq->where('type', 'value');
+                  }]);
+            }
+        ])
+        ->get()
+        ->keyBy(fn ($item) => Str::slug($item->name));
+
+        return view('admin.skills.edit', compact('skill', 'exams', 'skillFilters'));
     }
 
     /**
@@ -180,6 +203,10 @@ class SkillController extends Controller
             'sections.*.direct_questions.*.point' => 'nullable|numeric|min:0',
             'sections.*.direct_questions.*.feedback' => 'nullable|string',
             'sections.*.direct_questions.*.hint' => 'nullable|string',
+
+            // dữ liệu filter theo kỹ năng
+            'sections.*.exam_filters' => 'nullable|array',
+            'sections.*.exam_filters.*' => 'nullable',
         ]);
         // Log validated data
         Log::info('Validated Data:', $validated);
@@ -205,14 +232,13 @@ class SkillController extends Controller
 
         // Ensure is_active is always boolean (true or false)
         $validated['is_active'] = $request->has('is_active') ? true : false;
-        
+
         // Ensure is_online is boolean
         $validated['is_online'] = $request->has('is_online') ? true : false;
 
         // Extract sections data before updating skill
         $sectionsData = $validated['sections'] ?? [];
         unset($validated['sections']);
-
         // Update skill basic info
         $skill->update($validated);
 
@@ -228,6 +254,7 @@ class SkillController extends Controller
      */
     private function processSections(ExamSkill $skill, array $sectionsData, Request $request)
     {
+
         $existingSectionIds = [];
 
         foreach ($sectionsData as $index => $sectionData) {
@@ -242,12 +269,12 @@ class SkillController extends Controller
             // Handle audio file upload
             if ($request->hasFile("sections.{$index}.audio_file")) {
                 $audioFile = $request->file("sections.{$index}.audio_file");
-                
+
                 // Delete old audio file if exists
                 if ($existingSection && isset($existingSection->metadata['audio_file'])) {
                     Storage::disk('public')->delete($existingSection->metadata['audio_file']);
                 }
-                
+
                 $audioPath = $audioFile->store('sections/audio', 'public');
                 $metadata['audio_file'] = $audioPath;
             } else {
@@ -264,13 +291,13 @@ class SkillController extends Controller
                 'content' => $sectionData['content'] ?? '',
                 'feedback' => $sectionData['feedback'] ?? '',
                 'content_format' => $sectionData['content_format'] ?? 'text',
-                'ui_layer' => isset($sectionData['ui_layer']) && in_array($sectionData['ui_layer'], ['1', '2']) 
-                    ? $sectionData['ui_layer'] 
+                'ui_layer' => isset($sectionData['ui_layer']) && in_array($sectionData['ui_layer'], ['1', '2'])
+                    ? $sectionData['ui_layer']
                     : null,
                 'metadata' => $metadata,
                 'is_active' => true,
             ];
-
+            // dd(2);
             // Update or create section
             if ($sectionId) {
                 $section = $skill->sections()->findOrFail($sectionId);
@@ -279,6 +306,14 @@ class SkillController extends Controller
             } else {
                 $section = $skill->sections()->create($sectionInfo);
                 $existingSectionIds[] = $section->id;
+            }
+
+            $existingSectionIds[] = $section->id;
+            if (array_key_exists('exam_filters', $sectionData)) {
+                $this->syncSectionFilters(
+                    $section,
+                    $sectionData['exam_filters'] ?? []
+                );
             }
 
             // Process question groups
@@ -309,7 +344,7 @@ class SkillController extends Controller
                 'split_questions_side_by_side' => ($groupData['split_questions_side_by_side'] ?? '0') === '1',
                 'allow_drag_drop' => ($groupData['allow_drag_drop'] ?? '0') === '1',
             ];
-            
+
             // Add number_of_options for table_selection type
             if (isset($groupData['number_of_options'])) {
                 $options['number_of_options'] = (int) $groupData['number_of_options'];
@@ -454,6 +489,25 @@ class SkillController extends Controller
         // Delete direct questions that are not in the request (only direct questions, not group questions)
         $section->questions()->whereNull('exam_question_group_id')->whereNotIn('id', $existingQuestionIds)->delete();
     }
+
+    private function syncSectionFilters(ExamSection $section, array $filters)
+    {
+        $filterIds = [];
+
+        foreach ($filters as $filterValue) {
+            if (is_array($filterValue)) {
+                foreach ($filterValue as $id) {
+                    $filterIds[] = $id;
+                }
+            } else {
+                $filterIds[] = $filterValue;
+            }
+        }
+
+        // xoá trùng + sync
+        $section->filters()->sync(array_unique($filterIds));
+    }
+
 
     /**
      * Remove the specified skill.

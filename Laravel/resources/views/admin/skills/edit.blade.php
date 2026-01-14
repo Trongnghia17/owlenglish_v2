@@ -287,12 +287,13 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Sections & Questions Builder</h5>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-action="add-section">
-                                    <i class="bi bi-plus-circle me-1"></i>Add Section
+                                    <i class="bi bi-plus-circle me-1"></i>Add Section 2
                                 </button>
                             </div>
                         </div>
                         <div class="card-body">
                             <div id="sectionsContainer" class="skill-type-{{ $skill->skill_type }}">
+
                                 @foreach($skill->sections as $sectionIndex => $section)
                                     <div id="section-{{ $sectionIndex }}" class="section-item card mb-3"
                                         data-section-index="{{ $sectionIndex }}">
@@ -310,12 +311,46 @@
                                     data-action="delete-section">
                                     Delete Section
                                 </button>
+
+
                             </div>
                         </div>
                         <div class="card-body section-content collapse show"
                             id="section-body-{{ $sectionIndex }}">
                             <input type="hidden" name="sections[{{ $sectionIndex }}][id]"
-                                value="{{ $section->id }}">                                            <!-- Section Title -->
+                                value="{{ $section->id }}">    
+                                
+                                @php
+                                    $selectedFilterIds = $section->filters->pluck('id')->toArray();
+                                @endphp
+
+                                @php
+                                $skillSlug = Str::slug($skill->skill_type);
+                                $skillFilter = $skillFilters[$skillSlug] ?? null;
+                                @endphp
+
+                                @if($skillFilter)
+                                @foreach($skillFilter->children as $group)
+                                    <div class="mb-3">
+                                     <strong>{{ $group->name }}</strong>
+                                        @foreach($group->children as $value)
+                                    <div class="form-check">
+                                     <input
+                                     class="form-check-input exam-filter-input"
+                                    type="checkbox"
+                                    data-skill="{{ $skillSlug }}"
+                                    data-group="old_section_{{ $sectionIndex }}{{ $group->id }}"
+                                    value="{{ $value->id }}"
+                                    name="sections[{{ $sectionIndex }}][exam_filters][]"
+                                    {{ in_array($value->id, $selectedFilterIds) ? 'checked' : '' }}>
+                                    <label class="form-check-label">
+                                        {{ $value->name }}
+                                    </label>
+                                    </div>
+                                    @endforeach
+                                    </div>
+                                    @endforeach
+                                    @endif<!-- Section Title -->
                                             <div class="mb-3">
                                                 <label class="form-label">Section Title</label>
                                                 <input type="text" class="form-control"
@@ -1092,9 +1127,9 @@
                 function addSection() {
                     const container = document.getElementById('sectionsContainer');
                     const isSpeakingOrWriting = (skillType === 'speaking' || skillType === 'writing');
-
                     // Determine which questions container to show
                     const questionsContainerHTML = isSpeakingOrWriting ? `
+                    
                         <div class="direct-questions-container mt-4">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6>Questions</h6>
@@ -1130,6 +1165,36 @@
                             </div>
                         </div>
                         <div class="card-body section-content collapse show" id="section-new-${sectionIndex}">
+
+                                    <div id="exam-filter-sidebar" data-skill="{{ $skill->skill_type ?? '' }}">
+                            @foreach($skillFilters as $skillSlug => $filterItem)
+                        <div class="filter-skill {{ $skillSlug }} {{ $skillSlug != ($skill->skill_type ?? '') ? 'd-none' : '' }}"
+                            data-skill="{{ $skill->skill_type  }}">
+                                @foreach($filterItem->children as $group)
+                                <div class="filter-group mb-3"
+                                 data-group-type="{{ Str::slug($group->name) }}"> <strong class="d-block mb-2">{{ $group->name }}</strong>
+                                    @foreach($group->children as $value)
+                                        <div class="form-check">
+                                            <input
+                                            class="form-check-input exam-filter-input"
+                                            type="checkbox"
+                                            data-skill="{{ $skillSlug }}"
+                                            data-group="new_${sectionIndex}{{ $group->id }}"
+                                            value="{{ $value->id }}"
+                                            name="sections[${sectionIndex}][exam_filters][]"
+                                            >
+                                        <label class="form-check-label">
+                                        {{ $value->name }}
+                                        </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                             @endforeach
+
+                             </div>
+                                @endforeach
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Section Title</label>
                                 <input type="text" class="form-control" name="sections[${sectionIndex}][title]" placeholder="Enter section title">
@@ -1570,5 +1635,39 @@
 
             })();
         </script>
+
+        <script>
+document.addEventListener('change', function (e) {
+    if (!e.target.classList.contains('exam-filter-input')) return;
+
+    const input = e.target;
+    const skill = input.dataset.skill;
+    const groupId = input.dataset.group;
+
+    const allInputs = document.querySelectorAll(
+        `.exam-filter-input[data-skill="${skill}"]`
+    );
+
+    if (skill === 'writing' || skill === 'speaking') {
+        // ❌ chỉ được chọn 1
+        allInputs.forEach(i => {
+            if (i !== input) i.checked = false;
+        });
+        return;
+    }
+
+    // reading / listening
+    // ✅ mỗi group chỉ được chọn 1
+    allInputs.forEach(i => {
+        if (
+            i !== input &&
+            i.dataset.group === groupId
+        ) {
+            i.checked = false;
+        }
+    });
+});
+</script>
+
     @endpush
 @endsection

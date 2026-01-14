@@ -42,7 +42,8 @@ export default function Topbar() {
         <img className="topbar__logo" src={logo} alt="owl-logo" />
         <nav className="topbar__nav">
           <NavLink to="/" end className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Trang chủ</NavLink>
-          <NavLink to="/de-thi-online" className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Đề thi online</NavLink>
+          <NavLink to="/de-thi/ielts" className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Đề thi IELTS</NavLink>
+          <NavLink to="/de-thi/toeic" className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Đề thi TOEIC</NavLink>
           <NavLink to="/bo-de/ielts" className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Bộ đề IELTS</NavLink>
           <NavLink to="/bo-de/toeic" className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Bộ đề TOEIC</NavLink>
           <NavLink target="_blank" to="https://owlenglish.vn/" className='topbar__link'>Về Owl</NavLink>

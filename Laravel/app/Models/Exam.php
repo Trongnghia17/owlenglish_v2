@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Exam extends Model
 {
     use SoftDeletes;
 
     protected $fillable = [
         'name',
+        'exam_collection_id',
+        'level',
         'type',
         'description',
         'image',
@@ -57,5 +59,10 @@ class Exam extends Model
     public function examTests()
     {
         return $this->hasMany(ExamTest::class, 'exam_id');
+    }
+
+    public function collections(): BelongsTo
+    {
+        return $this->belongsTo(ExamCollection::class, 'exam_collection_id');
     }
 }

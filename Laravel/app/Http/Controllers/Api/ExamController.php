@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam;
+use App\Models\ExamSection;
 use App\Models\ExamSkill;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -151,6 +152,111 @@ class ExamController extends Controller
                 'skill_type' => $skill->skill_type,
                 'sections' => $sections, // Danh sách Sections đã được lọc
             ]
+        ]);
+    }
+
+    public function getExamCollections(Request $request): JsonResponse
+    {
+        $query = Exam::query()->where('is_active', 1)->with('collections');
+
+        // 🔹 Lọc theo type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // 🔹 Lọc theo collections (SIDEBAR + TOP dùng chung)
+        if ($request->filled('collectionIds')) {
+            $collectionIds = is_array($request->collectionIds)
+                ? $request->collectionIds
+                : explode(',', $request->collectionIds);
+
+            $query->whereHas('collections', function ($q) use ($collectionIds) {
+                $q->whereIn('exam_collections.id', $collectionIds);
+            });
+        }
+
+        // 🔹 Lọc theo level (Dễ / Vừa / Khó)
+        if ($request->filled('level')) {
+            $query->where('level', $request->level);
+        }
+
+        // 🔹 Active
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        // 🔹 Search
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $exams = $query
+            ->orderBy('created_at', 'desc')
+            ->paginate(3)
+            ->appends($request->all());
+
+        return response()->json([
+            'success' => true,
+            'data' => $exams
+        ]);
+    }
+
+    public function getSectionFilters(Request $request): JsonResponse
+    {
+        $type          = $request->get('type');            // ielts / toeic
+        $filterIds     = (array) $request->get('filters'); // exam_filter ids
+        $collectionIds = (array) $request->get('collectionIds');
+        $level         = $request->get('level');            // easy|medium|hard
+        $search        = $request->get('search');
+        $perPage       = 18;
+        return response()->json($request->all());
+
+        $query = ExamSection::query()
+            ->with([
+                'skill',
+                'exam',
+                'exam.collection',
+                'filters'
+            ])
+            ->whereHas('exam', function ($q) use ($type) {
+                $q->where('exam_type', $type);
+            });
+
+        /** 🔹 Lọc theo exam_filters */
+        if (!empty($filterIds)) {
+            $query->whereHas('filters', function ($q) use ($filterIds) {
+                $q->whereIn('exam_filters.id', $filterIds);
+            });
+        }
+
+        /** 🔹 Lọc theo collection */
+        if (!empty($collectionIds)) {
+            $query->whereHas('exam', function ($q) use ($collectionIds) {
+                $q->whereIn('collection_id', $collectionIds);
+            });
+        }
+
+        /** 🔹 Lọc theo level */
+        if ($level && $level !== 'all') {
+            $query->where('level', $level);
+        }
+
+        /** 🔹 Search */
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('exam', function ($ex) use ($search) {
+                        $ex->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        /** 🔹 Sort */
+        $query->orderByDesc('created_at');
+
+        return response()->json([
+            'success' => true,
+            'data' => $query->paginate($perPage),
         ]);
     }
 }

@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="createExamModalLabel">
+                <h5 class="modal-title text-white" id="createExamModalLabel">
                     <i class="bi bi-plus-circle me-2"></i>Thêm bộ đề thi mới
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
@@ -53,7 +53,8 @@
                         <label for="type" class="form-label fw-semibold">
                             Loại <span class="text-danger">*</span>
                         </label>
-                        <select class="form-select @error('type') is-invalid @enderror" id="type" name="type" required>
+                        <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
+                            required>
                             <option value="">-- Chọn loại --</option>
                             <option value="ielts" {{ old('type') == 'ielts' ? 'selected' : '' }}>IELTS</option>
                             <option value="toeic" {{ old('type') == 'toeic' ? 'selected' : '' }}>TOEIC</option>
@@ -63,14 +64,101 @@
                         @enderror
                     </div>
 
+                    <!-- Collection -->
+                    <div class="mb-3">
+                        <label for="collection" class="form-label fw-semibold">
+                            Bộ đề <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select @error('exam_collection_id') is-invalid @enderror" id="collection"
+                            name="exam_collection_id" required>
+                            <option value="">-- Chọn bộ đề --</option>
+                            @foreach ($collections as $collection)
+                                <option value="{{ $collection->id }}" data-type="{{ $collection->type }}"
+                                    {{ old('exam_collection_id') == $collection->id ? 'selected' : '' }}>
+                                    {{ $collection->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        @error('collection')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const typeSelect = document.getElementById('type');
+                            const collectionSelect = document.getElementById('collection');
+                            const options = Array.from(collectionSelect.options);
+
+                            function filterCollections(type) {
+                                collectionSelect.innerHTML = '';
+                                collectionSelect.appendChild(options[0]);
+
+                                options.forEach(option => {
+                                    if (!option.dataset.type) return;
+
+                                    if (option.dataset.type === type) {
+                                        collectionSelect.appendChild(option);
+                                    }
+                                });
+
+                                collectionSelect.value = '';
+                            }
+
+                            typeSelect.addEventListener('change', function() {
+                                const type = this.value;
+                                if (type) {
+                                    filterCollections(type);
+                                } else {
+                                    // reset lại tất cả
+                                    collectionSelect.innerHTML = '';
+                                    options.forEach(opt => collectionSelect.appendChild(opt));
+                                }
+                            });
+                            if (typeSelect.value) {
+                                filterCollections(typeSelect.value);
+                            }
+                        });
+                    </script>
+
+                    <!-- Level -->
+                    <div class="mb-3">
+                        <label for="level" class="form-label fw-semibold">
+                            Mức độ <span class="text-danger">*</span>
+                        </label>
+
+                        <select class="form-select @error('level') is-invalid @enderror" id="level" name="level"
+                            required>
+                            <option value="easy"
+                                {{ old('level', $exam->level ?? 'medium') == 'easy' ? 'selected' : '' }}>
+                                Dễ
+                            </option>
+                            <option value="medium"
+                                {{ old('level', $exam->level ?? 'medium') == 'medium' ? 'selected' : '' }}>
+                                Vừa
+                            </option>
+                            <option value="hard"
+                                {{ old('level', $exam->level ?? 'medium') == 'hard' ? 'selected' : '' }}>
+                                Khó
+                            </option>
+                        </select>
+
+                        @error('level')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+
+
                     <!-- Description -->
                     <div class="mb-3">
                         <label for="modal-description" class="form-label fw-semibold">
                             Mô tả
                         </label>
                         <div id="modal-description-editor" class="border rounded"></div>
-                        <textarea class="form-control d-none @error('description') is-invalid @enderror"
-                            id="modal-description" name="description">{{ old('description') }}</textarea>
+                        <textarea class="form-control d-none @error('description') is-invalid @enderror" id="modal-description"
+                            name="description">{{ old('description') }}</textarea>
                         @error('description')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
