@@ -38,6 +38,8 @@ export default function TestLayout({
   const [showNoteButton, setShowNoteButton] = useState(false);
   const [noteButtonPosition, setNoteButtonPosition] = useState({ x: 0, y: 0 });
   const [notesLoading, setNotesLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
 
   // Use external fontSize if provided, otherwise use internal state
   const fontSize = externalFontSize !== undefined ? externalFontSize : internalFontSize;
@@ -174,14 +176,29 @@ export default function TestLayout({
     setShowNotePopup(true);
   };
 
-  const handleDeleteNote = async (noteId) => {
+  const handleDeleteClick = (note, event) => {
+    event.stopPropagation();
+    setNoteToDelete(note);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!noteToDelete) return;
+    
     try {
-      await deleteNote(noteId);
-      setNotes(notes.filter(note => note.id !== noteId));
+      await deleteNote(noteToDelete.id);
+      setNotes(notes.filter(note => note.id !== noteToDelete.id));
+      setShowDeleteConfirm(false);
+      setNoteToDelete(null);
     } catch (error) {
       console.error('Error deleting note:', error);
       alert('Không thể xóa ghi chú. Vui lòng thử lại.');
     }
+  };
+
+  const cancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setNoteToDelete(null);
   };
 
   // Text selection handler
@@ -606,10 +623,7 @@ export default function TestLayout({
                         <h4>Note {index + 1}</h4>
                         <button
                           className="test-layout__notes-item-delete-icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteNote(note.id);
-                          }}
+                          onClick={(e) => handleDeleteClick(note, e)}
                           title="Xóa ghi chú"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -696,6 +710,52 @@ export default function TestLayout({
             </div>
           </div>
         </>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="test-layout__modal-overlay" onClick={cancelDelete}>
+          <div 
+            className="test-layout__modal-content test-layout__submit-modal" 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              display: 'flex',
+              
+              padding: '24px',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px',
+              borderRadius: '5px',
+              border: '1px solid #E7E7E7',
+              background: '#FFF',
+              boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.10)'
+            }}
+          >
+            <div className="test-layout__submit-modal-body">
+              <h3 className="test-layout__submit-modal-title">Xóa note</h3>
+              <p className="test-layout__submit-modal-text">
+                Bạn có chắc chắn muốn xóa Note {notes.findIndex(n => n.id === noteToDelete?.id) + 1}
+              </p>
+            </div>
+
+            <div className="test-layout__submit-modal-actions" style={{ flexDirection: 'row', gap: '12px' }}>
+              <button
+                className="test-layout__submit-modal-button test-layout__submit-modal-button--secondary"
+                onClick={cancelDelete}
+                style={{ flex: 1 }}
+              >
+                Hủy
+              </button>
+              <button
+                className="test-layout__submit-modal-button test-layout__submit-modal-button--primary"
+                onClick={confirmDelete}
+                style={{ flex: 1, backgroundColor: '#EF4444' }}
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
