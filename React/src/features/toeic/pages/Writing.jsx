@@ -28,16 +28,20 @@ export default function WritingToeic() {
 
     const [fontSize, setFontSize] = useState("normal");
 
-    const [writingAnswer, setWritingAnswer] = useState("");
-    const [wordCount, setWordCount] = useState(0);
+    // Lưu câu trả lời cho từng part
+    const [writingAnswers, setWritingAnswers] = useState({});
 
-    const handleWritingChange = (e) => {
-        const text = e.target.value;
-        setWritingAnswer(text);
+    const handleWritingChange = (partNumber, text) => {
+        setWritingAnswers(prev => ({
+            ...prev,
+            [partNumber]: text
+        }));
+    };
 
-        // Đếm từ: loại khoảng trắng thừa
-        const count = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
-        setWordCount(count);
+    // Tính số từ cho part hiện tại
+    const getCurrentWordCount = () => {
+        const text = writingAnswers[currentPartTab] || "";
+        return text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
     };
 
     const goNextPart = () => {
@@ -59,38 +63,37 @@ export default function WritingToeic() {
         const isFirst = currentPartTab === 1;
         const isLast = currentPartTab === parts.length;
 
-        return (
-            <div className="wt-nav-btns">
+        // Câu cuối → chỉ hiện nút "Hoàn thành"
+        if (isLast) {
+            return (
+                <div className="wt-nav-btns wt-nav-btns-center">
+                    <button className="btn-complete" onClick={handleSubmit}>
+                        Hoàn thành
+                    </button>
+                </div>
+            );
+        }
 
-                {/* Part đầu → chỉ hiện Next */}
-                {isFirst && (
+        // Câu đầu → chỉ hiện "Câu tiếp"
+        if (isFirst) {
+            return (
+                <div className="wt-nav-btns wt-nav-btns-right">
                     <button className="btn-next" onClick={goNextPart}>
                         Câu tiếp
                     </button>
-                )}
+                </div>
+            );
+        }
 
-                {/* Part giữa → hiện cả Prev + Next */}
-                {!isFirst && !isLast && (
-                    <>
-                        <div className='wt-nav-btn-two'>
-                            <button className="btn-prev" onClick={goPrevPart}>
-                            Câu trước
-                        </button>
-
-                        <button className="btn-next" onClick={goNextPart}>
-                            Câu tiếp
-                        </button>
-                        </div>
-                    </>
-                )}
-
-                {/* Part cuối → hiện nút Continue (disable) */}
-                {isLast && (
-                    <button className="btn-disabled">
-                        Tiếp tục
-                    </button>
-                )}
-
+        // Câu giữa → hiện cả "Câu trước" + "Câu tiếp"
+        return (
+            <div className="wt-nav-btns wt-nav-btns-two">
+                <button className="btn-prev" onClick={goPrevPart}>
+                    Câu trước
+                </button>
+                <button className="btn-next" onClick={goNextPart}>
+                    Câu tiếp
+                </button>
             </div>
         );
     };
@@ -104,18 +107,23 @@ export default function WritingToeic() {
                     if (response.data.success) {
                         const section = response.data.data;
                         setSectionData(section);
-                        setPassages([{
-                            id: section.id,
-                            part: 1,
-                            title: section.title || 'Writing Passage',
-                            subtitle: '',
-                            content: section.content || ''
-                        }]);
-                        setParts([{ id: section.id, part: 1, title: `Part 1` }]);
-
+                        
                         const allGroups = [];
+                        const allPassages = [];
+                        const allParts = [];
                         let questionNumber = 1;
-                        if (section.question_groups) {
+
+                        // Xử lý khi có question_groups
+                        if (section.question_groups && section.question_groups.length > 0) {
+                            setPassages([{
+                                id: section.id,
+                                part: 1,
+                                title: section.title || 'Writing Question',
+                                subtitle: '',
+                                content: section.content || ''
+                            }]);
+                            setParts([{ id: section.id, part: 1, title: `Part 1` }]);
+
                             section.question_groups.forEach(group => {
                                 const questions = [];
                                 if (group.questions) {
@@ -143,6 +151,49 @@ export default function WritingToeic() {
                                 });
                             });
                         }
+                        // Xử lý khi chỉ có questions trực tiếp (không có question_groups)
+                        else if (section.questions && section.questions.length > 0) {
+                            // Mỗi question là một màn hình riêng (nhưng không gọi là Part)
+                            section.questions.forEach((question, index) => {
+                                const questionNumber = index + 1;
+                                
+                                allPassages.push({
+                                    id: question.id,
+                                    part: questionNumber,
+                                    title: `Writing Question ${questionNumber}`,
+                                    subtitle: '',
+                                    content: question.content || '' // Hiển thị directions
+                                });
+
+                                allParts.push({
+                                    id: question.id,
+                                    part: questionNumber,
+                                    title: `Question ${questionNumber}` // Hiển thị "Question 1", "Question 2" thay vì "Part"
+                                });
+
+                                // Tạo group cho question để lưu answer
+                                allGroups.push({
+                                    id: question.id,
+                                    part: questionNumber,
+                                    type: 'ESSAY',
+                                    instructions: '',
+                                    groupContent: '',
+                                    options: [],
+                                    questions: [{
+                                        id: question.id,
+                                        number: questionNumber,
+                                        content: '',
+                                        correctAnswer: question.answer_content
+                                    }],
+                                    startNumber: questionNumber,
+                                    endNumber: questionNumber
+                                });
+                            });
+
+                            setPassages(allPassages);
+                            setParts(allParts);
+                        }
+
                         setQuestionGroups(allGroups);
                     }
                 } else if (skillId) {
@@ -158,18 +209,19 @@ export default function WritingToeic() {
 
                         if (skill.sections && skill.sections.length > 0) {
                             skill.sections.forEach((section, sectionIndex) => {
-                                const partNumber = sectionIndex + 1;
-                                const groupStartIndex = allGroups.length;
+                                // Xử lý nếu section có question_groups
+                                if (section.question_groups && section.question_groups.length > 0) {
+                                    const partNumber = sectionIndex + 1;
+                                    const groupStartIndex = allGroups.length;
 
-                                allPassages.push({
-                                    id: section.id,
-                                    part: partNumber,
-                                    title: section.title || `Writing Part ${partNumber}`,
-                                    subtitle: '',
-                                    content: section.content || ''
-                                });
+                                    allPassages.push({
+                                        id: section.id,
+                                        part: partNumber,
+                                        title: section.title || `Writing Part ${partNumber}`,
+                                        subtitle: '',
+                                        content: section.content || ''
+                                    });
 
-                                if (section.question_groups) {
                                     section.question_groups.forEach(group => {
                                         const questions = [];
                                         if (group.questions) {
@@ -196,15 +248,54 @@ export default function WritingToeic() {
                                             endNumber: questions[questions.length - 1]?.number || questionNumber
                                         });
                                     });
-                                }
 
-                                const firstQuestionNum = allGroups[groupStartIndex]?.startNumber || questionNumber;
-                                const lastQuestionNum = allGroups[allGroups.length - 1]?.endNumber || questionNumber;
-                                allParts.push({
-                                    id: section.id,
-                                    part: partNumber,
-                                    title: `Part ${partNumber} (${firstQuestionNum}-${lastQuestionNum})`
-                                });
+                                    const firstQuestionNum = allGroups[groupStartIndex]?.startNumber || questionNumber;
+                                    const lastQuestionNum = allGroups[allGroups.length - 1]?.endNumber || questionNumber;
+                                    allParts.push({
+                                        id: section.id,
+                                        part: partNumber,
+                                        title: `Part ${partNumber} (${firstQuestionNum}-${lastQuestionNum})`
+                                    });
+                                }
+                                // Xử lý nếu section chỉ có questions (không có question_groups)
+                                else if (section.questions && section.questions.length > 0) {
+                                    section.questions.forEach((question, qIndex) => {
+                                        const partNumber = questionNumber;
+
+                                        allPassages.push({
+                                            id: question.id,
+                                            part: partNumber,
+                                            title: `Writing Question ${partNumber}`,
+                                            subtitle: '',
+                                            content: question.content || ''
+                                        });
+
+                                        allParts.push({
+                                            id: question.id,
+                                            part: partNumber,
+                                            title: `Question ${partNumber}`
+                                        });
+
+                                        allGroups.push({
+                                            id: question.id,
+                                            part: partNumber,
+                                            type: 'ESSAY',
+                                            instructions: '',
+                                            groupContent: '',
+                                            options: [],
+                                            questions: [{
+                                                id: question.id,
+                                                number: questionNumber,
+                                                content: '',
+                                                correctAnswer: question.answer_content
+                                            }],
+                                            startNumber: questionNumber,
+                                            endNumber: questionNumber
+                                        });
+
+                                        questionNumber++;
+                                    });
+                                }
                             });
 
                             setPassages(allPassages);
@@ -313,10 +404,25 @@ export default function WritingToeic() {
             });
 
             // Chuẩn bị dữ liệu câu trả lời
-            const answersArray = allQuestionIds.map(questionId => ({
-                question_id: questionId,
-                answer: answers[questionId] || null
-            }));
+            const answersArray = allQuestionIds.map(questionId => {
+                // Tìm part number của question này
+                let answerText = answers[questionId] || null;
+                
+                // Nếu là ESSAY question, lấy từ writingAnswers
+                questionGroups.forEach(group => {
+                    if (group.type === 'ESSAY' && group.questions) {
+                        const question = group.questions.find(q => q.id === questionId);
+                        if (question && writingAnswers[group.part]) {
+                            answerText = writingAnswers[group.part];
+                        }
+                    }
+                });
+
+                return {
+                    question_id: questionId,
+                    answer: answerText
+                };
+            });
 
             const submitData = {
                 skill_id: skillId ? parseInt(skillId) : null,
@@ -326,7 +432,7 @@ export default function WritingToeic() {
                 all_question_ids: allQuestionIds,
                 time_spent: timeSpent,
                 total_questions: allQuestionIds.length,
-                answered_questions: Object.keys(answers).length
+                answered_questions: answersArray.filter(a => a.answer && a.answer.trim() !== '').length
             };
 
             console.log('Submitting:', submitData);
@@ -487,53 +593,38 @@ export default function WritingToeic() {
             >
             <div className='lt-grid-main'>
                 <div className="lt-grid">
-                    <aside className="lt-col lt-col--left">
-                    </aside>
-
-                    <main className="lt-col lt-col--center wt-col-center">
-                        <div className="lt-passage">
-                            <div className="lt-passage__header">
-                                <h2 className="lt-passage__title">{currentPassage.title}</h2>
-                                {currentPassage.subtitle && <p className="lt-passage__subtitle">{currentPassage.subtitle}</p>}
-                            </div>
-                            <div className="lt-passage__content" dangerouslySetInnerHTML={{ __html: currentPassage.content }} />
-                        </div>
-
-                        <div className="lt-questions">
-                            {currentPartGroups.map((group) => (
-                                <div key={group.id} id={`question-group-${group.id}`} className="lt-question-group">
-                                    {group.groupContent && !(/\{\{\s*[a-zA-Z0-9]+\s*\}\}/g.test(group.groupContent)) && (
-                                        <div className="lt-group__content" dangerouslySetInnerHTML={{ __html: group.groupContent }} />
-                                    )}
-
-                                    <div className="lt-questions-list">
-                                        {renderQuestionsByType(group)}
-                                    </div>
+                    <main className="lt-col lt-col--left">
+                        <div className="lt-left-box">
+                            <div className="lt-passage">
+                                <div className="lt-passage__header">
+                                    <h2 className="lt-passage__title">{currentPassage.title}</h2>
+                                    {currentPassage.subtitle && <p className="lt-passage__subtitle">{currentPassage.subtitle}</p>}
                                 </div>
-                            ))}
-                        </div>
+                                <div className="lt-passage__content" dangerouslySetInnerHTML={{ __html: currentPassage.content }} />
+                            </div>
 
+                           
+                        </div>
+                    </main>
+
+                    <aside className="lt-col lt-col--right">
                         <div className="lt-writing-box-answer">
-                            <h4>Answer</h4>
+                            <h4>Your answer</h4>
 
                             <textarea
                                 className=''
                                 placeholder="Your answer"
-                                value={writingAnswer}
-                                onChange={handleWritingChange}
+                                value={writingAnswers[currentPartTab] || ""}
+                                onChange={(e) => handleWritingChange(currentPartTab, e.target.value)}
                             ></textarea>
 
+                        <div className="wt-answer-footer">
                             <div className="lt-word-count">
-                                Số từ: <span>{wordCount}</span>/150
+                                Số từ: <span>{getCurrentWordCount()}</span>/150
                             </div>
-                        </div>
-                        <div className="lt-part-content">
+                              </div>
                             {renderNavigationButtons()}
                         </div>
-
-                    </main>
-
-                    <aside className="lt-col lt-col--right">
                     </aside>
                 </div>
             </div>
@@ -547,7 +638,7 @@ export default function WritingToeic() {
                                 className={`lt-part-tab ${currentPartTab === p.part ? 'active' : ''}`}
                                 onClick={() => setCurrentPartTab(p.part)}
                             >
-                                Part {p.part}
+                                {p.part}
                             </button>
                         ))}
                     </div>
