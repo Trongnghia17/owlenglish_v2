@@ -343,8 +343,8 @@ export default function ExamPackage() {
                     />
                     <div className="online-exam-library__card-content">
                       <h3 className="online-exam-library__card-title">{skill.name}</h3>
-                      <div className="online-exam-library__card-subtitle">
-                        <strong>Tiến trình:</strong> <span> TOEIC Reading</span>
+                      <div style={{ marginBottom:'15px' }} className="online-exam-library__card-subtitle">
+                        <strong>Tiến trình:</strong> <span> <span className="text-up-text">{examType} </span></span>
                       </div>
                       <div className="online-exam-library__card-footer">
                         <button

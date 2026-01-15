@@ -3,13 +3,14 @@
   height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: center; 
+  justify-content: center;
   background-image: url('../../../assets/images/banner-login.png');
-  background-size: cover; 
-  background-position: center; 
-  background-repeat: no-repeat; 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
-.register-wrapper{
+
+.register-wrapper {
   background-image: url('../../../assets/images/banner-register.png');
 }
 
@@ -59,7 +60,7 @@
 /* Button chính */
 .login-primaryBtn {
   height: 55px;
-  width: 150px;
+  width: 100%;
   border: none;
   border-radius: 30px;
   background: #045CCE;
@@ -69,20 +70,43 @@
   font-size: 15px;
   margin-bottom: 10px;
 }
-.logo-div{
+
+.logo-div {
   display: flex;
   justify-content: center;
 }
+
 .logo {
   width: 158px;
   height: 41px;
 }
-.modal-register .ant-modal-title{
+
+.modal-register {
+  width: 520px !important;
+  background: #FFFFFFCC;
+  border: 1px solid;
+  border-image-source: linear-gradient(151.14deg, #A9CFFF 1.46%, #69ABFF 101.67%);
+  backdrop-filter: blur(2px);
+  border-radius: 10px;
+  padding-bottom: 0 !important;
+  top: 30%;
+}
+.modal-register .ant-modal-header,
+.modal-register .ant-modal-content {
+  background: none !important;
+}
+
+.ant-modal-wrap {
+  background: rgba(0, 0, 0, 0.23);
+}
+
+.modal-register .ant-modal-title {
   text-align: center;
   font-size: 25px;
   margin-bottom: 15px;
 }
-.btn-select-register{
+
+.btn-select-register {
   width: 100%;
   height: 55px;
   border: none;
@@ -90,11 +114,15 @@
   border-radius: 5px;
   padding: 17px 35px;
   cursor: pointer;
-}
-.btn-select-register-email{
+  border-radius: 30px;
   background-color: #045CCE;
   color: #fff;
 }
+
+.btn-select-register-email {
+  margin-bottom: 5px;
+}
+
 .title-login {
   font-size: 40px;
   color: #1F2937;
@@ -154,10 +182,12 @@
   gap: 5px;
   font-size: 13px;
 }
-.save-password-text{
+
+.save-password-text {
   font-size: 13px;
   color: #045CCE;
 }
+
 .login-forgot a {
   color: #045CCE;
   font-weight: 600;
@@ -233,11 +263,13 @@
 .register-wrapper .title-login {
   margin-bottom: 5px;
 }
-.otp-action-group{
+
+.otp-action-group {
   display: flex;
   align-items: center;
   width: 100%;
 }
+
 .otp-submit {
   background: #045CCE;
   color: #fff;
@@ -247,6 +279,7 @@
   border: none;
   margin-top: 15px;
 }
+
 
 /* CSS cho tablet */
 @media (min-width: 768px) and (max-width: 992px) {

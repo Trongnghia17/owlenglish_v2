@@ -11,7 +11,7 @@ import './Login.css';
 export default function VerifyOtp() {
     const location = useLocation();
     const nav = useNavigate();
-    const { channel, destination, password, email } = location.state || {};
+    const { channel, destination, password, email , phone } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [otp, setOtp] = useState("");
     const handleVerify = async () => {
@@ -28,6 +28,7 @@ export default function VerifyOtp() {
                 otp: otp,
                 purpose: "register",
                 password,
+                phone,
             });
 
             toast.success("Xác thực thành công! Tài khoản đã được tạo.");
