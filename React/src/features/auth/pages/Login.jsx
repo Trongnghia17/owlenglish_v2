@@ -38,8 +38,9 @@ export default function Login() {
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Email không hợp lệ");
+    const phoneRegex = /^(0\d{9}|(\+84)\d{9})$/;
+    if (!emailRegex.test(email) && !phoneRegex.test(email)) {
+      toast.error("Email hoặc số điện thoại không hợp lệ");
       return;
     }
     if (!password.trim()) {
@@ -87,8 +88,8 @@ export default function Login() {
             <div className='login-input-container'>
               <input
                 className="login-input"
-                type="email"
-                placeholder="Email"
+                type="text"
+                placeholder="Email hoặc Số điện thoại"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
 

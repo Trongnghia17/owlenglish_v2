@@ -196,28 +196,39 @@ export default function OnlineExamLibrary() {
         : [...prev[filterType], value]
     }));
   };
-  const handleTakeExam = (examId) => {
-    navigate(`/bo-de/${examType}/${examId}`);
-  };
-
-  const getSkillImage = (skill) => {
-    if (skill.image) {
-      const image = skill.image;
-      if (image.startsWith('http')) {
-        return image;
-      }
-      return `${import.meta.env.VITE_API_BASE_URL}/storage/${image}`;
+  const handleTakeExam = ({ examId, sectionId, skillType }) => {
+    if (!examId || !sectionId || !skillType) return;
+    if (examType === 'ielts') {
+      navigate(
+        `/exam/section/${skillType}/${sectionId}/test/${skillType}`,
+        {
+          state: {
+            examId,
+            sectionId,
+            skillType,
+            examType,
+          },
+        }
+      );
+      return;
     }
-
-    const colors = {
-      reading: '3b82f6',
-      writing: '10b981',
-      listening: 'f59e0b',
-      speaking: 'ef4444',
-    };
-    const color = colors[skill.skill_type] || '6366f1';
-    return `https://via.placeholder.com/280x180/${color}/ffffff?text=${skill.skill_type || 'Skill'}`;
+    if (examType === 'toeic') {
+      navigate(
+        `/toeic-${skillType}/${skillType}/${sectionId}`,
+        {
+          state: {
+            examId,
+            sectionId,
+            skillType,
+            examType,
+          },
+        }
+      );
+    }
   };
+
+
+
 
 
 
@@ -407,7 +418,7 @@ export default function OnlineExamLibrary() {
                       className="online-exam-library__card"
                     >
                       <img
-                        src={getSkillImage(skill)}
+                        src={`${import.meta.env.VITE_API_BASE_URL}/storage/${skill.skill_image}`}
                         alt={skill.title}
                         className="online-exam-library__card-image"
                         onError={(e) => {
@@ -431,7 +442,11 @@ export default function OnlineExamLibrary() {
                             className="online-exam-library__card-button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleTakeExam(skill.id);
+                              handleTakeExam({
+                                examId: skill.exam_id,
+                                sectionId: skill.id,
+                                skillType: skill.skill?.skill_type,
+                              });
                             }}
                           >
                             Thi ngay

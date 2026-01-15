@@ -44,6 +44,10 @@ Route::prefix('otp')->group(function () {
     Route::post('/send', [AuthApiController::class, 'sendOtp']);
     // Xác thực OTP
     Route::post('/verify', [AuthApiController::class, 'verifyOtp']);
+    // Gửi OTP qua Zalo ZNS
+    Route::post('/send-zalo', [AuthApiController::class, 'sendOtpZalo']);
+
+     Route::get('/send-zalo-haha', [AuthApiController::class, 'testZaloToken']);
 });
 
 Route::post('/login', [AuthApiController::class, 'login']);

@@ -20,7 +20,10 @@ import ButtonLoading from '../../../components/common/ButtonLoading';
 export default function Register() {
   const nav = useNavigate();
   const { setToken, setUser } = useAuth();
-  const [loadingSend, setLoadingSend] = useState(false);
+  const [loading, setLoading] = useState({
+    email: false,
+    zalo_oa: false,
+  });
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -55,18 +58,31 @@ export default function Register() {
   };
 
   const handleSendCode = async (method) => {
-    setLoadingSend(true);
+    setLoading(prev => ({ ...prev, [method]: true }));
+
     try {
-      await api.post("api/otp/send", {
-        channel: method,
-        destination: method === "email" ? email : phone,
-        email,
-        purpose: "register",
-      });
+      if (method === "email") {
+        await api.post("api/otp/send", {
+          channel: "email",
+          destination: email,
+          email,
+          purpose: "register",
+        });
+      }
+
+      if (method === "zalo_oa") {
+        await api.post("api/otp/send-zalo", {
+          channel: "zalo_oa",
+          destination: phone,
+          phone,
+          purpose: "register",
+        });
+      }
 
       toast.success(
         `Mã xác nhận đã được gửi qua ${method === "email" ? "Email" : "Zalo OA"}`
       );
+
       setIsModalOpen(false);
 
       nav("/verify-otp", {
@@ -75,15 +91,15 @@ export default function Register() {
           password,
           channel: method,
           destination: method === "email" ? email : phone,
+          phone
         },
       });
     } catch (error) {
       toast.error(error?.response?.data?.message || "Gửi OTP thất bại");
     } finally {
-      setLoadingSend(false);
+      setLoading(prev => ({ ...prev, [method]: false }));
     }
   };
-
 
 
   const socialRedirect = (provider) => {
@@ -204,7 +220,7 @@ export default function Register() {
         </div>
       </div>
       <Modal
-        title="Chọn phương thức nhận mã xác nhận"
+        title="Chọn phương thức nhận OTP"
         open={isModalOpen}
         footer={null}
         onCancel={() => setIsModalOpen(false)}
@@ -216,13 +232,13 @@ export default function Register() {
             className="btn-select-register btn-select-register-email"
             block
             onClick={() => handleSendCode("email")}
-            loading={loadingSend}
+            loading={loading.email}
           >
             Gửi mã qua Email
           </ButtonLoading>
-          <Button type="default" className='btn-select-register' block onClick={() => handleSendCode("zalo_oa")}>
+          <ButtonLoading loading={loading.zalo_oa} type="default" className='btn-select-register btn-select-register-zalo' block onClick={() => handleSendCode("zalo_oa")}>
             Gửi mã qua Zalo OA
-          </Button>
+          </ButtonLoading>
         </Space>
       </Modal>
     </div>

@@ -265,10 +265,12 @@ class ExamController extends Controller
             ->appends($request->all());
 
         $sections->getCollection()->transform(function ($section) {
+            $exam = $section->skill?->examTest?->exam;
             $section->level = optional(
                 $section->skill?->examTest?->exam
             )->level;
-
+            $section->exam_id = optional($exam)->id;
+            $section->skill_image = $section->skill?->image;
             return $section;
         });
 

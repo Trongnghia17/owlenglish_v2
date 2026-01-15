@@ -8,6 +8,7 @@ use App\Models\OtpCode;
 use App\Models\User;
 use App\Models\UserContact;
 use App\Models\UserIdentity;
+use App\Services\ZaloZNSService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -18,6 +19,9 @@ use Laravel\Socialite\Facades\Socialite;
 use Jenssegers\Agent\Agent;
 use Stevebauman\Location\Facades\Location;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class AuthApiController extends Controller
 {
@@ -253,16 +257,67 @@ class AuthApiController extends Controller
         return response()->json(['message' => 'OTP đã được gửi'], 200);
     }
 
+    // Gửi OTP qua Zalo zns
+    public function sendOtpZalo(Request $request, ZaloZNSService $zaloService)
+    {
+        $request->validate([
+            'channel' => 'required|in:email,zalo_oa',
+            'destination' => 'required', // đây sẽ là số điện thoại
+            'purpose' => 'required',
+        ]);
+        $phone = $this->normalizePhone($request->phone);
+        $otp = random_int(100000, 999999);
+        OtpCode::create([
+            'channel' => $request->channel,
+            'destination' => $request->phone,
+            'code_hash' => Hash::make($otp),
+            'purpose' => $request->purpose,
+            'expires_at' => now()->addMinutes(5),
+        ]);
+        if ($request->channel === 'zalo_oa') {
+            $res = $zaloService->sendOtp($phone, $otp);
+
+            if (($res['error'] ?? 1) !== 0) {
+                return response()->json([
+                    'message' => 'Gửi Zalo OTP thất bại',
+                    'zalo_error' => $res,
+                ], 500);
+            }
+        }
+
+        return response()->json([
+            'message' => 'OTP đã được gửi',
+        ]);
+    }
+
+    protected function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/\D/', '', $phone);
+
+        if (str_starts_with($phone, '0')) {
+            return '84' . substr($phone, 1);
+        }
+
+        if (str_starts_with($phone, '84')) {
+            return $phone;
+        }
+
+        throw new Exception('Số điện thoại không hợp lệ');
+    }
+
+
     public function verifyOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'channel' => 'required|in:email,zalo_oa',
+            'destination' => 'required|string',
             'otp' => 'required|string',
             'password' => 'required|min:6',
             'purpose' => 'required|in:register,link_contact,reset_password',
         ]);
 
-        $otpRecord = OtpCode::where('destination', $request->email)
+        $otpRecord = OtpCode::where('channel', $request->channel)
+            ->where('destination', $request->destination)
             ->where('purpose', $request->purpose)
             ->whereNull('used_at')
             ->where('expires_at', '>', now())
@@ -270,47 +325,97 @@ class AuthApiController extends Controller
             ->first();
 
         if (!$otpRecord || !Hash::check($request->otp, $otpRecord->code_hash)) {
-            return response()->json(['message' => 'OTP không hợp lệ hoặc đã hết hạn'], 400);
+            return response()->json([
+                'message' => 'OTP không hợp lệ hoặc đã hết hạn'
+            ], 400);
         }
         $otpRecord->update(['used_at' => now()]);
-        $user = User::where('email', $request->email)->first();
 
+        $email = $request->email;
+        $phone = $request->phone;
+        $user = null;
+
+        // 2. TÌM USER THEO LOGIC BẠN MÔ TẢ
+        if ($request->channel === 'email' && $phone) {
+            // TH1: verify email → check phone
+            $user = User::where('phone', $phone)->first();
+        }
+
+        if ($request->channel === 'zalo_oa' && $email) {
+            // TH2: verify phone → check email
+            $user = User::where('email', $email)->first();
+        }
+
+        // 3. CREATE / UPDATE USER
         if (!$user) {
             $user = User::create([
-                'email' => $request->email,
+                'email' => $request->channel === 'email' ? $request->destination : $email,
+                'phone' => $request->channel === 'zalo_oa' ? $request->destination : $phone,
                 'password' => Hash::make($request->password),
-                'email_verified_at' => now(),
+                'email_verified_at' => $request->channel === 'email' ? now() : null,
+                'phone_verified_at' => $request->channel === 'zalo_oa' ? now() : null,
                 'role_id' => 6,
-            ]);
-
-            UserContact::create([
-                'user_id' => $user->id,
-                'type' => 'email',
-                'value' => $user->email,
-                'is_primary' => true,
-                'verified_at' => now(),
-            ]);
-
-            UserIdentity::create([
-                'user_id' => $user->id,
-                'provider' => 'local_email',
-                'provider_user_id' => $user->email,
-                'email_at_signup' => $user->email,
-                'is_primary' => true,
-                'verified_at' => now(),
             ]);
         } else {
             $user->update([
+                'email' => $user->email ?? $email,
+                'phone' => $user->phone ?? $phone,
                 'password' => Hash::make($request->password),
-                'email_verified_at' => $user->email_verified_at ?? now(),
+                'email_verified_at' => $request->channel === 'email'
+                    ? ($user->email_verified_at ?? now())
+                    : $user->email_verified_at,
+                'phone_verified_at' => $request->channel === 'zalo_oa'
+                    ? ($user->phone_verified_at ?? now())
+                    : $user->phone_verified_at,
             ]);
         }
+
+        if ($email) {
+            UserContact::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'type' => 'email',
+                    'value' => $email,
+                ],
+                [
+                    'is_primary' => true,
+                    'verified_at' => now(),
+                ]
+            );
+        }
+
+        if ($phone) {
+            UserContact::firstOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'type' => 'phone',
+                    'value' => $phone,
+                ],
+                [
+                    'is_primary' => true,
+                    'verified_at' => now(),
+                ]
+            );
+        }
+
+        UserIdentity::firstOrCreate(
+            [
+                'user_id' => $user->id,
+                'provider' => $request->channel === 'email' ? 'local_email' : 'zalo_oa',
+            ],
+            [
+                'provider_user_id' => $request->destination,
+                'is_primary' => true,
+                'verified_at' => now(),
+            ]
+        );
 
         return response()->json([
             'message' => 'Xác thực thành công',
             'user' => $user,
         ]);
     }
+
 
     public function login(Request $request)
     {
@@ -384,5 +489,59 @@ class AuthApiController extends Controller
             'session_id'        => $token,
             'location'          => $locationStr,
         ]);
+    }
+
+    public function testZaloToken(): array
+    {
+        $refreshToken = Cache::get('zalo_zns_refresh_token')
+            ?? config('zalo.refresh_token');
+
+        $response = Http::asForm()
+            ->withHeaders([
+                'secret_key' => config('zalo.app_secret'),
+            ])
+            ->post('https://oauth.zaloapp.com/v4/oa/access_token', [
+                'app_id'        => config('zalo.app_id'),
+                'grant_type'    => 'refresh_token',
+                'refresh_token' => $refreshToken,
+            ]);
+
+        if (!$response->ok()) {
+            return [
+                'success' => false,
+                'stage' => 'refresh_token',
+                'http_status' => $response->status(),
+                'body' => $response->body(),
+            ];
+        }
+
+        $data = $response->json();
+
+        if (!isset($data['access_token'], $data['refresh_token'])) {
+            return [
+                'success' => false,
+                'stage' => 'parse_response',
+                'data' => $data,
+            ];
+        }
+
+        // LƯU TOKEN MỚI
+        Cache::put(
+            'zalo_zns_access_token',
+            $data['access_token'],
+            now()->addSeconds($data['expires_in'] - 60)
+        );
+
+        Cache::forever(
+            'zalo_zns_refresh_token',
+            $data['refresh_token']
+        );
+
+        return [
+            'success' => true,
+            'access_token' => substr($data['access_token'], 0, 20) . '...',
+            'expires_in' => $data['expires_in'],
+            'refresh_token_saved' => true,
+        ];
     }
 }
