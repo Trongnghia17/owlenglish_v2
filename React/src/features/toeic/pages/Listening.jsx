@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
+import { submitTestResult } from '@/features/exams/api/exams.api';
+import TestLayout from '@/features/exams/components/TestLayout';
 import './Toeic.css';
-import Header from '../components/Header';
 
 export default function ListeningToeic() {
   const navigate = useNavigate();
@@ -24,7 +25,6 @@ export default function ListeningToeic() {
   const [passages, setPassages] = useState([]);
   const [parts, setParts] = useState([]);
 
-  const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
   const [fontSize, setFontSize] = useState("normal");
 
   useEffect(() => {
@@ -56,7 +56,8 @@ export default function ListeningToeic() {
                       id: q.id,
                       number: questionNumber++,
                       content: q.content,
-                      correctAnswer: q.answer_content
+                      correctAnswer: q.answer_content,
+                      metadata: q.metadata || null
                     });
                   });
                 }
@@ -68,7 +69,7 @@ export default function ListeningToeic() {
                   groupContent: group.content,
                   options: Array.isArray(group.options)
                     ? group.options
-                    : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['A', 'B', 'C', 'D']) : ['A', 'B', 'C', 'D']),
+                    : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : group.options) : []),
                   questions: questions,
                   startNumber: questions[0]?.number || 1,
                   endNumber: questions[questions.length - 1]?.number || 1
@@ -110,7 +111,8 @@ export default function ListeningToeic() {
                           id: q.id,
                           number: questionNumber++,
                           content: q.content,
-                          correctAnswer: q.answer_content
+                          correctAnswer: q.answer_content,
+                          metadata: q.metadata || null
                         });
                       });
                     }
@@ -122,7 +124,7 @@ export default function ListeningToeic() {
                       groupContent: group.content,
                       options: Array.isArray(group.options)
                         ? group.options
-                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['A', 'B', 'C', 'D']) : ['A', 'B', 'C', 'D']),
+                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : group.options) : []),
                       questions: questions,
                       startNumber: questions[0]?.number || questionNumber,
                       endNumber: questions[questions.length - 1]?.number || questionNumber
@@ -225,95 +227,104 @@ export default function ListeningToeic() {
     setAudioProgress(time);
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const handleAnswerSelect = (questionId, answer) => {
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   };
 
-  const handleQuestionClick = (questionNumber) => {
-    const group = questionGroups.find(g =>
-      g.questions.some(q => q.number === questionNumber)
-    );
-
-    if (group && group.part !== currentPartTab) {
-      setCurrentPartTab(group.part);
-      setTimeout(() => {
-        const element = document.getElementById(`question-${questionNumber}`);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
+  const handleSubmit = async () => {
+    try {
+      // Tính thời gian đã làm bài
+      const timeSpent = (skillData?.time_limit * 60 || sectionData?.time_limit * 60 || 1800) - timeRemaining;
+      
+      // Thu thập tất cả ID câu hỏi
+      const allQuestionIds = [];
+      questionGroups.forEach(group => {
+        if (group.questions) {
+          group.questions.forEach(q => {
+            allQuestionIds.push(q.id);
+          });
         }
-      }, 120);
-    } else {
-      const element = document.getElementById(`question-${questionNumber}`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      // Chuẩn bị dữ liệu câu trả lời
+      const answersArray = allQuestionIds.map(questionId => ({
+        question_id: questionId,
+        answer: answers[questionId] || null
+      }));
+
+      const submitData = {
+        skill_id: skillId ? parseInt(skillId) : null,
+        section_id: sectionId ? parseInt(sectionId) : null,
+        test_id: examData?.id || null,
+        answers: answersArray,
+        all_question_ids: allQuestionIds,
+        time_spent: timeSpent,
+        total_questions: allQuestionIds.length,
+        answered_questions: Object.keys(answers).length
+      };
+
+      console.log('Submitting:', submitData);
+
+      // Gửi kết quả lên server
+      const response = await submitTestResult(submitData);
+
+      if (response.data.success) {
+        // Chuyển đến trang kết quả
+        navigate(`/test-result/${response.data.data.id}`);
+      } else {
+        throw new Error(response.data.message || 'Không thể nộp bài');
       }
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
     }
   };
 
-
-  const handleSubmit = () => {
-    const result = {
-      skillId,
-      sectionId,
-      answers,
-      timeSpent: (skillData?.time_limit * 60 || 1800) - timeRemaining
-    };
-    console.log('Submit result:', result);
-    alert('Nộp bài thành công!');
-    navigate('/lich-su-lam-bai');
-  };
-
-  // helper: render questions by group type (class names prefixed with lt-)
+  // helper: render questions by group type
   const renderQuestionsByType = (group) => {
-    const opts = Array.isArray(group.options) ? group.options : (group.options || []);
     const type = (group.type || '').toLowerCase();
 
-    const renderMCQ = (q) => (
-      <div key={q.id} id={`question-${q.number}`} className="lt-question">
-        <div className="lt-question__number">Câu {q.number}:</div>
-        <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
-        <div className="lt-question__options">
-          {opts.map((option, idx) => {
-            const val = typeof option === 'object' ? (option.value ?? option.label ?? String(option)) : String(option);
-            const labelHtml = typeof option === 'object' ? (option.label ?? val) : option;
-            return (
-              <label key={idx} className="lt-option">
-                <input
-                  type="radio"
-                  name={`q-${q.id}`}
-                  value={val}
-                  checked={String(answers[q.id] ?? '') === String(val)}
-                  onChange={() => handleAnswerSelect(q.id, val)}
-                />
-                <span dangerouslySetInnerHTML={{ __html: labelHtml }} />
-              </label>
-            );
-          })}
+    const renderMCQ = (q) => {
+      // Lấy options từ metadata.answers của câu hỏi
+      let opts = [];
+      if (q.metadata && Array.isArray(q.metadata.answers)) {
+        opts = q.metadata.answers.map(ans => ({
+          value: ans.content,
+          label: ans.content,
+          isCorrect: ans.is_correct === "1" || ans.is_correct === true
+        }));
+      } else if (Array.isArray(group.options)) {
+        opts = group.options.map(opt => ({
+          value: typeof opt === 'object' ? (opt.value ?? opt.label ?? String(opt)) : String(opt),
+          label: typeof opt === 'object' ? (opt.label ?? opt.value) : opt
+        }));
+      }
+
+      return (
+        <div key={q.id} id={`question-${q.number}`} className="lt-question">
+          <div className="lt-question__number">Câu {q.number}:</div>
+          <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: q.content || '' }} />
+          <div className="lt-question__options">
+            {opts.map((option, idx) => {
+              const val = option.value || option.label || '';
+              const labelHtml = option.label || option.value || '';
+              return (
+                <label key={idx} className="lt-option">
+                  <input
+                    type="radio"
+                    name={`q-${q.id}`}
+                    value={val}
+                    checked={String(answers[q.id] ?? '') === String(val)}
+                    onChange={() => handleAnswerSelect(q.id, val)}
+                  />
+                  <span dangerouslySetInnerHTML={{ __html: labelHtml }} />
+                </label>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     const renderTF = (q) => (
       <div key={q.id} id={`question-${q.number}`} className="lt-question">
@@ -399,38 +410,38 @@ export default function ListeningToeic() {
 
   const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-  const allQuestions = questionGroups.flatMap(g => g.questions);
   const questionsByPart = questionGroups.reduce((acc, group) => {
     const part = group.part;
-
     if (!acc[part]) acc[part] = [];
     acc[part].push(...group.questions);
-
     return acc;
   }, {});
 
-
   return (
     <div className="lt-page">
-      <Header
+      <TestLayout
         examData={examData}
         skillData={skillData}
         sectionData={sectionData}
-        currentPartTab={currentPartTab}
         timeRemaining={timeRemaining}
-        showFontSizeMenu={showFontSizeMenu}
-        setShowFontSizeMenu={setShowFontSizeMenu}
-        handleSubmit={handleSubmit}
-        formatTime={formatTime}
-      />
-
+        setTimeRemaining={setTimeRemaining}
+        parts={parts}
+        currentPartTab={currentPartTab}
+        setCurrentPartTab={setCurrentPartTab}
+        questionGroups={questionGroups}
+        answers={answers}
+        onSubmit={handleSubmit}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+        showQuestionNumbers={false}
+      >
       <div className='lt-grid-main'>
         <div className="lt-grid">
           <aside className="lt-col lt-col--left">
             <div className="lt-left-box">
               <div className="lt-questions">
                 {currentPartGroups.map((group) => (
-                  <div>
+                  <div key={group.id}>
                     <div className="lt-group__header">
                       <h3>Questions {group.startNumber} - {group.endNumber}</h3>
                       {group.instructions && <div className="lt-group__instructions" dangerouslySetInnerHTML={{ __html: group.instructions }} />}
@@ -504,7 +515,12 @@ export default function ListeningToeic() {
                       <button
                         key={q.id}
                         className={`lt-qn-item ${answers[q.id] ? 'answered' : ''}`}
-                        onClick={() => handleQuestionClick(q.number)}
+                        onClick={() => {
+                          const element = document.getElementById(`question-${q.number}`);
+                          if (element) {
+                            element.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }
+                        }}
                       >
                         {q.number}
                       </button>
@@ -537,7 +553,12 @@ export default function ListeningToeic() {
               <button
                 key={q.number}
                 className={`lt-footer__number-btn ${answers[q.id] ? 'answered' : ''}`}
-                onClick={() => handleQuestionClick(q.number)}
+                onClick={() => {
+                  const element = document.getElementById(`question-${q.number}`);
+                  if (element) {
+                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
               >
                 {q.number}
               </button>
@@ -545,42 +566,7 @@ export default function ListeningToeic() {
           </div>
         </div>
       </aside>
-
-      {showFontSizeMenu && (
-        <div className="lt-fontsize-popup">
-          <h3>Cỡ chữ</h3>
-          <p>Chọn cỡ chữ phù hợp cho việc đọc</p>
-
-          <div
-            className={`lt-fontsize-option ${fontSize === "normal" ? "active" : ""}`}
-            onClick={() => setFontSize("normal")}
-          >
-            Bình thường
-          </div>
-
-          <div
-            className={`lt-fontsize-option ${fontSize === "large" ? "active" : ""}`}
-            onClick={() => setFontSize("large")}
-          >
-            Lớn
-          </div>
-
-          <div
-            className={`lt-fontsize-option ${fontSize === "xlarge" ? "active" : ""}`}
-            onClick={() => setFontSize("xlarge")}
-          >
-            Rất lớn
-          </div>
-
-          <button
-            className="lt-fontsize-close"
-            onClick={() => setShowFontSizeMenu(false)}
-          >
-            Đóng
-          </button>
-        </div>
-      )}
-
+    </TestLayout>
     </div>
   );
 }

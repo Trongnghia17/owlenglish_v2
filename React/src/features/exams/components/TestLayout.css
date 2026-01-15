@@ -264,7 +264,7 @@
 .test-layout__content {
     flex: 1;
     overflow-y: auto;
-    display: flex;
+    /* display: flex; */
     padding-bottom: 120px;
     user-select: text;
     -webkit-user-select: text;

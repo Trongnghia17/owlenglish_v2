@@ -527,3 +527,63 @@ line-height: normal;
   line-height: 1.6;
   margin: 0;
 }
+
+/* Success Card for Speaking/Writing */
+.test-result__content--centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 73px);
+  padding: 40px 20px;
+}
+
+.test-result__success-card {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 40px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.test-result__success-icon {
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.test-result__success-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 16px 0;
+}
+
+.test-result__success-message {
+  font-size: 16px;
+  color: #6B7280;
+  line-height: 1.6;
+  margin: 0 0 32px 0;
+}
+
+.test-result__continue-btn {
+  background: #045CCE;
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+  max-width: 280px;
+}
+
+.test-result__continue-btn:hover {
+  background: #034BA8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(4, 92, 206, 0.3);
+}

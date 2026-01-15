@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getSkillById, getSectionById } from '../api/toeic.api';
+import { submitTestResult } from '@/features/exams/api/exams.api';
+import TestLayout from '@/features/exams/components/TestLayout';
 import './Toeic.css';
-import Header from '../components/Header';
 import clock_speaking from '@/assets/images/clock.svg';
 
 export default function SpeakingToeic() {
@@ -26,8 +27,13 @@ export default function SpeakingToeic() {
     const [passages, setPassages] = useState([]);
     const [parts, setParts] = useState([]);
 
-    const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
     const [fontSize, setFontSize] = useState("normal");
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+    // Reset question index khi chuyển part
+    useEffect(() => {
+        setCurrentQuestionIndex(0);
+    }, [currentPartTab]);
 
     useEffect(() => {
         const fetchExamData = async () => {
@@ -41,7 +47,7 @@ export default function SpeakingToeic() {
                         setPassages([{
                             id: section.id,
                             part: 1,
-                            title: section.title || 'Writing Passage',
+                            title: section.title || 'Speaking',
                             subtitle: '',
                             content: section.content || ''
                         }]);
@@ -49,32 +55,31 @@ export default function SpeakingToeic() {
 
                         const allGroups = [];
                         let questionNumber = 1;
-                        if (section.question_groups) {
-                            section.question_groups.forEach(group => {
-                                const questions = [];
-                                if (group.questions) {
-                                    group.questions.forEach((q) => {
-                                        questions.push({
-                                            id: q.id,
-                                            number: questionNumber++,
-                                            content: q.content,
-                                            correctAnswer: q.answer_content
-                                        });
-                                    });
-                                }
-                                allGroups.push({
-                                    id: group.id,
-                                    part: 1,
-                                    type: group.question_type || 'MCQ',
-                                    instructions: group.instructions,
-                                    groupContent: group.content,
-                                    options: Array.isArray(group.options)
-                                        ? group.options
-                                        : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['A', 'B', 'C', 'D']) : ['A', 'B', 'C', 'D']),
-                                    questions: questions,
-                                    startNumber: questions[0]?.number || 1,
-                                    endNumber: questions[questions.length - 1]?.number || 1
+                        
+                        // Speaking: questions nằm trực tiếp trong section.questions
+                        if (section.questions && section.questions.length > 0) {
+                            const questions = [];
+                            section.questions.forEach((q) => {
+                                questions.push({
+                                    id: q.id,
+                                    number: questionNumber++,
+                                    content: q.content,
+                                    correctAnswer: q.answer_content,
+                                    metadata: q.metadata || null
                                 });
+                            });
+                            
+                            // Tạo 1 group ảo chứa tất cả questions
+                            allGroups.push({
+                                id: section.id,
+                                part: 1,
+                                type: 'speaking',
+                                instructions: '',
+                                groupContent: '',
+                                options: [],
+                                questions: questions,
+                                startNumber: 1,
+                                endNumber: questions.length
                             });
                         }
                         setQuestionGroups(allGroups);
@@ -103,32 +108,30 @@ export default function SpeakingToeic() {
                                     content: section.content || ''
                                 });
 
-                                if (section.question_groups) {
-                                    section.question_groups.forEach(group => {
-                                        const questions = [];
-                                        if (group.questions) {
-                                            group.questions.forEach((q) => {
-                                                questions.push({
-                                                    id: q.id,
-                                                    number: questionNumber++,
-                                                    content: q.content,
-                                                    correctAnswer: q.answer_content
-                                                });
-                                            });
-                                        }
-                                        allGroups.push({
-                                            id: group.id,
-                                            part: partNumber,
-                                            type: group.question_type || 'MCQ',
-                                            instructions: group.instructions,
-                                            groupContent: group.content,
-                                            options: Array.isArray(group.options)
-                                                ? group.options
-                                                : (group.options ? (typeof group.options === 'string' ? JSON.parse(group.options) : ['A', 'B', 'C', 'D']) : ['A', 'B', 'C', 'D']),
-                                            questions: questions,
-                                            startNumber: questions[0]?.number || questionNumber,
-                                            endNumber: questions[questions.length - 1]?.number || questionNumber
+                                // Speaking: questions nằm trực tiếp trong section.questions
+                                if (section.questions && section.questions.length > 0) {
+                                    const questions = [];
+                                    section.questions.forEach((q) => {
+                                        questions.push({
+                                            id: q.id,
+                                            number: questionNumber++,
+                                            content: q.content,
+                                            correctAnswer: q.answer_content,
+                                            metadata: q.metadata || null
                                         });
+                                    });
+                                    
+                                    // Tạo 1 group ảo chứa tất cả questions của section này
+                                    allGroups.push({
+                                        id: section.id,
+                                        part: partNumber,
+                                        type: 'speaking',
+                                        instructions: '',
+                                        groupContent: '',
+                                        options: [],
+                                        questions: questions,
+                                        startNumber: questions[0]?.number || questionNumber,
+                                        endNumber: questions[questions.length - 1]?.number || questionNumber
                                     });
                                 }
 
@@ -227,22 +230,6 @@ export default function SpeakingToeic() {
         setAudioProgress(time);
     };
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeRemaining((prev) => {
-                if (prev <= 0) {
-                    clearInterval(timer);
-                    handleSubmit();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -253,43 +240,73 @@ export default function SpeakingToeic() {
         setAnswers((prev) => ({ ...prev, [questionId]: answer }));
     };
 
-    const handleQuestionClick = (questionNumber) => {
-        const group = questionGroups.find(g =>
-            g.questions.some(q => q.number === questionNumber)
-        );
-
-        if (group && group.part !== currentPartTab) {
-            setCurrentPartTab(group.part);
-            setTimeout(() => {
-                const element = document.getElementById(`question-${questionNumber}`);
-                if (element) {
-                    element.scrollIntoView({ behavior: "smooth", block: "start" });
+    const handleSubmit = async () => {
+        try {
+            // Tính thời gian đã làm bài
+            const timeSpent = (skillData?.time_limit * 60 || sectionData?.time_limit * 60 || 1800) - timeRemaining;
+            
+            // Thu thập tất cả ID câu hỏi
+            const allQuestionIds = [];
+            questionGroups.forEach(group => {
+                if (group.questions) {
+                    group.questions.forEach(q => {
+                        allQuestionIds.push(q.id);
+                    });
                 }
-            }, 120);
-        } else {
-            const element = document.getElementById(`question-${questionNumber}`);
-            if (element) {
-                element.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+
+            // Chuẩn bị dữ liệu câu trả lời
+            const answersArray = allQuestionIds.map(questionId => ({
+                question_id: questionId,
+                answer: answers[questionId] || null
+            }));
+
+            const submitData = {
+                skill_id: skillId ? parseInt(skillId) : null,
+                section_id: sectionId ? parseInt(sectionId) : null,
+                test_id: examData?.id || null,
+                answers: answersArray,
+                all_question_ids: allQuestionIds,
+                time_spent: timeSpent,
+                total_questions: allQuestionIds.length,
+                answered_questions: Object.keys(answers).length
+            };
+
+            console.log('Submitting:', submitData);
+
+            // Gửi kết quả lên server
+            const response = await submitTestResult(submitData);
+
+            if (response.data.success) {
+                // Chuyển đến trang kết quả
+                navigate(`/test-result/${response.data.data.id}`);
+            } else {
+                throw new Error(response.data.message || 'Không thể nộp bài');
             }
+        } catch (error) {
+            console.error('Error submitting test:', error);
+            alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
         }
-    };
-
-
-    const handleSubmit = () => {
-        const result = {
-            skillId,
-            sectionId,
-            answers,
-            timeSpent: (skillData?.time_limit * 60 || 1800) - timeRemaining
-        };
-        console.log('Submit result:', result);
-        alert('Nộp bài thành công!');
-        navigate('/lich-su-lam-bai');
     };
 
     // helper: render questions by group type (class names prefixed with lt-)
     const renderQuestionsByType = (group) => {
-        const opts = Array.isArray(group.options) ? group.options : (group.options || []);
+        // Xử lý options an toàn hơn
+        let opts = [];
+        if (Array.isArray(group.options)) {
+            opts = group.options;
+        } else if (group.options && typeof group.options === 'object') {
+            // Nếu là object, lấy values
+            opts = Object.values(group.options);
+        } else if (group.options && typeof group.options === 'string') {
+            try {
+                const parsed = JSON.parse(group.options);
+                opts = Array.isArray(parsed) ? parsed : [];
+            } catch {
+                opts = [];
+            }
+        }
+        
         const type = (group.type || '').toLowerCase();
 
         const renderMCQ = (q) => (
@@ -401,72 +418,63 @@ export default function SpeakingToeic() {
 
     const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
     const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-    const allQuestions = questionGroups.flatMap(g => g.questions);
     const questionsByPart = questionGroups.reduce((acc, group) => {
         const part = group.part;
-
         if (!acc[part]) acc[part] = [];
         acc[part].push(...group.questions);
-
         return acc;
     }, {});
 
+    // Lấy câu hỏi của part hiện tại
+    const currentPartQuestions = questionsByPart[currentPartTab] || [];
+    const currentQuestion = currentPartQuestions[currentQuestionIndex] || null;
 
     return (
         <div className="lt-page">
-            <Header
+            <TestLayout
                 examData={examData}
                 skillData={skillData}
                 sectionData={sectionData}
-                currentPartTab={currentPartTab}
                 timeRemaining={timeRemaining}
-                showFontSizeMenu={showFontSizeMenu}
-                setShowFontSizeMenu={setShowFontSizeMenu}
-                handleSubmit={handleSubmit}
-                formatTime={formatTime}
+                setTimeRemaining={setTimeRemaining}
+                parts={parts}
+                currentPartTab={currentPartTab}
+                setCurrentPartTab={setCurrentPartTab}
+                questionGroups={questionGroups}
+                answers={answers}
+                onSubmit={handleSubmit}
+                fontSize={fontSize}
+                onFontSizeChange={setFontSize}
+                showQuestionNumbers={false}
                 hideTimer={true}
-            />
-
+            >
             <div className='lt-grid-main'>
                 <div className="lt-grid">
                     <aside className="lt-col lt-col--left">
                     </aside>
 
                     <main className="lt-col lt-col--center wt-col-center">
-                        <div className="lt-audio">
-                            <audio ref={audioRef} preload="auto" />
-                            <div className="lt-audio__controls">
-                                <button className="lt-audio__play" onClick={handleAudioToggle}>
-                                    {isPlaying ? 'Pause' : 'Play'}
-                                </button>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={audioDuration ? (audioProgress / audioDuration) * 100 : 0}
-                                    onChange={handleAudioSeek}
-                                />
-                                <div className="lt-audio__time">
-                                    {Math.floor(audioProgress)} / {Math.floor(audioDuration)} s
+                        {currentQuestion && (
+                            <div className="speaking-question-container">
+                                <h2 className="speaking-question-title">
+                                    Speaking Question {currentQuestionIndex + 1}
+                                </h2>
+                                
+                                {currentQuestion.content && (
+                                    <div className="speaking-directions">
+                                        <div className="lt-question__content" dangerouslySetInnerHTML={{ __html: currentQuestion.content }} />
+                                    </div>
+                                )}
+
+                                <div className='clock_speaking'>
+                                    <h4>Response Time</h4>
+                                    <div className="lt-timer">
+                                        <img src={clock_speaking} alt="" />
+                                        <p>{formatTime(timeRemaining)}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="lt-passage">
-                            <div className="lt-passage__header">
-                                <h2 className="lt-passage__title">{currentPassage.title}</h2>
-                                {currentPassage.subtitle && <p className="lt-passage__subtitle">{currentPassage.subtitle}</p>}
-                            </div>
-                            <div className="lt-passage__content" dangerouslySetInnerHTML={{ __html: currentPassage.content }} />
-                        </div>
-
-                        <div className='clock_speaking'>
-                            <h4>Preparation Time</h4>
-                            <div className="lt-timer">
-                                <img src={clock_speaking} alt="" />
-                                <p>{formatTime(timeRemaining)}</p>
-                            </div>
-                        </div>
+                        )}
                     </main>
 
                     <aside className="lt-col lt-col--right">
@@ -489,42 +497,7 @@ export default function SpeakingToeic() {
                     </div>
                 </div>
             </aside>
-
-            {showFontSizeMenu && (
-                <div className="lt-fontsize-popup">
-                    <h3>Cỡ chữ</h3>
-                    <p>Chọn cỡ chữ phù hợp cho việc đọc</p>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "normal" ? "active" : ""}`}
-                        onClick={() => setFontSize("normal")}
-                    >
-                        Bình thường
-                    </div>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "large" ? "active" : ""}`}
-                        onClick={() => setFontSize("large")}
-                    >
-                        Lớn
-                    </div>
-
-                    <div
-                        className={`lt-fontsize-option ${fontSize === "xlarge" ? "active" : ""}`}
-                        onClick={() => setFontSize("xlarge")}
-                    >
-                        Rất lớn
-                    </div>
-
-                    <button
-                        className="lt-fontsize-close"
-                        onClick={() => setShowFontSizeMenu(false)}
-                    >
-                        Đóng
-                    </button>
-                </div>
-            )}
-
+        </TestLayout>
         </div>
     );
 }
