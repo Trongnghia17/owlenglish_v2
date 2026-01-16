@@ -28,7 +28,7 @@
     gap: 10px;
 }
 
-.ph-actions a{
+.ph-actions a {
     text-decoration: none;
 }
 
@@ -53,7 +53,7 @@
     justify-content: center;
 }
 
-.ph-btn-text{
+.ph-btn-text {
     color: #fff;
     margin-left: 10px;
 }
@@ -76,10 +76,12 @@
     border-collapse: collapse;
     min-width: 800px;
 }
-.ph-table thead tr{
+
+.ph-table thead tr {
     background-color: #E7E7E7;
     height: 60px;
 }
+
 .ph-table thead th {
     text-align: left;
     font-size: 13px;
@@ -90,10 +92,22 @@
     font-size: 14px;
     font-weight: 600;
 }
-.ph-table tbody tr{
+
+.ph-table tbody tr {
     background-color: #fff;
     height: 70px;
+    border-bottom: none;
+
+    background-image: repeating-linear-gradient(to right,
+            rgba(231, 231, 231, 1),
+            rgba(231, 231, 231, 1) 2px,
+            transparent 2px,
+            transparent 10px);
+    background-position: bottom left;
+    background-size: auto 1px;
+    background-repeat: repeat-x;
 }
+
 .ph-table tbody td {
     padding: 14px 16px;
     font-size: 14px;

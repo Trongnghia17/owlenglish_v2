@@ -42,7 +42,7 @@ export default function Home() {
             </p>
 
             <div className="hp-btn-cta">
-              <Link to="/de-thi-online" className="">Bắt đầu luyện tập</Link>
+              <Link to="/de-thi/ielts" className="">Bắt đầu luyện tập</Link>
             </div>
           </div>
 
