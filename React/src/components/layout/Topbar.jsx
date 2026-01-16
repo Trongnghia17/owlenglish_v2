@@ -34,12 +34,13 @@ export default function Topbar() {
 
   const handleProfile = () => { setOpenMenu(false); nav('/trang-ca-nhan'); };
   const handleHistory = () => { setOpenMenu(false); nav('/lich-su-thanh-toan'); };
+  const handleHistoryLogin = () => { setOpenMenu(false); nav('/lich-su-dang-nhap'); };
   const handleLogout = () => { setOpenMenu(false); logout(); nav('/'); };
 
   return (
     <header className="topbar">
       <div className="topbar__left">
-        <img className="topbar__logo" src={logo} alt="owl-logo" />
+        <NavLink to="/"><img className="topbar__logo" src={logo} alt="owl-logo" /></NavLink>
         <nav className="topbar__nav">
           <NavLink to="/" end className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Trang chủ</NavLink>
           <NavLink to="/de-thi/ielts" className={({isActive}) => isActive ? 'topbar__link topbar__link--active' : 'topbar__link'}>Đề thi IELTS</NavLink>
@@ -114,7 +115,7 @@ export default function Topbar() {
                     <span className="topbar__menu-text">Lịch sử giao dịch OWL</span>
                   </button>
 
-                  <button className="topbar__menu-item" onClick={handleHistory}>
+                  <button className="topbar__menu-item" onClick={handleHistoryLogin}>
                     <span className="topbar__menu-icon">
                       <img src={lsdangnhap} alt="" />
                     </span>

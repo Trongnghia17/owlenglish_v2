@@ -139,7 +139,6 @@ class AuthApiController extends Controller
             ->stateless()
             ->scopes(['email'])
             ->redirect();
-        return 22;
     }
 
     public function facebookCallback()
@@ -238,6 +237,16 @@ class AuthApiController extends Controller
         ]);
 
         $email = $request->email;
+        if ($request->purpose === 'register') {
+            $exists = User::where('email', $request->email)->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email đã tồn tại'
+                ], 409);
+            }
+        }
         $otp = rand(100000, 999999);
         OtpCode::create([
             'channel' => 'email',
@@ -254,7 +263,10 @@ class AuthApiController extends Controller
                 ->subject('Mã xác thực OTP');
         });
 
-        return response()->json(['message' => 'OTP đã được gửi'], 200);
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP đã được gửi qua email'
+        ], 200);
     }
 
     // Gửi OTP qua Zalo zns
@@ -262,10 +274,20 @@ class AuthApiController extends Controller
     {
         $request->validate([
             'channel' => 'required|in:email,zalo_oa',
-            'destination' => 'required', // đây sẽ là số điện thoại
+            'destination' => 'required',
             'purpose' => 'required',
         ]);
         $phone = $this->normalizePhone($request->phone);
+        if ($request->purpose === 'register') {
+            $exists = User::where('phone', $request->phone)->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Số điện thoại đã tồn tại'
+                ], 409);
+            }
+        }
         $otp = random_int(100000, 999999);
         OtpCode::create([
             'channel' => $request->channel,
@@ -345,8 +367,6 @@ class AuthApiController extends Controller
             // TH2: verify phone → check email
             $user = User::where('email', $email)->first();
         }
-
-        // 3. CREATE / UPDATE USER
         if (!$user) {
             $user = User::create([
                 'email' => $request->channel === 'email' ? $request->destination : $email,
@@ -493,9 +513,14 @@ class AuthApiController extends Controller
 
     public function testZaloToken(): array
     {
-        $refreshToken = Cache::get('zalo_zns_refresh_token')
-            ?? config('zalo.refresh_token');
+        // $refreshToken = Cache::get('zalo_zns_refresh_token')
+        //     ?? config('zalo.refresh_token');
+        $refreshToken = Cache::get('zalo_zns_refresh_token');
 
+        return [
+            $refreshToken
+        ];
+        $refreshToken = 'C3lg62Xl240nDUyKBcmFIpSvw1ygUbSvE7B94rDrJZSiNzONO5We4ZDFkHKeI3apSa6V5c0K5Knp4O9C3mLXTqug-IyIA5aIT2-xCISfKJn0SEiS05Ll05Dxx0SMUMfPK47uMWDaJ7bvQyrA6rbMI7HayqOIPaTEML74HGT4H6L_7y9UDmfdTqKty6mLDnSrQJAkQ2K67qbc3ujSAmaU0JChdIfDC2iGNccoFW5J9MLv3A4-8YmgONaDlrmhFoq0GpRC0XyLTYzj0FKrTXTkRnqioMrZ46ys1Ik45Hq90Z0QD98pT6mdPZTBabnt7Wr76121OMCo7M8H4gmyL15DDHz4tobm6ry1OqBeN0vu0bjpBA14FYKbOaHwWLOZ8093CNMKNcDV2diOLU10TdDhIp8cz1SgRTDiBdWDHm';
         $response = Http::asForm()
             ->withHeaders([
                 'secret_key' => config('zalo.app_secret'),
@@ -542,6 +567,7 @@ class AuthApiController extends Controller
             'access_token' => substr($data['access_token'], 0, 20) . '...',
             'expires_in' => $data['expires_in'],
             'refresh_token_saved' => true,
+            'refresh_token' => $data['refresh_token'],
         ];
     }
 }

@@ -29,6 +29,7 @@ import ReadingToeic from '../features/toeic/pages/Reading';
 import PackageList from '../features/payment-packages/pages/PackageList';
 import PaymentCancel from '../features/payment-packages/pages/PaymentCancel';
 import PaymentSuccess from '../features/payment-packages/pages/PaymentSuccess';
+import ForgotPassword from '../features/auth/pages/ForgotPassword';
 const PublicShell = (
   <MainLayout />
 );
@@ -116,6 +117,7 @@ export const router = createBrowserRouter([
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
       { path: '/verify-otp', element: <VerifyOtp /> },
+      { path: '/forgot-password', element: <ForgotPassword /> },
       { path: '/oauth/callback', element: <OAuthCallback /> },
     ],
   },

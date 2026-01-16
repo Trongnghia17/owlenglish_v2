@@ -62,7 +62,7 @@ export default function Register() {
 
     try {
       if (method === "email") {
-        await api.post("api/otp/send", {
+        const res = await api.post("api/otp/send", {
           channel: "email",
           destination: email,
           email,
@@ -71,7 +71,7 @@ export default function Register() {
       }
 
       if (method === "zalo_oa") {
-        await api.post("api/otp/send-zalo", {
+        const res = await api.post("api/otp/send-zalo", {
           channel: "zalo_oa",
           destination: phone,
           phone,
@@ -94,10 +94,12 @@ export default function Register() {
           phone
         },
       });
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Gửi OTP thất bại");
-    } finally {
-      setLoading(prev => ({ ...prev, [method]: false }));
+    } catch (err) {
+      const message =
+        err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại";
+      toast.error(message);
+      setIsModalOpen(false);
+      setLoading(false);
     }
   };
 
