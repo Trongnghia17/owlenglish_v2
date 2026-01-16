@@ -436,9 +436,11 @@ export default function TestLayout({
             </svg>
             <span>{formatTime(timeRemaining)}</span>
           </div>
-          <button className="test-layout__submit-button-header" onClick={handleSubmit}>
-            Nộp bài
-          </button>
+          {onSubmit && (
+            <button className="test-layout__submit-button-header" onClick={handleSubmit}>
+              Nộp bài
+            </button>
+          )}
         </div>
       </div>
 

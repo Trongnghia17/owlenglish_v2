@@ -1053,7 +1053,7 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   border-radius: 5px;
   border: 1px solid #E7E7E7;
   background: #FFF;
-  padding: 16px 16px 0 16px;
+  padding: 16px ;
 }
 
 .reading-test__question-item {

@@ -216,9 +216,9 @@ export default function TestResult() {
             </div>
 
             <button className="test-result__review-btn" onClick={() => {
-              // Scroll to answers section
-              document.querySelector('.test-result__answers-section')?.scrollIntoView({ 
-                behavior: 'smooth' 
+              // Navigate to review page
+              navigate(`/exam/result/${resultId}/review`, {
+                state: { result }
               });
             }}>
               Giải thích chi tiết
