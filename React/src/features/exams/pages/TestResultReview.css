@@ -4,17 +4,12 @@
    =================================== */
 
 /* Review Question Item */
-.reading-test__question-item--review {
-    margin-bottom: 24px;
-    padding: 16px;
-    background-color: #F8F9FA;
-    border-radius: 8px;
-}
+.reading-test__question-item--review {}
 
 /* Question Row - Number không có background color */
 .reading-test__question-item--review .reading-test__question-row {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     margin-bottom: 12px;
 }
 
@@ -31,6 +26,19 @@
     font-size: 15px;
     line-height: 1.6;
     color: #374151;
+}
+
+/* Limit image sizes in questions and explanations */
+.reading-test__question-item--review .reading-test__question-text img,
+.review-explanation-text img,
+.reading-test__group-content-with-inputs img {
+    max-width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    display: block;
+    margin: 12px 0;
+    border-radius: 4px;
 }
 
 /* Answer Badge - Giống như nút True/False trong ảnh */
@@ -51,7 +59,7 @@
 }
 
 .review-answer-badge.correct {
-    background-color: #10B981;
+    background-color: #35A815;
     color: white;
 }
 
@@ -68,39 +76,35 @@
 /* Correct Answer Section - Hiện khi sai và đang mở explanation */
 .review-correct-answer-section {
     margin-bottom: 12px;
-    padding: 12px;
-    background-color: #FFF;
-    border-radius: 6px;
-    font-size: 14px;
 }
 
 .review-correct-answer-section strong {
-    display: block;
-    margin-bottom: 6px;
-    color: #6B7280;
-    font-weight: 500;
+    color: var(--Main-color-Primary-4, #045CCE);
+    font-size: 17px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 .review-correct-answer-text {
-    color: #1F2937;
-    font-weight: 500;
+    color: var(--Mine-Shaft-700, #4F4F4F);
+    font-size: 17px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 /* Explanation Section */
 .review-explanation-section {
-    margin-bottom: 12px;
-    padding: 12px;
-    background-color: #FFF;
-    border-radius: 6px;
-    font-size: 14px;
-    line-height: 1.6;
+    margin-bottom: 16px;
 }
 
 .review-explanation-section strong {
-    display: block;
-    margin-bottom: 8px;
-    color: #6B7280;
-    font-weight: 500;
+    color: var(--Main-color-Primary-4, #045CCE);
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 .review-explanation-text {
@@ -112,7 +116,11 @@
 }
 
 .review-explanation-text p:last-child {
-    margin-bottom: 0;
+    color: var(--Mine-Shaft-700, #4F4F4F);
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
 }
 
 /* Action Buttons Row */
@@ -125,15 +133,20 @@
 .review-action-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     padding: 8px 16px;
-    border: 1px solid #D1D5DB;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 400;
     cursor: pointer;
     transition: all 0.2s;
     background-color: #FFF;
+    color: var(--Mine-Shaft-800, #454545);
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    border-radius: var(--Radius-S, 5px);
+    border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
+    background: var(--Main-color-White, #FFF);
+    box-shadow: 3px 4px 1px 0 rgba(0, 0, 0, 0.05);
 }
 
 /* Locate Button - Blue outline */
@@ -155,19 +168,84 @@
 
 /* Explain Button - Gray outline */
 .review-explain-btn {
-    color: #6B7280;
-    border-color: #D1D5DB;
+    color: #454545;
 }
 
-.review-explain-btn:hover {
-    background-color: #F9FAFB;
-    border-color: #9CA3AF;
-    color: #374151;
-}
+
 
 .review-explain-btn svg {
     width: 16px;
     height: 16px;
+}
+
+/* Text Answer Section - For short_text type */
+.review-text-answer-wrapper {
+    margin-bottom: 12px;
+}
+
+.review-text-answer {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 400;
+    outline: none;
+    background-color: transparent;
+}
+
+.review-text-answer.correct {
+    border: 1.5px solid #35A815;
+    color: #065F46;
+}
+
+.review-text-answer.incorrect {
+    border: 1.5px solid #EF4444;
+    color: #991B1B;
+}
+
+.review-correct-answer {
+    margin-top: 8px;
+    padding: 10px 14px;
+    background-color: #D1FAE5;
+    border: 1px solid #10B981;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #065F46;
+}
+
+/* Inline Input Review Styles - For placeholders {{ a }} */
+.review-inline-input {
+    padding: 4px 8px !important;
+    min-width: 60px !important;
+    font-size: 15px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    border-radius: 4px !important;
+}
+
+.review-inline-input.correct {
+    background-color: #D1FAE5 !important;
+    border: 1.5px solid #35A815 !important;
+    color: #065F46 !important;
+}
+
+.review-inline-input.incorrect {
+    background-color: #FEE2E2 !important;
+    border: 1.5px solid #EF4444 !important;
+    color: #991B1B !important;
+}
+
+.review-inline-correct-answer {
+    display: inline-block;
+    line-height: 2.1;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background-color: #D1FAE5;
+    border: 1px solid #10B981;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #065F46;
+    font-weight: 500;
 }
 
 /* Remove old styles that conflict */
