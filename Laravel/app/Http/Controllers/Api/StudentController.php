@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\UserContact;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserDevice;
 use Carbon\Carbon;
+
 class StudentController extends Controller
 {
     public function updateProfile(Request $request)
@@ -130,5 +132,31 @@ class StudentController extends Controller
         if (!$datetime) return null;
 
         return Carbon::parse($datetime)->format('H:i · d/m/Y');
+    }
+
+    public function StudentPayment(Request $request)
+    {
+        $user = $request->user();
+
+        $payments = Payment::with('package')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($payment) {
+                return [
+                    'id' => $payment->id,
+                    'order_code' => $payment->order_code,
+                    'amount' => (int) $payment->amount,
+                    'currency' => $payment->currency ?? 'VND',
+                    'package_name' => optional($payment->package)->name,
+                    'payment_method' => $payment->payment_method,
+                    'status' => $payment->status, // enum: pending|success|failed|canceled|expired
+                    'paid_at' => $payment->paid_at
+                        ? $payment->paid_at->format('H:i · d/m/Y')
+                        : $payment->created_at->format('H:i · d/m/Y'),
+                ];
+            });
+
+        return response()->json($payments);
     }
 }

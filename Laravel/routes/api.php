@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/user/profile', [StudentController::class, 'updateProfile']);
     Route::get('/user/login-history', [StudentController::class, 'loginHistory']);
+    Route::get('/user/student-payment', [StudentController::class, 'StudentPayment']);
     Route::post('/user/device/action', [StudentController::class, 'deviceAction']);
     Route::post('/payments/create', [PaymentPackageController::class, 'create']);
     

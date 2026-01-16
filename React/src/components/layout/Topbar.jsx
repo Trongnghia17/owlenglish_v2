@@ -34,7 +34,9 @@ export default function Topbar() {
 
   const handleProfile = () => { setOpenMenu(false); nav('/trang-ca-nhan'); };
   const handleHistory = () => { setOpenMenu(false); nav('/lich-su-thanh-toan'); };
+  const handleExamHistory = () => { setOpenMenu(false); nav('/lich-su-lam-bai'); };
   const handleHistoryLogin = () => { setOpenMenu(false); nav('/lich-su-dang-nhap'); };
+  const handleWalletHistories = () => { setOpenMenu(false); nav('/lich-su-giao-dich-owl'); };
   const handleLogout = () => { setOpenMenu(false); logout(); nav('/'); };
 
   return (
@@ -94,7 +96,7 @@ export default function Topbar() {
                     <span className="topbar__menu-text">Thông tin tài khoản</span>
                   </button>
 
-                  <button className="topbar__menu-item" onClick={handleHistory}>
+                  <button className="topbar__menu-item" onClick={handleExamHistory}>
                     <span className="topbar__menu-icon">
                       <img src={dongho} alt="" />
                     </span>
@@ -108,7 +110,7 @@ export default function Topbar() {
                     <span className="topbar__menu-text">Lịch sử thanh toán</span>
                   </button>
 
-                  <button className="topbar__menu-item" onClick={handleHistory}>
+                  <button className="topbar__menu-item" onClick={handleWalletHistories}>
                     <span className="topbar__menu-icon">
                       <img src={lsgiaodich} alt="" />
                     </span>

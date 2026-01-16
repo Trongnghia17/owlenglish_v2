@@ -23,6 +23,13 @@ export const getDeviceInfo = async () => {
   return response.data;
 };
 
+export const getStudentPayment = async () => {  
+  const response = await axios.get(
+    `${VITE_API_LARAVEL_SERVER}/api/user/student-payment`
+  );
+  return response.data;
+};
+
 export const deviceAction = async (data) => {  
   const response = await axios.post(
     `${VITE_API_LARAVEL_SERVER}/api/user/device/action`,

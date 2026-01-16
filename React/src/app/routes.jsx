@@ -22,6 +22,7 @@ import TestResultReview from '../features/exams/pages/TestResultReview';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
+import WalletHistories from '../features/users/pages/WalletHistories';
 import LoginHistory from '../features/users/pages/LoginHistory';
 import ListeningToeic from '../features/toeic/pages/Listening';
 import WritingToeic from '../features/toeic/pages/Writing';
@@ -133,7 +134,7 @@ export const router = createBrowserRouter([
       { path: '/trang-ca-nhan', element: <Profile /> },
       { path: '/lich-su-lam-bai', element: <ExamHistory /> },
       { path: '/lich-su-thanh-toan', element: <PaymentHistory /> },
-      { path: '/lich-su-giao-dich-owl', element: <ExamHistory /> },
+      { path: '/lich-su-giao-dich-owl', element: <WalletHistories /> },
       { path: '/lich-su-dang-nhap', element: <LoginHistory /> },
       { path: '/payment/cancel/:orderCode', element: <PaymentCancel /> },
       { path: '/payment/success/:orderCode', element: <PaymentSuccess /> },

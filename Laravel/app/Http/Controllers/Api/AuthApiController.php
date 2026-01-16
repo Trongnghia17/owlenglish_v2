@@ -36,7 +36,7 @@ class AuthApiController extends Controller
     }
 
     /** Step 2: Callback từ Google */
-    public function googleCallback()
+    public function googleCallback(Request $request)
     {
         $frontend = config('app.frontend_url', env('FRONTEND_APP_URL', 'http://localhost:5173'));
         try {
@@ -123,9 +123,12 @@ class AuthApiController extends Controller
 
             // Phát token Sanctum
             $token = $user->createToken('api')->plainTextToken;
+            $device = $this->logDevice($request, $user, $token);
+            
             // Redirect về FE kèm token + provider
             $url = $frontend . '/oauth/callback?provider=google'
                 . '&token=' . urlencode($token);
+            
             return redirect()->away($url);
         } catch (\Throwable $e) {
             return redirect()->away($frontend . '/login?error=google_callback');
@@ -466,7 +469,7 @@ class AuthApiController extends Controller
             'message' => 'Đăng nhập thành công',
             'user'    => $user,
             'token'   => $token,
-            'device_id' => $device->id,
+            'device_id' => $device->id, 
         ]);
     }
 
@@ -515,7 +518,7 @@ class AuthApiController extends Controller
     {
         // $refreshToken = Cache::get('zalo_zns_refresh_token')
         //     ?? config('zalo.refresh_token');
-        $refreshToken = Cache::get('zalo_zns_refresh_token');
+        $refreshToken = Cache::get('zalo_zns_access_token');
 
         return [
             $refreshToken
