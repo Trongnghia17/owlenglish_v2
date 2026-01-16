@@ -18,6 +18,7 @@ import WritingTest from '../features/exams/pages/WritingTest';
 import SpeakingTest from '../features/exams/pages/SpeakingTest';
 import ListeningTest from '../features/exams/pages/ListeningTest';
 import TestResult from '../features/exams/pages/TestResult';
+import TestResultReview from '../features/exams/pages/TestResultReview';
 import Profile from '../features/users/pages/Profile';
 import ExamHistory from '../features/users/pages/ExamHistory';
 import PaymentHistory from '../features/users/pages/PaymentHistory';
@@ -109,6 +110,7 @@ export const router = createBrowserRouter([
 
   // Test Result Page
   { path: '/test-result/:resultId', element: <TestResult /> },
+  { path: '/exam/result/:resultId/review', element: <TestResultReview /> },
 
   {
     element: <GuestRoute><AuthLayout /></GuestRoute>,
