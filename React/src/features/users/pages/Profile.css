@@ -51,7 +51,6 @@
     cursor: pointer;
     border-radius: 16px;
     box-sizing: border-box;
-    transition: background .12s;
 }
 
 .profile-row:hover {
@@ -85,6 +84,10 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
+}
+
+.avatar-cell img{
+    width: 100%;
 }
 
 .avatar-image {
@@ -140,6 +143,87 @@
 
 .profile-row.danger .row-label {
     color: #E11D48;
+}
+
+.modal-edit-user{
+    width: 379px !important;
+    top: 27%;
+}
+
+.modal-edit-user .ant-modal-close{
+    border: 1px solid rgba(136, 136, 136, 1);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    top: 20px;
+}
+
+.modal-edit-user .ant-modal-content{
+    border-radius: 12px;
+    padding: 20px 14px;
+}
+
+.modal-edit-user .ant-modal-title{
+    font-size: 18px;
+    font-weight: 600;
+}
+.modal-edit-user input{
+    height: 50px !important;
+    border: 1px solid  rgba(231, 231, 231, 1);
+    background: rgba(255, 255, 255, 1);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.modal-edit-user input:hover {
+  border-color: rgba(4, 92, 206, 1);
+}
+
+.modal-edit-user input:focus {
+  border-color: rgba(4, 92, 206, 1);
+  box-shadow: 0 0 0 2px rgba(4, 92, 206, 0.2);
+  outline: none;
+}
+
+
+.modal-edit-user .ant-modal-footer{
+    display: flex;
+    justify-content: end;
+}
+.modal-edit-user .ant-btn-default{
+    height: 40px;
+    width: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(245, 247, 248, 1);
+    color: rgba(136, 136, 136, 1);
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 30px;
+    transition: 0.5s all ease-in;
+    margin-right: 10px;
+}
+.modal-edit-user .ant-btn-default:hover span{
+    color: rgba(4, 92, 206, 1);
+}
+.modal-edit-user .ant-btn-default:hover {
+    background-color: rgba(245, 247, 248, 1) !important;
+}
+
+.modal-edit-user .ant-btn-primary{
+    height: 40px;
+    width: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(4, 92, 206, 1) !important;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: 30px;
 }
 
 /* responsive */

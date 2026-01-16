@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Input, DatePicker, Button, Upload, message } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Modal, Input, DatePicker } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import useAuth from '@/features/auth/store/auth.store';
 import avatar_default from '@/assets/images/avatar_default.svg';
@@ -9,6 +9,8 @@ import moment from 'moment';
 import './Profile.css';
 import { updateProfile } from '../api/users.api';
 const VITE_API_LARAVEL_SERVER = import.meta.env.VITE_API_BASE_URL;
+import { toast } from "react-toastify";
+import dayjs from 'dayjs';
 
 export default function Profile() {
   const { user, setUser } = useAuth();
@@ -21,13 +23,16 @@ export default function Profile() {
     email: '',
     phone: '',
   });
+  const avatarInputRef = useRef(null);
 
   useEffect(() => {
     if (user) {
       setForm({
         avatar: null,
         name: user.name || '',
-        birthday: user.birthday ? moment(user.birthday) : null,
+        birthday: user.birthday
+          ? dayjs(user.birthday, 'YYYY-MM-DD')
+          : null,
         email: user.email || '',
         phone: user.phone || '',
       });
@@ -39,17 +44,15 @@ export default function Profile() {
   const closeModal = () => setModalVisible(false);
 
   const onEdit = (field) => {
-    console.log('edit', field);
+    if (field === 'avatar') {
+      avatarInputRef.current?.click();
+    } else {
+      openModal();
+    }
   };
 
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAvatarChange = ({ file }) => {
-    if (file.status === 'done' || file.status === 'uploading') {
-      handleChange('avatar', file.originFileObj);
-    }
   };
 
   const handleSubmit = async () => {
@@ -64,14 +67,12 @@ export default function Profile() {
       fd.append("email", form.email ?? "");
       fd.append("phone", form.phone ?? "");
       const result = await updateProfile(fd);
-      console.log(form.name)
       setUser(result.user);
-      message.success("Cập nhật thành công");
+      toast.success("Lưu thông tin thành công");
       closeModal();
 
     } catch (err) {
-      console.log(err);
-      message.error("Cập nhật thất bại");
+      toast.error("Lưu thông tin thất bại");
     } finally {
       setLoading(false);
     }
@@ -93,7 +94,7 @@ export default function Profile() {
             <button
               key={field}
               className="profile-row active-hover"
-              onClick={openModal}
+              onClick={() => onEdit(field)}
             >
               <div className="row-label">
                 {field === 'avatar' ? 'Ảnh đại diện' :
@@ -113,7 +114,11 @@ export default function Profile() {
                   </div>
                 ) : (
                   <>
-                    {user?.[field] || '—'}
+                    {field === 'birthday'
+                      ? (user?.birthday
+                        ? moment(user.birthday).format('DD-MM-YYYY')
+                        : '—')
+                      : (user?.[field] || '—')}
                     <img src={next_right} alt="" />
                   </>
                 )}
@@ -145,48 +150,77 @@ export default function Profile() {
         </div>
       </div>
       <Modal
-        title="Cập nhật thông tin cá nhân"
+        title="Chỉnh sửa thông tin cá nhân"
         open={modalVisible}
         onCancel={closeModal}
         onOk={handleSubmit}
         confirmLoading={loading}
+        okText="Lưu"
+        cancelText="Hủy"
+        className='modal-edit-user'
       >
-        <div style={{ marginBottom: 16 }}>
-          <div>Ảnh đại diện</div>
-          <Upload
-            beforeUpload={() => false} // không tự động upload
-            showUploadList={false}
-            onChange={handleAvatarChange}
-          >
-            <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
-          </Upload>
-          {form.avatar && (
-            <div style={{ marginTop: 8 }}>
-              <img src={URL.createObjectURL(form.avatar)} alt="avatar" style={{ width: 80, height: 80, borderRadius: '50%' }} />
-            </div>
-          )}
+
+        <div style={{ marginBottom: 16, marginTop: 20 }}>
+          <Input value={form.name} placeholder='Họ và tên' onChange={e => handleChange('name', e.target.value)} />
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <div>Họ tên</div>
-          <Input value={form.name} onChange={e => handleChange('name', e.target.value)} />
+          <Input value={form.email} placeholder='Email của bạn' onChange={e => handleChange('email', e.target.value)} />
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <div>Ngày sinh</div>
-          <DatePicker value={form.birthday} onChange={date => handleChange('birthday', date)} style={{ width: '100%' }} />
+          <Input value={form.phone} placeholder='Số điện thoại' onChange={e => handleChange('phone', e.target.value)} />
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <div>Email</div>
-          <Input value={form.email} onChange={e => handleChange('email', e.target.value)} />
+        <div
+          style={{ marginBottom: 16 }}
+          onWheel={(e) => e.preventDefault()}
+        >
+          <DatePicker
+            placeholder="Ngày sinh"
+            value={form.birthday}
+            onChange={(date) => handleChange('birthday', date)}
+            style={{ width: '100%' }}
+            inputReadOnly
+          />
         </div>
 
-        <div style={{ marginBottom: 16 }}>
-          <div>Số điện thoại</div>
-          <Input value={form.phone} onChange={e => handleChange('phone', e.target.value)} />
-        </div>
+
       </Modal>
+
+      <input
+        type="file"
+        accept="image/*"
+        ref={avatarInputRef}
+        style={{ display: 'none' }}
+        onChange={async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (!file.type.startsWith('image/')) {
+            toast.error('Vui lòng chọn file ảnh');
+            return;
+          }
+
+          try {
+            setLoading(true);
+
+            const fd = new FormData();
+            fd.append('avatar', file);
+
+            const result = await updateProfile(fd);
+            setUser(result.user);
+
+            toast.success('Cập nhật ảnh đại diện thành công');
+          } catch {
+            toast.error('Cập nhật ảnh thất bại');
+          } finally {
+            setLoading(false);
+            e.target.value = '';
+          }
+        }}
+      />
+
     </div>
   );
 }

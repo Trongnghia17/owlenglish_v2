@@ -130,7 +130,7 @@ export default function Login() {
               <p className='save-password-text'>Lưu mật khẩu</p>
             </div>
             <div className='login-forgot'>
-              <a href="">Quên mật khẩu?</a>
+              <Link to="/forgot-password">Quên mật khẩu?</Link>
             </div>
           </div>
 

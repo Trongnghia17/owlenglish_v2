@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\OauthToken;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Exception;
@@ -20,18 +21,16 @@ class ZaloZNSService
      */
     public function sendOtp(string $phone, string $otp): array
     {
-        $token = Cache::get('zalo_zns_access_token');
+        $accessToken = $this->getAccessToken();
 
-        if (!$token) {
-            $token = $this->refreshToken();
-        }
+        $response = $this->callSendOtpApi($accessToken, $phone, $otp);
 
-        $response = $this->callSendOtpApi($token, $phone, $otp);
-
+        // Access token hết hạn → refresh lại
         if (($response['error'] ?? 0) === -216) {
-            $token = $this->refreshToken();
-            return $this->callSendOtpApi($token, $phone, $otp);
+            $accessToken = $this->refreshToken();
+            return $this->callSendOtpApi($accessToken, $phone, $otp);
         }
+
         return $response;
     }
 
@@ -52,19 +51,42 @@ class ZaloZNSService
     }
 
     /**
-     * Refresh access_token (có lock chống race)
+     * Lấy access token (ưu tiên cache → DB)
+     */
+    protected function getAccessToken(): string
+    {
+        return Cache::remember('zalo_zns_access_token', 300, function () {
+            $token = OauthToken::provider('zalo')->first();
+
+            if (!$token) {
+                throw new Exception('Chưa cấu hình Zalo OAuth token');
+            }
+
+            if ($token->isAccessTokenValid()) {
+                return $token->access_token;
+            }
+
+            return $this->refreshToken();
+        });
+    }
+
+    /**
+     * Refresh access token (lock chống race condition)
      */
     protected function refreshToken(): string
     {
         return Cache::lock('zalo_refresh_token_lock', 10)->block(5, function () {
 
-            // Có thể token đã được refresh bởi request khác
+            // Có thể request khác đã refresh
             if ($token = Cache::get('zalo_zns_access_token')) {
                 return $token;
             }
 
-            $refreshToken = Cache::get('zalo_zns_refresh_token')
-                ?? config('zalo.refresh_token');
+            $oauth = OauthToken::provider('zalo')->first();
+
+            if (!$oauth || !$oauth->isRefreshTokenValid()) {
+                throw new Exception('Refresh token Zalo không hợp lệ hoặc đã hết hạn');
+            }
 
             $response = Http::asForm()
                 ->withHeaders([
@@ -73,7 +95,7 @@ class ZaloZNSService
                 ->post('https://oauth.zaloapp.com/v4/oa/access_token', [
                     'app_id'        => config('zalo.app_id'),
                     'grant_type'    => 'refresh_token',
-                    'refresh_token' => $refreshToken,
+                    'refresh_token' => $oauth->refresh_token,
                 ]);
 
             if (!$response->ok()) {
@@ -90,15 +112,20 @@ class ZaloZNSService
                 throw new Exception('Response token Zalo không hợp lệ');
             }
 
+            // Update DB
+            $oauth->updateAccessToken(
+                $data['access_token'],
+                $data['expires_in']
+            );
+
+            $oauth->updateRefreshToken(
+                $data['refresh_token']
+            );
+
             Cache::put(
                 'zalo_zns_access_token',
                 $data['access_token'],
                 now()->addSeconds($data['expires_in'] - 60)
-            );
-
-            Cache::forever(
-                'zalo_zns_refresh_token',
-                $data['refresh_token']
             );
 
             return $data['access_token'];

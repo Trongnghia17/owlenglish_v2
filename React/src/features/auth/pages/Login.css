@@ -14,6 +14,11 @@
   background-image: url('../../../assets/images/banner-register.png');
 }
 
+.forgot-wrapper {
+  background-image: url('../../../assets/images/forgotpassword.png');
+  margin-left: -100px;
+}
+
 .login-imgleftmain {
   width: 45%;
   height: 100vh;
