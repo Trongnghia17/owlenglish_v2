@@ -1563,7 +1563,7 @@
                     }).join('');
                 }
 
-                // Initialize Quill editors
+                // Initialize editors (CKEditor preferred, Quill as fallback)
                 function initializeAllEditors() {
                     const patterns = [
                         'section-content-',
@@ -1587,9 +1587,55 @@
                     const hiddenInput = document.getElementById(elementId);
                     const editorDiv = document.getElementById(elementId + '-editor');
 
-                    if (!editorDiv || editorDiv.classList.contains('ql-container')) return;
+                    if (!editorDiv) return;
 
-                   console.log ('Initializing Quill for:', elementId, 'Value:', hiddenInput?.value?.substring(0, 100));
+                    // If CKEditor (ClassicEditor) is available, prefer it
+                    if (window.ClassicEditor) {
+                        // Avoid double initialization
+                        if (editorDiv.dataset.ckeditorInitialized === 'true') {
+                            return;
+                        }
+                        editorDiv.dataset.ckeditorInitialized = 'true';
+
+                        // Prepare initial data from the hidden input (decode HTML entities if needed)
+                        let initialData = hiddenInput ? hiddenInput.value || '' : '';
+                        if (initialData && (initialData.includes('&lt;') || initialData.includes('&gt;'))) {
+                            const tempDiv = document.createElement('textarea');
+                            tempDiv.innerHTML = initialData;
+                            initialData = tempDiv.value;
+                        }
+
+                        window.ClassicEditor
+                            .create(editorDiv, {
+                                // Tắt plugin MediaEmbed/MediaEmbedToolbar để tránh cảnh báo widget-toolbar-no-items
+                                removePlugins: ['MediaEmbed', 'MediaEmbedToolbar']
+                            })
+                            .then(editor => {
+                                if (initialData) {
+                                    editor.setData(initialData);
+                                }
+
+                                if (hiddenInput) {
+                                    editor.model.document.on('change:data', () => {
+                                        hiddenInput.value = editor.getData();
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('CKEditor initialization error for', elementId, error);
+                            });
+
+                        return;
+                    }
+
+                    // Fallback to Quill if CKEditor is not available
+                    if (!window.Quill) {
+                        console.error('No editor library available for', elementId);
+                        return;
+                    }
+
+                    // Prevent double initialization with Quill
+                    if (editorDiv.classList.contains('ql-container')) return;
 
                     const quill = new Quill(`#${elementId}-editor`, {
                         theme: 'snow',
@@ -1607,23 +1653,19 @@
                         placeholder: 'Nhập nội dung...'
                     });
 
-                    if (hiddenInput?.value) {
+                    if (hiddenInput && hiddenInput.value) {
                         // Decode HTML entities if the value contains escaped HTML
                         let decodedHtml = hiddenInput.value;
                         if (decodedHtml.includes('&lt;') || decodedHtml.includes('&gt;')) {
                             const tempDiv = document.createElement('textarea');
                             tempDiv.innerHTML = decodedHtml;
                             decodedHtml = tempDiv.value;
-                            console.log('Decoded HTML entities for:', elementId);
                         }
 
                         // Set content with a small delay to prevent browser lag
                         setTimeout(() => {
                             quill.root.innerHTML = decodedHtml;
-                            console.log('Set content for:', elementId, 'Length:', decodedHtml.length);
                         }, 10);
-                    } else {
-                        console.log('No value for:', elementId);
                     }
 
                     quill.on('text-change', () => {
