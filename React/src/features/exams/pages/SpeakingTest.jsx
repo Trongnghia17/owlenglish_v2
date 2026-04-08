@@ -213,7 +213,7 @@ const SpeakingTest = () => {
   const handleSubmit = () => {
     console.log('Submitting recordings:', recordings);
     // TODO: Submit to API
-    navigate('/exams/result');
+    // navigate('/exams/result');
   };
 
   const handleUpload = (questionId) => {

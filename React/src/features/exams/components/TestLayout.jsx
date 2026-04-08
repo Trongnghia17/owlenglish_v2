@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/images/logo.png'
+import doneImg from '@/assets/images/cudaxong.png'
+import notDoneImg from '@/assets/images/cuchuaxong.png'
 import './TestLayout.css';
 import { getNotes, createNote, updateNote, deleteNote } from '../api/notes.api';
 
@@ -497,7 +499,7 @@ export default function TestLayout({
           <div className="test-layout__modal-content test-layout__submit-modal" onClick={(e) => e.stopPropagation()}>
             <div className="test-layout__submit-modal-icon">
               <img
-                src={isTestComplete ? "/src/assets/images/cudaxong.png" : "/src/assets/images/cuchuaxong.png"}
+                src={isTestComplete ? doneImg : notDoneImg}
                 alt="Owl"
                 className="test-layout__submit-modal-owl"
               />

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTestResult } from '../api/exams.api';
 import logo from '@/assets/images/logo.png';
+import congratsImg from '@/assets/images/source_image-Photoroom.png'
 import './TestResult.css';
 
 export default function TestResult() {
@@ -156,7 +157,7 @@ export default function TestResult() {
               Hôi kho bạn nhỉ? Mời bạn ôn luyện tập với OWL nhé !
             </div>
             <div className="test-result__mascot">
-              <img src="/src/assets/images/source_image-Photoroom.png" alt="Congratulations" />
+             <img src={congratsImg} alt="Congratulations" />
             </div>
            
           </div>

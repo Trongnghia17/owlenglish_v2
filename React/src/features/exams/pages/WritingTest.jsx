@@ -122,7 +122,7 @@ const WritingTest = () => {
   const handleSubmit = () => {
     console.log('Submitting answers:', answers);
     // TODO: Submit to API
-    navigate('/exams/result');
+    // navigate('/exams/result');
   };
 
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
