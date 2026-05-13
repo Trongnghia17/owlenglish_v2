@@ -64,6 +64,22 @@
                                     <img src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
                                 </div>
                             </div>
+                            <!-- Shared Audio File -->
+                            <div class="mb-3" id="sharedAudioField"
+                                style="display: {{ old('skill_type') === 'listening' ? 'block' : 'none' }};">
+                                <label for="audio_file" class="form-label">Audio File dùng chung</label>
+                                <input type="file"
+                                    class="form-control @error('audio_file') is-invalid @enderror"
+                                    id="audio_file"
+                                    name="audio_file"
+                                    accept="audio/*">
+                                <small class="form-text text-muted">
+                                    Một file nghe áp dụng cho toàn bộ sections của quiz Listening này.
+                                </small>
+                                @error('audio_file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
                             <!-- Time Limit -->
                             <div class="mb-3">
                                 <label for="time_limit" class="form-label">Time Limit (phút) <span
@@ -173,6 +189,8 @@
             document.addEventListener('DOMContentLoaded', function () {
                 const examSelect = document.getElementById('exam_id');
                 const testSelect = document.getElementById('exam_test_id');
+                const skillTypeSelect = document.getElementById('skill_type');
+                const sharedAudioField = document.getElementById('sharedAudioField');
                 
                 // Image preview
                 const imageInput = document.getElementById('image');
@@ -191,6 +209,13 @@
                         imagePreview.style.display = 'none';
                     }
                 });
+
+                function toggleSharedAudioField() {
+                    sharedAudioField.style.display = skillTypeSelect.value === 'listening' ? 'block' : 'none';
+                }
+
+                skillTypeSelect.addEventListener('change', toggleSharedAudioField);
+                toggleSharedAudioField();
 
                 // Load tests when exam changes
                 examSelect.addEventListener('change', function () {

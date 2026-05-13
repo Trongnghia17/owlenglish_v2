@@ -76,6 +76,7 @@ class SkillController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:102400',
             'time_limit' => 'required|integer|min:1',
             'is_online' => 'nullable|boolean',
         ]);
@@ -90,6 +91,11 @@ class SkillController extends Controller
             $image = $request->file('image');
             $imagePath = $image->store('skills', 'public');
             $validated['image'] = $imagePath;
+        }
+
+        if ($request->hasFile('audio_file')) {
+            $audioFile = $request->file('audio_file');
+            $validated['audio_file'] = $audioFile->store('skills/audio', 'public');
         }
 
         // Remove exam_id from validated data as it's not in the database table
@@ -163,6 +169,7 @@ class SkillController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:102400',
             'time_limit' => 'required|integer|min:1',
             'is_online' => 'nullable|boolean',
             'sections' => 'nullable|array',
@@ -172,7 +179,6 @@ class SkillController extends Controller
             'sections.*.feedback' => 'nullable|string',
             'sections.*.content_format' => 'nullable|in:text,audio,video',
             'sections.*.answer_inputs_inside_content' => 'nullable|string',
-            'sections.*.audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:102400', // 100MB
             'sections.*.ui_layer' => 'nullable|in:1,2',
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
@@ -227,6 +233,15 @@ class SkillController extends Controller
             $validated['image'] = $imagePath;
         }
 
+        if ($request->hasFile('audio_file')) {
+            if ($skill->audio_file && Storage::disk('public')->exists($skill->audio_file)) {
+                Storage::disk('public')->delete($skill->audio_file);
+            }
+
+            $audioFile = $request->file('audio_file');
+            $validated['audio_file'] = $audioFile->store('skills/audio', 'public');
+        }
+
         // Remove exam_id from validated data as it's not in the database table
         unset($validated['exam_id']);
 
@@ -243,7 +258,7 @@ class SkillController extends Controller
         $skill->update($validated);
 
         // Process sections
-        $this->processSections($skill, $sectionsData, $request);
+        $this->processSections($skill, $sectionsData);
 
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill đã được cập nhật thành công!');
@@ -252,7 +267,7 @@ class SkillController extends Controller
     /**
      * Process sections, question groups, and questions
      */
-    private function processSections(ExamSkill $skill, array $sectionsData, Request $request)
+    private function processSections(ExamSkill $skill, array $sectionsData)
     {
 
         $existingSectionIds = [];
@@ -260,29 +275,9 @@ class SkillController extends Controller
         foreach ($sectionsData as $index => $sectionData) {
             $sectionId = $sectionData['id'] ?? null;
 
-            // Get existing section to preserve old files if needed
-            $existingSection = $sectionId ? $skill->sections()->find($sectionId) : null;
             $metadata = [
                 'answer_inputs_inside_content' => ($sectionData['answer_inputs_inside_content'] ?? '0') === '1',
             ];
-
-            // Handle audio file upload
-            if ($request->hasFile("sections.{$index}.audio_file")) {
-                $audioFile = $request->file("sections.{$index}.audio_file");
-
-                // Delete old audio file if exists
-                if ($existingSection && isset($existingSection->metadata['audio_file'])) {
-                    Storage::disk('public')->delete($existingSection->metadata['audio_file']);
-                }
-
-                $audioPath = $audioFile->store('sections/audio', 'public');
-                $metadata['audio_file'] = $audioPath;
-            } else {
-                // Keep existing audio file
-                if ($existingSection && isset($existingSection->metadata['audio_file'])) {
-                    $metadata['audio_file'] = $existingSection->metadata['audio_file'];
-                }
-            }
 
             // Prepare section data
             $sectionInfo = [

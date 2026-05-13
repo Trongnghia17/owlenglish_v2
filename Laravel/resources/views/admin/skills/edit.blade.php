@@ -123,6 +123,36 @@
                                 </div>
                             </div>
 
+                            @if($skill->isListening())
+                                <!-- Shared Audio File -->
+                                <div class="mb-3">
+                                    <label for="audio_file" class="form-label">Audio File dùng chung</label>
+                                    <input type="file"
+                                        class="form-control @error('audio_file') is-invalid @enderror"
+                                        id="audio_file"
+                                        name="audio_file"
+                                        accept="audio/*">
+                                    <small class="form-text text-muted">
+                                        Một file nghe áp dụng cho toàn bộ sections của quiz Listening này.
+                                    </small>
+                                    @error('audio_file')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+
+                                    @if($skill->audio_file)
+                                        <div class="mt-2">
+                                            <label class="form-label">Audio hiện tại:</label>
+                                            <div>
+                                                <small class="text-muted">{{ basename($skill->audio_file) }}</small>
+                                                <audio controls class="w-100 mt-1">
+                                                    <source src="{{ asset('storage/' . $skill->audio_file) }}">
+                                                </audio>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
                             <!-- Time Limit -->
                             <div class="mb-3">
                                 <label for="time_limit" class="form-label">Time Limit (phút) <span
@@ -375,23 +405,6 @@
                                                     name="sections[{{ $sectionIndex }}][feedback]"
                                                     value="{{ old('sections.' . $sectionIndex . '.feedback', $section->feedback) }}">
                                                 <div id="section-feedback-{{ $sectionIndex }}-editor"></div>
-                                            </div>
-
-                                            <!-- Audio File Upload (for Listening) -->
-                                            <div class="mb-3 skill-specific-field listening-field">
-                                                <label class="form-label">Audio File <span class="text-danger">*</span></label>
-                                                <input type="file" class="form-control"
-                                                    name="sections[{{ $sectionIndex }}][audio_file]" accept="audio/*">
-                                                @if($section->metadata['audio_file'] ?? false)
-                                                    <div class="mt-2">
-                                                        <small class="text-muted">Current:
-                                                            {{ $section->metadata['audio_file'] }}</small>
-                                                        <audio controls class="w-100 mt-1">
-                                                            <source src="{{ asset('storage/' . $section->metadata['audio_file']) }}"
-                                                                type="audio/mpeg">
-                                                        </audio>
-                                                    </div>
-                                                @endif
                                             </div>
 
                                             <!-- UI Layer Selection (for Listening) -->
@@ -1208,10 +1221,6 @@
                                 <label class="form-label">Section Feedback</label>
                                 <input type="hidden" id="section-feedback-new-${sectionIndex}" name="sections[${sectionIndex}][feedback]">
                                 <div id="section-feedback-new-${sectionIndex}-editor"></div>
-                            </div>
-                            <div class="mb-3 skill-specific-field listening-field">
-                                <label class="form-label">Audio File <span class="text-danger">*</span></label>
-                                <input type="file" class="form-control" name="sections[${sectionIndex}][audio_file]" accept="audio/*">
                             </div>
                             <div class="mb-3 skill-specific-field listening-field">
                                 <label class="form-label">UI Layer (Optional)</label>
