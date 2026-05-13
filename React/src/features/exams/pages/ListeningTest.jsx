@@ -6,6 +6,16 @@ import './ListeningTest.css';
 
 const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '';
+
+const toStorageUrl = (path) => {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  if (path.startsWith('/storage/')) return `${API_BASE_URL}${path}`;
+  if (path.startsWith('storage/')) return `${API_BASE_URL}/${path}`;
+  return `${API_BASE_URL}/storage/${path}`;
+};
+
 const GroupContentWithInlineInputs = ({ content, questions = [], answers = {}, onAnswerChange }) => {
   const containerRef = useRef(null);
   const placeholdersMetaRef = useRef([]);
@@ -129,7 +139,19 @@ const ListeningTest = () => {
         
         if (sectionId) {
           // Lấy data cho section cụ thể (1 part)
-          const response = await getSectionById(sectionId, { with_questions: true });
+          const [response, skillResponse] = await Promise.all([
+            getSectionById(sectionId, { with_questions: true }),
+            skillId ? getSkillById(skillId) : Promise.resolve(null)
+          ]);
+
+          if (skillResponse?.data?.success) {
+            const skill = skillResponse.data.data;
+            setSkillData(skill);
+            if (skill.time_limit) {
+              setTimeRemaining(skill.time_limit * 60);
+            }
+          }
+
           if (response.data.success) {
             const section = response.data.data;
             setSectionData(section);
@@ -458,7 +480,14 @@ const ListeningTest = () => {
   }
 
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-  const currentPartAudio = currentPartGroups[0]?.audioUrl;
+  const currentPartAudio = toStorageUrl(
+    skillData?.audio_file ||
+    skillData?.audio_url ||
+    skillData?.media?.audio ||
+    sectionData?.exam_skill?.audio_file ||
+    sectionData?.skill?.audio_file ||
+    currentPartGroups[0]?.audioUrl
+  );
 
   // Render câu hỏi dựa trên loại question type
   const renderQuestionsByType = (group, answers, handleAnswerSelect) => {
