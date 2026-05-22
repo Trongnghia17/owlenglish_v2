@@ -74,6 +74,7 @@
                     initSkillTypeSelect();
                     initializeAllEditors();
                     initImagePreview();
+                    initBuilderNavigationScroll();
                 });
 
                 // Initialize image preview
@@ -103,6 +104,35 @@
                             }
                         });
                     }
+                }
+
+                function initBuilderNavigationScroll() {
+                    const navContainer = document.getElementById('sectionNavigation');
+                    const scrollBody = document.querySelector('.sections-builder-scroll-body');
+
+                    if (!navContainer || !scrollBody) return;
+
+                    navContainer.addEventListener('click', function (e) {
+                        const link = e.target.closest('a[href^="#"]');
+                        if (!link) return;
+
+                        const targetId = link.getAttribute('href').slice(1);
+                        const target = document.getElementById(targetId);
+                        if (!target || !scrollBody.contains(target)) return;
+
+                        e.preventDefault();
+
+                        const bodyRect = scrollBody.getBoundingClientRect();
+                        const targetRect = target.getBoundingClientRect();
+                        const top = scrollBody.scrollTop + targetRect.top - bodyRect.top - 8;
+
+                        scrollBody.scrollTo({
+                            top,
+                            behavior: 'smooth'
+                        });
+
+                        history.replaceState(null, '', `#${targetId}`);
+                    });
                 }
 
                 // Initialize exam select
@@ -419,12 +449,19 @@
                                 <div id="group-content-new-${sectionIdx}-${groupIndex}-editor"></div>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Question Group Instructions</label>
+                                <input type="hidden" id="group-instructions-new-${sectionIdx}-${groupIndex}" name="sections[${sectionIdx}][groups][${groupIndex}][instructions]">
+                                <div id="group-instructions-new-${sectionIdx}-${groupIndex}-editor"></div>
+                                <small class="form-text text-muted">Example: Questions 7 - 10, Complete the notes below, Write ONE WORD ONLY...</small>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Question Type</label>
                                 <select class="form-select group-question-type-select" name="sections[${sectionIdx}][groups][${groupIndex}][question_type]">
                                     <option value="multiple_choice">Multiple Choice</option>
                                     <option value="yes_no_not_given">Yes/No/Not Given</option>
                                     <option value="true_false_not_given">True/False/Not Given</option>
                                     <option value="short_text">Short Text</option>
+                                    <option value="note_completion">Note Completion</option>
                                     <option value="table_selection">Table Selection</option>
                                 </select>
                             </div>
@@ -472,6 +509,7 @@
                 `);
 
                     initQuillEditor(`group-content-new-${sectionIdx}-${groupIndex}`);
+                    initQuillEditor(`group-instructions-new-${sectionIdx}-${groupIndex}`);
                     updateGroupNumbers(sectionItem);
                     updateNavigation();
                 }
@@ -521,6 +559,7 @@
                                         <option value="yes_no_not_given">Yes/No/Not Given</option>
                                         <option value="true_false_not_given">True/False/Not Given</option>
                                         <option value="short_text">Short Text</option>
+                                        <option value="note_completion">Note Completion</option>
                                         <option value="table_selection">Table Selection</option>
                                     </select>
                                 </div>
@@ -689,6 +728,7 @@
                         'section-content-',
                         'section-feedback-',
                         'group-content-',
+                        'group-instructions-',
                         'question-content-',
                         'answer-content-',
                         'answer-feedback-',

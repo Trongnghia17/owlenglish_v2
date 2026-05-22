@@ -182,7 +182,8 @@ class SkillController extends Controller
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
-            'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,fill_in_blank,matching,table_selection,essay,speaking',
+            'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,note_completion,fill_in_blank,matching,table_selection,essay,speaking',
+            'sections.*.groups.*.instructions' => 'nullable|string',
             'sections.*.groups.*.number_of_options' => 'nullable|integer|min:2|max:10',
             'sections.*.groups.*.answer_inputs_inside_content' => 'nullable|string',
             'sections.*.groups.*.split_questions_side_by_side' => 'nullable|string',
@@ -345,6 +346,7 @@ class SkillController extends Controller
                 'exam_section_id' => $section->id,
                 'content' => $groupData['content'] ?? '',
                 'question_type' => $groupData['question_type'] ?? 'multiple_choice',
+                'instructions' => $groupData['instructions'] ?? null,
                 'options' => $options,
                 'is_active' => true,
             ];

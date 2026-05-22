@@ -20,6 +20,7 @@ return new class extends Migration
                 'yes_no_not_given',         // Yes/No/Not Given (IELTS Reading)
                 'true_false_not_given',     // True/False/Not Given (IELTS Reading)
                 'short_text',               // Điền từ ngắn
+                'note_completion',          // Hoàn thành ghi chú
                 'fill_in_blank',            // Điền vào chỗ trống
                 'matching',                 // Nối
                 'table_selection',          // Chọn trong bảng
