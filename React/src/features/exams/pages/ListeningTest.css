@@ -3,7 +3,7 @@
 .listening-test__content {
   flex: 1;
   padding: 40px;
-  background: #F8F8F8;
+  background: #fff;
   max-width: 1000px;
   margin: 0 auto;
   width: 100%;
@@ -19,7 +19,7 @@
   margin: 0 auto;
   padding: 24px 40px;
   gap: 24px;
-  background: #F8F8F8;
+  background: #fff;
 }
 
 /* Font size variations */
@@ -560,12 +560,12 @@
 }
 
 .listening-test__mc-option {
-  min-height: 48px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid #DADDE3;
-  border-radius: 10px;
+  border: 2px solid #DADDE3;
+  border-radius: 12px;
   background: #FFF;
   padding: 10px 14px;
   cursor: pointer;
@@ -573,14 +573,14 @@
 }
 
 .listening-test__mc-option:hover {
-  border-color: #045CCE;
+  border-color: #D3E7FF;
   background: #F8FBFF;
 }
 
 .listening-test__mc-option.selected {
-  border-color: #045CCE;
-  background: #F3F8FF;
-  box-shadow: 0 0 0 2px rgba(4, 92, 206, 0.08);
+  border-color: #D3E7FF;
+  background: #FFF;
+  box-shadow: none;
 }
 
 .listening-test__mc-option input {
@@ -590,13 +590,13 @@
 }
 
 .listening-test__mc-letter {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 24px;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #F3F6FA;
   color: #6B7280;
   font-size: 13px;
@@ -604,14 +604,19 @@
 }
 
 .listening-test__mc-option.selected .listening-test__mc-letter {
-  background: #045CCE;
-  color: #FFF;
+  background: #F1F7FF;
+  color: #1D6DFF;
 }
 
 .listening-test__mc-option-text {
   color: #1F2937;
   font-size: 14px;
   line-height: 1.5;
+}
+
+.listening-test__mc-option.selected .listening-test__mc-option-text,
+.listening-test__mc-option.selected .listening-test__mc-option-text * {
+  color: #1D6DFF;
 }
 
 .listening-test__mc-option-text p {
@@ -697,11 +702,20 @@
 
 .listening-test__group-content {
   margin-bottom: 0;
-  background: white;
-  border-radius: 0;
+  border-radius: var(--Radius-S, 5px);
+  background: rgba(4, 92, 206, 0.07);
   line-height: 1.8;
-  color: #374151;
-  border-bottom: 1px solid #F3F4F6;
+  padding: var(--Spacing-5, 16px);
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  margin-bottom: 16px;
+}
+
+.listening-test__group-content p {
+  margin: 0px;
+  color: #0537A5;
 }
 
 .listening-test__group-content img {
