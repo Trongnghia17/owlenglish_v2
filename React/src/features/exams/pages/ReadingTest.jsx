@@ -634,6 +634,7 @@ export default function ReadingTest() {
                     break;
                     
                   case 'short_text':
+                  case 'note_completion':
                     // No options needed for text input
                     options = [];
                     break;
@@ -794,6 +795,7 @@ export default function ReadingTest() {
                         break;
                         
                       case 'short_text':
+                      case 'note_completion':
                         // No options needed for text input
                         options = [];
                         break;
@@ -1000,7 +1002,7 @@ export default function ReadingTest() {
 
     // 1. DẠNG SHORT_TEXT - Điền vào chỗ trống inline (có {{ placeholders }})
     const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
-    if (hasPlaceholders || questionType === 'short_text') {
+    if (hasPlaceholders || questionType === 'short_text' || questionType === 'note_completion') {
       if (hasPlaceholders) {
         return (
           <div className="reading-test__question-group-with-inputs">

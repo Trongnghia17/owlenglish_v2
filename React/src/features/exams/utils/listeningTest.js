@@ -2,6 +2,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || ''
 
 export const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
 
+export const isNoteCompletionGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'note_completion';
+
 const encodeStoragePath = (path) =>
   path.split('/').map((segment) => encodeURIComponent(segment)).join('/');
 
@@ -35,6 +38,9 @@ export const toStorageUrl = (path) => {
 
 export const usesTwoColumnLayout = (groups = []) =>
   groups.some((group) => (group.type || '').toLowerCase() === 'table_selection');
+
+export const usesNoteCompletionLayout = (groups = []) =>
+  groups.some(isNoteCompletionGroup);
 
 export const isMultipleChoiceGroup = (group) =>
   (group?.type || '').toLowerCase() === 'multiple_choice';
@@ -113,6 +119,7 @@ const getGroupAnswerOptions = (group) => {
         optionsWithContent: null
       };
     case 'short_text':
+    case 'note_completion':
       return { options: [], optionsWithContent: null };
     default:
       return {

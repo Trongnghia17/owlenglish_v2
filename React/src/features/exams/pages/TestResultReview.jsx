@@ -271,6 +271,7 @@ export default function TestResultReview() {
               break;
               
             case 'short_text':
+            case 'note_completion':
               options = [];
               break;
               
@@ -393,6 +394,7 @@ export default function TestResultReview() {
                   break;
                   
                 case 'short_text':
+                case 'note_completion':
                   options = [];
                   break;
                   
@@ -481,7 +483,7 @@ export default function TestResultReview() {
 
     // SHORT_TEXT
     const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
-    if (hasPlaceholders || questionType === 'short_text') {
+    if (hasPlaceholders || questionType === 'short_text' || questionType === 'note_completion') {
       // Dạng 1: Inline placeholders trong group content
       if (hasPlaceholders) {
         return (

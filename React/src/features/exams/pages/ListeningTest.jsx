@@ -2,13 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { getSkillById, getSectionById, submitTestResult } from '../api/exams.api';
 import ListeningContentPanel from '../components/listening/ListeningContentPanel';
+import ListeningNoteCompletionGroup from '../components/listening/ListeningNoteCompletionGroup';
 import ListeningQuestionGroup from '../components/listening/ListeningQuestionGroup';
 import TestLayout from '../components/TestLayout';
 import {
   createPartTitle,
   getAnsweredCount,
   getCurrentPartAudio,
+  isNoteCompletionGroup,
   normalizeListeningSection,
+  usesNoteCompletionLayout,
   usesTwoColumnLayout
 } from '../utils/listeningTest';
 import './ListeningTest.css';
@@ -137,7 +140,8 @@ const ListeningTest = () => {
     [questionGroups, currentPartTab]
   );
 
-  const isTwoColumnLayout = usesTwoColumnLayout(currentPartGroups);
+  const isNoteCompletionLayout = usesNoteCompletionLayout(currentPartGroups);
+  const isTwoColumnLayout = !isNoteCompletionLayout && usesTwoColumnLayout(currentPartGroups);
 
   const currentPartAudio = useMemo(
     () => getCurrentPartAudio({ skillData, sectionData, currentPartGroups }),
@@ -221,8 +225,32 @@ const ListeningTest = () => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''}`}>
-        {isTwoColumnLayout ? (
+      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''}`}>
+        {isNoteCompletionLayout ? (
+          currentPartGroups.map((group, index) => (
+            isNoteCompletionGroup(group) ? (
+              <ListeningNoteCompletionGroup
+                key={group.id}
+                group={group}
+                currentPartTab={currentPartTab}
+                audioUrl={currentPartAudio}
+                showAudio={index === 0}
+                answers={answers}
+                onAnswerChange={handleAnswerSelect}
+              />
+            ) : (
+              <ListeningQuestionGroup
+                key={group.id}
+                group={group}
+                currentPartTab={currentPartTab}
+                audioUrl={currentPartAudio}
+                showAudio={index === 0}
+                answers={answers}
+                onAnswerChange={handleAnswerSelect}
+              />
+            )
+          ))
+        ) : isTwoColumnLayout ? (
           <>
             <ListeningContentPanel
               groups={currentPartGroups}
