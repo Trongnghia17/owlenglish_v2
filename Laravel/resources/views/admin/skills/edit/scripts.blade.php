@@ -282,9 +282,9 @@
 
                     // Initialize editors only when using rich text mode
                     if (!(isYN || isTF)) {
-                        initQuillEditor(`answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
+                        queueEditorById(`answer-content-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
                     }
-                    initQuillEditor(`answer-feedback-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
+                    queueEditorById(`answer-feedback-new-${sectionIdx}-${groupIdx}-${questionIdx}-${answerIndex}`);
                 }
 
                 // Add section
@@ -385,8 +385,8 @@
                     </div>
                 `);
 
-                    initQuillEditor(`section-content-new-${sectionIndex}`);
-                    initQuillEditor(`section-feedback-new-${sectionIndex}`);
+                    queueEditorById(`section-content-new-${sectionIndex}`);
+                    queueEditorById(`section-feedback-new-${sectionIndex}`);
                     sectionIndex++;
                     updateSectionNumbers();
                     updateNavigation();
@@ -508,8 +508,8 @@
                     </div>
                 `);
 
-                    initQuillEditor(`group-content-new-${sectionIdx}-${groupIndex}`);
-                    initQuillEditor(`group-instructions-new-${sectionIdx}-${groupIndex}`);
+                    queueEditorById(`group-content-new-${sectionIdx}-${groupIndex}`);
+                    queueEditorById(`group-instructions-new-${sectionIdx}-${groupIndex}`);
                     updateGroupNumbers(sectionItem);
                     updateNavigation();
                 }
@@ -599,7 +599,7 @@
                     </div>
                 `);
 
-                    initQuillEditor(`question-content-new-${sectionIdx}-${groupIdx}-${questionIndex}`);
+                    queueEditorById(`question-content-new-${sectionIdx}-${groupIdx}-${questionIndex}`);
                     updateQuestionNumbers(groupItem);
                     updateNavigation();
                 }
@@ -656,9 +656,9 @@
                     </div>
                 `);
 
-                    initQuillEditor(`direct-question-content-new-${sectionIdx}-${questionIndex}`);
-                    initQuillEditor(`direct-answer-new-${sectionIdx}-${questionIndex}`);
-                    initQuillEditor(`direct-feedback-new-${sectionIdx}-${questionIndex}`);
+                    queueEditorById(`direct-question-content-new-${sectionIdx}-${questionIndex}`);
+                    queueEditorById(`direct-answer-new-${sectionIdx}-${questionIndex}`);
+                    queueEditorById(`direct-feedback-new-${sectionIdx}-${questionIndex}`);
                     updateDirectQuestionNumbers(sectionItem);
                     updateNavigation();
                 }
@@ -722,25 +722,123 @@
                     }).join('');
                 }
 
-                // Initialize editors (CKEditor preferred, Quill as fallback)
+                const richTextEditorPrefixes = [
+                    'section-content-',
+                    'section-feedback-',
+                    'group-content-',
+                    'group-instructions-',
+                    'question-content-',
+                    'answer-content-',
+                    'answer-feedback-',
+                    'direct-question-content-',
+                    'direct-answer-',
+                    'direct-feedback-'
+                ];
+                const lazyEditorQueue = [];
+                const lazyEditorQueued = new Set();
+                let activeLazyEditors = 0;
+                let lazyEditorObserver = null;
+                const maxConcurrentLazyEditors = 2;
+
+                // Register editors lazily. Creating every CKEditor at once makes long tests very slow.
                 function initializeAllEditors() {
-                    const patterns = [
-                        'section-content-',
-                        'section-feedback-',
-                        'group-content-',
-                        'group-instructions-',
-                        'question-content-',
-                        'answer-content-',
-                        'answer-feedback-',
-                        'direct-question-content-',
-                        'direct-answer-',
-                        'direct-feedback-'
-                    ];
-                    patterns.forEach(pattern => {
-                        document.querySelectorAll(`[id^="${pattern}"][id$="-editor"]`).forEach(editorDiv => {
-                            initQuillEditor(editorDiv.id.replace('-editor', ''));
+                    const scrollBody = document.querySelector('.sections-builder-scroll-body');
+
+                    if ('IntersectionObserver' in window) {
+                        lazyEditorObserver = new IntersectionObserver(entries => {
+                            entries.forEach(entry => {
+                                if (!entry.isIntersecting) return;
+
+                                lazyEditorObserver.unobserve(entry.target);
+                                queueLazyEditor(entry.target);
+                            });
+                        }, {
+                            root: scrollBody || null,
+                            rootMargin: '600px 0px',
+                            threshold: 0
                         });
+                    }
+
+                    registerLazyEditors(document);
+
+                    document.addEventListener('pointerdown', function (e) {
+                        const editorDiv = e.target.closest('[id$="-editor"]');
+                        if (!editorDiv || !isRichTextEditorElement(editorDiv)) return;
+
+                        queueLazyEditor(editorDiv, true);
                     });
+                }
+
+                function registerLazyEditors(root) {
+                    root.querySelectorAll('[id$="-editor"]').forEach(editorDiv => {
+                        if (!isRichTextEditorElement(editorDiv) || isEditorInitialized(editorDiv)) return;
+
+                        editorDiv.classList.add('lazy-editor-placeholder');
+
+                        if (lazyEditorObserver) {
+                            lazyEditorObserver.observe(editorDiv);
+                        } else {
+                            queueLazyEditor(editorDiv);
+                        }
+                    });
+                }
+
+                function isRichTextEditorElement(editorDiv) {
+                    const baseId = editorDiv.id.replace(/-editor$/, '');
+
+                    return richTextEditorPrefixes.some(prefix => baseId.startsWith(prefix));
+                }
+
+                function isEditorInitialized(editorDiv) {
+                    return editorDiv.dataset.ckeditorInitialized === 'true'
+                        || editorDiv.dataset.quillInitialized === 'true'
+                        || editorDiv.classList.contains('ql-container');
+                }
+
+                function queueLazyEditor(editorDiv, prioritize = false) {
+                    if (!editorDiv || !editorDiv.isConnected || isEditorInitialized(editorDiv) || lazyEditorQueued.has(editorDiv)) {
+                        return;
+                    }
+
+                    lazyEditorQueued.add(editorDiv);
+                    prioritize ? lazyEditorQueue.unshift(editorDiv) : lazyEditorQueue.push(editorDiv);
+                    processLazyEditorQueue();
+                }
+
+                function queueEditorById(elementId, prioritize = true) {
+                    const editorDiv = document.getElementById(elementId + '-editor');
+                    if (!editorDiv) return;
+
+                    editorDiv.classList.add('lazy-editor-placeholder');
+                    queueLazyEditor(editorDiv, prioritize);
+                }
+
+                function processLazyEditorQueue() {
+                    while (activeLazyEditors < maxConcurrentLazyEditors && lazyEditorQueue.length > 0) {
+                        const editorDiv = lazyEditorQueue.shift();
+                        lazyEditorQueued.delete(editorDiv);
+
+                        if (!editorDiv.isConnected || isEditorInitialized(editorDiv)) {
+                            continue;
+                        }
+
+                        activeLazyEditors++;
+                        editorDiv.classList.remove('lazy-editor-placeholder');
+
+                        const result = initQuillEditor(editorDiv.id.replace('-editor', ''));
+                        Promise.resolve(result).finally(() => {
+                            activeLazyEditors--;
+                            scheduleLazyEditorQueue();
+                        });
+                    }
+                }
+
+                function scheduleLazyEditorQueue() {
+                    if ('requestIdleCallback' in window) {
+                        window.requestIdleCallback(processLazyEditorQueue, { timeout: 500 });
+                    } else {
+                        setTimeout(processLazyEditorQueue, 50);
+                    }
                 }
 
                 function initQuillEditor(elementId, forceQuill = false) {
@@ -749,11 +847,13 @@
 
                     if (!editorDiv) return;
 
+                    editorDiv.classList.remove('lazy-editor-placeholder');
+
                     // If CKEditor (ClassicEditor) is available, prefer it
                     if (!forceQuill && window.ClassicEditor) {
                         // Avoid double initialization
                         if (editorDiv.dataset.ckeditorInitialized === 'true') {
-                            return;
+                            return Promise.resolve();
                         }
                         editorDiv.dataset.ckeditorInitialized = 'true';
 
@@ -765,7 +865,7 @@
                             initialData = tempDiv.value;
                         }
 
-                        window.ClassicEditor
+                        return window.ClassicEditor
                             .create(editorDiv, window.adminEditorConfig ? window.adminEditorConfig() : {
                                 removePlugins: ['Title', 'MediaEmbed', 'MediaEmbedToolbar'],
                                 toolbar: {
@@ -800,10 +900,8 @@
                             .catch(error => {
                                 editorDiv.dataset.ckeditorInitialized = 'false';
                                 console.error('CKEditor initialization error for', elementId, error);
-                                initQuillEditor(elementId, true);
+                                return initQuillEditor(elementId, true);
                             });
-
-                        return;
                     }
 
                     // Fallback to Quill if CKEditor is not available
@@ -813,7 +911,7 @@
                     }
 
                     // Prevent double initialization with Quill
-                    if (editorDiv.classList.contains('ql-container')) return;
+                    if (editorDiv.dataset.quillInitialized === 'true' || editorDiv.classList.contains('ql-container')) return;
 
                     const quill = new Quill(`#${elementId}-editor`, {
                         theme: 'snow',
@@ -848,6 +946,8 @@
                     quill.on('text-change', () => {
                         if (hiddenInput) hiddenInput.value = quill.root.innerHTML;
                     });
+
+                    editorDiv.dataset.quillInitialized = 'true';
 
                     return quill;
                 }

@@ -115,6 +115,22 @@
             scroll-margin-top: 1rem;
         }
 
+        .lazy-editor-placeholder {
+            min-height: 96px;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            color: #64748b;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 0.375rem;
+            cursor: text;
+        }
+
+        .lazy-editor-placeholder::before {
+            content: 'Bấm để tải editor';
+        }
+
         @media (max-width: 991.98px) {
             .quiz-navigation-col {
                 position: static;
