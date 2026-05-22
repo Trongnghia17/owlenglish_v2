@@ -196,14 +196,15 @@ export default function OnlineExamLibrary() {
         : [...prev[filterType], value]
     }));
   };
-  const handleTakeExam = ({ examId, sectionId, skillType }) => {
-    if (!examId || !sectionId || !skillType) return;
+  const handleTakeExam = ({ examId, skillId, sectionId, skillType }) => {
+    if (!examId || !skillId || !sectionId || !skillType) return;
     if (examType === 'ielts') {
       navigate(
-        `/exam/section/${skillType}/${sectionId}/test/${skillType}`,
+        `/exam/section/${skillId}/${sectionId}/test/${skillType}`,
         {
           state: {
             examId,
+            skillId,
             sectionId,
             skillType,
             examType,
@@ -214,10 +215,11 @@ export default function OnlineExamLibrary() {
     }
     if (examType === 'toeic') {
       navigate(
-        `/toeic-${skillType}/${skillType}/${sectionId}`,
+        `/toeic-${skillType}/${skillId}/${sectionId}`,
         {
           state: {
             examId,
+            skillId,
             sectionId,
             skillType,
             examType,
@@ -444,6 +446,7 @@ export default function OnlineExamLibrary() {
                               e.stopPropagation();
                               handleTakeExam({
                                 examId: skill.exam_id,
+                                skillId: skill.skill?.id,
                                 sectionId: skill.id,
                                 skillType: skill.skill?.skill_type,
                               });

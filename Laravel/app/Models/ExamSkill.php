@@ -17,6 +17,7 @@ class ExamSkill extends Model
         'name',
         'description',
         'image',
+        'audio_file',
         'time_limit',
         'is_active',
         'is_online',

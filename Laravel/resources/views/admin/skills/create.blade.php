@@ -1,5 +1,32 @@
 @extends('layouts.app')
 
+@push('styles')
+    <style>
+        .ck-editor__editable h1.ck-placeholder[data-placeholder="Type your title"],
+        .ck-heading-dropdown,
+        .ck-font-size-dropdown,
+        .ck-font-family-dropdown,
+        .ck-toolbar [aria-label="Choose heading"],
+        .ck-toolbar [aria-label="Heading"],
+        .ck-toolbar [aria-label="Font Size"],
+        .ck-toolbar [aria-label="Font Family"],
+        .ck-toolbar [aria-label="Font Color"],
+        .ck-toolbar [aria-label="Font Background Color"],
+        .ql-header {
+            display: none !important;
+        }
+
+        .ck-toolbar .ck-dropdown:has([aria-label="Choose heading"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Heading"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Size"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Family"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Color"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Background Color"]) {
+            display: none !important;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="container-fluid p-4">
         <!-- Header -->
@@ -63,6 +90,22 @@
                                 <div id="imagePreview" class="mt-2" style="display: none;">
                                     <img src="" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
                                 </div>
+                            </div>
+                            <!-- Shared Audio File -->
+                            <div class="mb-3" id="sharedAudioField"
+                                style="display: {{ old('skill_type') === 'listening' ? 'block' : 'none' }};">
+                                <label for="audio_file" class="form-label">Audio File dùng chung</label>
+                                <input type="file"
+                                    class="form-control @error('audio_file') is-invalid @enderror"
+                                    id="audio_file"
+                                    name="audio_file"
+                                    accept="audio/*">
+                                <small class="form-text text-muted">
+                                    Một file nghe áp dụng cho toàn bộ sections của quiz Listening này.
+                                </small>
+                                @error('audio_file')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <!-- Time Limit -->
                             <div class="mb-3">
@@ -173,6 +216,8 @@
             document.addEventListener('DOMContentLoaded', function () {
                 const examSelect = document.getElementById('exam_id');
                 const testSelect = document.getElementById('exam_test_id');
+                const skillTypeSelect = document.getElementById('skill_type');
+                const sharedAudioField = document.getElementById('sharedAudioField');
                 
                 // Image preview
                 const imageInput = document.getElementById('image');
@@ -191,6 +236,13 @@
                         imagePreview.style.display = 'none';
                     }
                 });
+
+                function toggleSharedAudioField() {
+                    sharedAudioField.style.display = skillTypeSelect.value === 'listening' ? 'block' : 'none';
+                }
+
+                skillTypeSelect.addEventListener('change', toggleSharedAudioField);
+                toggleSharedAudioField();
 
                 // Load tests when exam changes
                 examSelect.addEventListener('change', function () {
