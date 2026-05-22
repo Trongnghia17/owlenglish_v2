@@ -179,7 +179,6 @@ class SkillController extends Controller
             'sections.*.feedback' => 'nullable|string',
             'sections.*.content_format' => 'nullable|in:text,audio,video',
             'sections.*.answer_inputs_inside_content' => 'nullable|string',
-            'sections.*.ui_layer' => 'nullable|in:1,2',
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
@@ -286,9 +285,6 @@ class SkillController extends Controller
                 'content' => $sectionData['content'] ?? '',
                 'feedback' => $sectionData['feedback'] ?? '',
                 'content_format' => $sectionData['content_format'] ?? 'text',
-                'ui_layer' => isset($sectionData['ui_layer']) && in_array($sectionData['ui_layer'], ['1', '2'])
-                    ? $sectionData['ui_layer']
-                    : null,
                 'metadata' => $metadata,
                 'is_active' => true,
             ];

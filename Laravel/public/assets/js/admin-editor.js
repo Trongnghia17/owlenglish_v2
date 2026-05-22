@@ -1,7 +1,6 @@
 // Quill Editor Configuration
 const QuillEditor = {
     toolbar: [
-        [{ 'header': [1, 2, 3, false] }],
         ['bold', 'italic', 'underline', 'strike'],
         [{ 'color': [] }, { 'background': [] }],
         [{ 'align': [] }],
@@ -113,8 +112,8 @@ const ImagePreview = {
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-init Quill editor if #description exists
-    if (document.querySelector('#description')) {
+    // Auto-init Quill only on pages that provide a matching editor container.
+    if (document.querySelector('#description') && document.querySelector('#description-editor')) {
         QuillEditor.init('#description');
     }
 });

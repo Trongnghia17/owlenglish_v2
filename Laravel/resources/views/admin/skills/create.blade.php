@@ -1,5 +1,32 @@
 @extends('layouts.app')
 
+@push('styles')
+    <style>
+        .ck-editor__editable h1.ck-placeholder[data-placeholder="Type your title"],
+        .ck-heading-dropdown,
+        .ck-font-size-dropdown,
+        .ck-font-family-dropdown,
+        .ck-toolbar [aria-label="Choose heading"],
+        .ck-toolbar [aria-label="Heading"],
+        .ck-toolbar [aria-label="Font Size"],
+        .ck-toolbar [aria-label="Font Family"],
+        .ck-toolbar [aria-label="Font Color"],
+        .ck-toolbar [aria-label="Font Background Color"],
+        .ql-header {
+            display: none !important;
+        }
+
+        .ck-toolbar .ck-dropdown:has([aria-label="Choose heading"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Heading"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Size"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Family"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Color"]),
+        .ck-toolbar .ck-dropdown:has([aria-label="Font Background Color"]) {
+            display: none !important;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="container-fluid p-4">
         <!-- Header -->

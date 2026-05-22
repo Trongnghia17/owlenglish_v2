@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ExamSectionController;
 use App\Http\Controllers\Api\ExamQuestionController;
 use App\Http\Controllers\Api\PaymentPackageController;
 use App\Http\Controllers\Api\PayosWebhookController;
+use App\Http\Controllers\Api\PublicMediaController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\TestResultController;
 use App\Http\Controllers\Api\UserNoteController;
@@ -77,6 +78,9 @@ Route::prefix('public')->group(function () {
     // Lấy question group và questions
     Route::get('/question-groups/{id}', [ExamQuestionController::class, 'showGroup']);
     Route::get('/question-groups/{groupId}/questions', [ExamQuestionController::class, 'indexQuestions']);
+
+    // Serve public media with HTTP Range support for audio/video seeking.
+    Route::get('/media/{path}', [PublicMediaController::class, 'show'])->where('path', '.*');
 
     // Lấy danh sách gói nạp tiền
     Route::get('/payment-packages', [PaymentPackageController::class, 'index']);
