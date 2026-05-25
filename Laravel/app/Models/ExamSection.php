@@ -18,7 +18,6 @@ class ExamSection extends Model
         'feedback',
         'content_format',
         'audio_file',
-        'ui_layer',
         'metadata',
         'is_active',
     ];
@@ -82,22 +81,6 @@ class ExamSection extends Model
     public function hasAudio(): bool
     {
         return $this->content_format === 'audio' && !empty($this->audio_file);
-    }
-
-    /**
-     * Check if section has UI layer
-     */
-    public function hasUiLayer(): bool
-    {
-        return !empty($this->ui_layer) && in_array($this->ui_layer, ['1', '2']);
-    }
-
-    /**
-     * Get UI layer value
-     */
-    public function getUiLayer(): ?string
-    {
-        return $this->ui_layer;
     }
 
     /**
