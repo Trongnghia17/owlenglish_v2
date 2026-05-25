@@ -55,7 +55,19 @@ function ListeningQuestionGroup({
         </div>
       )}
 
-   
+      {!isMultipleChoice && group.instructions && (
+        <div
+          className="listening-test__group-instructions"
+          dangerouslySetInnerHTML={{ __html: group.instructions }}
+        />
+      )}
+
+      {showGroupContent && !isMultipleChoice && group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
+        <ListeningHtmlContent
+          className="listening-test__group-content"
+          html={group.groupContent}
+        />
+      )}
 
       <div className={`listening-test__questions-list ${isMultipleChoice ? 'listening-test__questions-list--multiple-choice' : ''}`}>
         <ListeningQuestionRenderer

@@ -548,13 +548,19 @@
                                                                     <label class="form-label">Question Type</label>
                                                                     <select class="form-select group-question-type-select"
                                                                         name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][question_type]">
-                                                                        <option value="multiple_choice" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice</option>
-                                                                        <option value="yes_no_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'yes_no_not_given' ? 'selected' : '' }}>Yes/No/Not Given</option>
-                                                                        <option value="true_false_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'true_false_not_given' ? 'selected' : '' }}>True/False/Not Given</option>
-                                                                        <option value="short_text" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'short_text' ? 'selected' : '' }}>Short Text</option>
-                                                                        <option value="note_completion" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'note_completion' ? 'selected' : '' }}>Note Completion</option>
-                                                                        <option value="table_selection" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'table_selection' ? 'selected' : '' }}>Table Selection</option>
+                                                                        @php
+                                                                            $selectedGroupQuestionType = old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type);
+                                                                            $groupQuestionTypeOptions = $questionTypeOptions;
 
+                                                                            if ($selectedGroupQuestionType && !array_key_exists($selectedGroupQuestionType, $groupQuestionTypeOptions)) {
+                                                                                $groupQuestionTypeOptions = [
+                                                                                    $selectedGroupQuestionType => $questionTypeLabels[$selectedGroupQuestionType] ?? $selectedGroupQuestionType,
+                                                                                ] + $groupQuestionTypeOptions;
+                                                                            }
+                                                                        @endphp
+                                                                        @foreach($groupQuestionTypeOptions as $value => $label)
+                                                                            <option value="{{ $value }}" {{ $selectedGroupQuestionType == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                        @endforeach
                                                                     </select>
                                                                 </div>
 
@@ -675,18 +681,19 @@
                                                                                                 class="form-select form-select-sm question-type-select"
                                                                                                 name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][questions][{{ $qIndex }}][question_type]">
                                                                                                 <option value="">Chọn</option>
-                                                                                                <option value="multiple_choice" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'multiple_choice' ? 'selected' : '' }}>Multiple Choice
-                                                                                                </option>
-                                                                                                <option value="yes_no_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'yes_no_not_given' ? 'selected' : '' }}>Yes/No/Not Given
-                                                                                                </option>
-                                                                                                <option value="true_false_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'true_false_not_given' ? 'selected' : '' }}>True/False/Not
-                                                                                                    Given</option>
-                                                                                                <option value="short_text" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'short_text' ? 'selected' : '' }}>Short Text</option>
-                                                                                                <option value="note_completion" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'note_completion' ? 'selected' : '' }}>Note Completion
-                                                                                                </option>
-                                                                                                <option value="table_selection" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'table_selection' ? 'selected' : '' }}>Table Selection
-                                                                                                </option>
+                                                                                                @php
+                                                                                                    $selectedQuestionType = old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '');
+                                                                                                    $questionOptions = $questionTypeOptions;
 
+                                                                                                    if ($selectedQuestionType && !array_key_exists($selectedQuestionType, $questionOptions)) {
+                                                                                                        $questionOptions = [
+                                                                                                            $selectedQuestionType => $questionTypeLabels[$selectedQuestionType] ?? $selectedQuestionType,
+                                                                                                        ] + $questionOptions;
+                                                                                                    }
+                                                                                                @endphp
+                                                                                                @foreach($questionOptions as $value => $label)
+                                                                                                    <option value="{{ $value }}" {{ $selectedQuestionType == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                                                                @endforeach
                                                                                             </select>
                                                                                         </div>
                                                                                     </div>

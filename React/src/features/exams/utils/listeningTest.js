@@ -2,8 +2,37 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || ''
 
 export const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
 
+const TEXT_ANSWER_QUESTION_TYPES = new Set([
+  'short_text',
+  'form_completion',
+  'table_completion',
+  'flow_chart_completion',
+  'summary_completion',
+  'sentence_completion',
+  'short_answer_questions',
+  'plan_map_diagram_labelling'
+]);
+
+const CHOICE_ANSWER_QUESTION_TYPES = new Set([
+  'multiple_choice',
+  'matching'
+]);
+
+const TWO_COLUMN_QUESTION_TYPES = new Set([
+  'table_selection',
+  'table_completion',
+  'flow_chart_completion',
+  'plan_map_diagram_labelling'
+]);
+
 export const isNoteCompletionGroup = (group) =>
   (group?.type || '').toLowerCase() === 'note_completion';
+
+export const isTextAnswerQuestionType = (questionType) =>
+  TEXT_ANSWER_QUESTION_TYPES.has((questionType || '').toLowerCase());
+
+export const isChoiceAnswerQuestionType = (questionType) =>
+  CHOICE_ANSWER_QUESTION_TYPES.has((questionType || '').toLowerCase());
 
 const encodeStoragePath = (path) =>
   path.split('/').map((segment) => encodeURIComponent(segment)).join('/');
@@ -37,7 +66,7 @@ export const toStorageUrl = (path) => {
 };
 
 export const usesTwoColumnLayout = (groups = []) =>
-  groups.some((group) => (group.type || '').toLowerCase() === 'table_selection');
+  groups.some((group) => TWO_COLUMN_QUESTION_TYPES.has((group.type || '').toLowerCase()));
 
 export const usesNoteCompletionLayout = (groups = []) =>
   groups.some(isNoteCompletionGroup);
@@ -107,6 +136,7 @@ const getGroupAnswerOptions = (group) => {
 
   switch (questionType) {
     case 'multiple_choice':
+    case 'matching':
       return getMultipleChoiceOptions(group.questions || []);
     case 'yes_no_not_given':
       return {
@@ -120,6 +150,13 @@ const getGroupAnswerOptions = (group) => {
       };
     case 'short_text':
     case 'note_completion':
+    case 'form_completion':
+    case 'table_completion':
+    case 'flow_chart_completion':
+    case 'summary_completion':
+    case 'sentence_completion':
+    case 'short_answer_questions':
+    case 'plan_map_diagram_labelling':
       return { options: [], optionsWithContent: null };
     default:
       return {

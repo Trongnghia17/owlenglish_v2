@@ -23,6 +23,13 @@ return new class extends Migration
                 'note_completion',          // Hoàn thành ghi chú
                 'fill_in_blank',            // Điền vào chỗ trống
                 'matching',                 // Nối
+                'plan_map_diagram_labelling', // Dán nhãn sơ đồ/bản đồ
+                'form_completion',          // Hoàn thành biểu mẫu
+                'table_completion',         // Hoàn thành bảng
+                'flow_chart_completion',    // Hoàn thành lưu đồ
+                'summary_completion',       // Hoàn thành tóm tắt
+                'sentence_completion',      // Hoàn thành câu
+                'short_answer_questions',   // Câu hỏi trả lời ngắn
                 'table_selection',          // Chọn trong bảng
                 'essay',                    // Viết luận (Writing)
                 'speaking'                  // Nói (Speaking)

@@ -530,6 +530,10 @@
   gap: 32px;
 }
 
+.listening-test__mc-layout--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .listening-test__mc-questions {
   display: flex;
   flex-direction: column;
