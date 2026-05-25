@@ -10,6 +10,7 @@ import {
   getAnsweredCount,
   getCurrentPartAudio,
   isNoteCompletionGroup,
+  isMultipleChoiceGroup,
   normalizeListeningSection,
   usesNoteCompletionLayout,
   usesTwoColumnLayout
@@ -142,6 +143,7 @@ const ListeningTest = () => {
 
   const isNoteCompletionLayout = usesNoteCompletionLayout(currentPartGroups);
   const isTwoColumnLayout = !isNoteCompletionLayout && usesTwoColumnLayout(currentPartGroups);
+  const isMultipleChoiceLayout = !isNoteCompletionLayout && !isTwoColumnLayout && currentPartGroups.some(isMultipleChoiceGroup);
 
   const currentPartAudio = useMemo(
     () => getCurrentPartAudio({ skillData, sectionData, currentPartGroups }),
@@ -225,7 +227,7 @@ const ListeningTest = () => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''}`}>
+      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''}`}>
         {isNoteCompletionLayout ? (
           currentPartGroups.map((group, index) => (
             isNoteCompletionGroup(group) ? (
