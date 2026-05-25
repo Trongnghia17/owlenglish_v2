@@ -212,8 +212,8 @@
                     </div>
                 </div>
                 <!-- Sidebar Navigation -->
-                <div class="col-lg-3 col-12" style="position: sticky; top: 20px; max-height: calc(100vh - 40px); overflow-y: auto;">
-                    <div class="card">
+                <div class="col-lg-3 col-12 quiz-navigation-col">
+                    <div class="card quiz-navigation-card">
                         <div class="card-header bg-primary text-white">
                             <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Navigation</h6>
                         </div>
@@ -277,7 +277,7 @@
 
                     <!-- Sections Builder Card -->
                     <div id="sections-builder" class="card">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-light sections-builder-sticky-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Sections & Questions Builder</h5>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-action="add-section">
@@ -285,7 +285,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body sections-builder-scroll-body">
                             <div id="sectionsContainer" class="skill-type-{{ $skill->skill_type }}">
 
                                 @foreach($skill->sections as $sectionIndex => $section)
@@ -528,6 +528,21 @@
                                                                     </div>
                                                                 </div>
 
+                                                                <!-- Question Group Instructions -->
+                                                                <div class="mb-3">
+                                                                    <label class="form-label">Question Group Instructions</label>
+                                                                    <input type="hidden"
+                                                                        id="group-instructions-{{ $sectionIndex }}-{{ $groupIndex }}"
+                                                                        name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][instructions]"
+                                                                        value="{{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.instructions', $group->instructions) }}">
+                                                                    <div
+                                                                        id="group-instructions-{{ $sectionIndex }}-{{ $groupIndex }}-editor">
+                                                                    </div>
+                                                                    <small class="form-text text-muted">
+                                                                        Example: Questions 7 - 10, Complete the notes below, Write ONE WORD ONLY...
+                                                                    </small>
+                                                                </div>
+
                                                                 <!-- Question Type -->
                                                                 <div class="mb-3">
                                                                     <label class="form-label">Question Type</label>
@@ -537,6 +552,7 @@
                                                                         <option value="yes_no_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'yes_no_not_given' ? 'selected' : '' }}>Yes/No/Not Given</option>
                                                                         <option value="true_false_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'true_false_not_given' ? 'selected' : '' }}>True/False/Not Given</option>
                                                                         <option value="short_text" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'short_text' ? 'selected' : '' }}>Short Text</option>
+                                                                        <option value="note_completion" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'note_completion' ? 'selected' : '' }}>Note Completion</option>
                                                                         <option value="table_selection" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.question_type', $group->question_type) == 'table_selection' ? 'selected' : '' }}>Table Selection</option>
 
                                                                     </select>
@@ -666,6 +682,8 @@
                                                                                                 <option value="true_false_not_given" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'true_false_not_given' ? 'selected' : '' }}>True/False/Not
                                                                                                     Given</option>
                                                                                                 <option value="short_text" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'short_text' ? 'selected' : '' }}>Short Text</option>
+                                                                                                <option value="note_completion" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'note_completion' ? 'selected' : '' }}>Note Completion
+                                                                                                </option>
                                                                                                 <option value="table_selection" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.questions.' . $qIndex . '.question_type', $question->metadata['question_type'] ?? '') == 'table_selection' ? 'selected' : '' }}>Table Selection
                                                                                                 </option>
 
