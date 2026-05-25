@@ -924,7 +924,7 @@
 /* Note Completion */
 .listening-test__content--note-completion {
   display: block;
-  max-width: 1060px;
+  max-width: 940px;
   padding: 24px 40px 140px;
 }
 
@@ -937,20 +937,20 @@
 
 .listening-test__note-completion h2 {
   color: #454545;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
   line-height: normal;
-  margin: 0 0 16px;
+  margin: 0 0 14px;
 }
 
 .listening-test__note-instructions {
   border-radius: 5px;
   background: #EAF2FF;
   color: #0537A5;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
-  line-height: 1.35;
-  padding: 12px 16px;
+  line-height: 1.25;
+  padding: 11px 14px;
   margin: 12px 0 14px;
 }
 
@@ -960,31 +960,42 @@
 
 .listening-test__note-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.98fr);
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.98fr);
   align-items: start;
-  gap: 18px;
+  gap: 16px;
 }
 
 .listening-test__note-card,
 .listening-test__note-answer-card {
-  border: 1px solid #DADDE3;
+  border: 1px solid #D9DDE4;
   border-radius: 10px;
   background: #FFF;
   overflow: hidden;
 }
 
+.listening-test__note-card {
+  box-shadow: inset 0 0 0 1px #EFEFEF;
+}
+
 .listening-test__note-content {
   color: #111827;
-  font-size: 14px;
-  line-height: 1.75;
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .listening-test__note-content p {
   margin: 0;
 }
 
+.listening-test__note-content figure,
+.listening-test__note-content figure.table {
+  width: 100%;
+  margin: 0;
+}
+
 .listening-test__note-content > p {
-  padding: 12px 20px;
+  min-height: 40px;
+  padding: 10px 18px;
   border-bottom: 1px solid #E7E7E7;
 }
 
@@ -1000,13 +1011,14 @@
 .listening-test__note-content th,
 .listening-test__note-content td {
   border-bottom: 1px solid #E7E7E7;
-  padding: 12px 20px;
+  padding: 10px 18px;
   vertical-align: middle;
 }
 
 .listening-test__note-content th {
   text-align: center;
   font-weight: 700;
+  height: 38px;
 }
 
 .listening-test__note-content tr:last-child td {
@@ -1016,11 +1028,11 @@
 .listening-test__note-content ul,
 .listening-test__note-content ol {
   margin: 0;
-  padding: 12px 20px 12px 36px;
+  padding: 10px 18px 10px 32px;
 }
 
 .listening-test__note-content li {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   padding-left: 2px;
 }
 
@@ -1031,10 +1043,10 @@
 .listening-test__note-placeholder {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-width: 62px;
-  height: 28px;
-  padding: 2px 10px 2px 4px;
+  gap: 7px;
+  min-width: 56px;
+  height: 24px;
+  padding: 2px 9px 2px 3px;
   border: 1px solid #E0E5EF;
   border-radius: 999px;
   background: #F8FAFC;
@@ -1046,45 +1058,45 @@
 }
 
 .listening-test__note-placeholder-number {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: #EEF2F7;
   color: #334155;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .listening-test__note-placeholder-line {
   color: #111827;
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0;
 }
 
 .listening-test__note-answer-title {
-  min-height: 48px;
+  min-height: 36px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid #E7E7E7;
   color: #111827;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 0 20px;
+  padding: 0 18px;
 }
 
 .listening-test__note-answer-list {
-  padding: 16px 20px 8px;
+  padding: 14px 18px 8px;
 }
 
 .listening-test__note-answer-row {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  min-height: 72px;
+  gap: 10px;
+  min-height: 66px;
   border-bottom: 1px solid #E9EDF4;
 }
 
@@ -1093,28 +1105,28 @@
 }
 
 .listening-test__note-answer-number {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: #1F2937;
   color: #FFF;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .listening-test__note-answer-input {
   width: 100%;
   min-width: 0;
-  height: 36px;
+  height: 31px;
   border: 1px solid #E0E7F1;
-  border-radius: 12px;
+  border-radius: 11px;
   background: #FFF;
   color: #1F2937;
-  font-size: 13px;
-  padding: 0 16px;
+  font-size: 11px;
+  padding: 0 14px;
   transition: border-color 0.16s ease, box-shadow 0.16s ease;
 }
 

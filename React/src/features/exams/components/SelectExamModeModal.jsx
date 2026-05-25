@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSkillById } from '../api/exams.api';
 import './SelectExamModeModal.css';
@@ -17,21 +17,23 @@ export default function SelectExamModeModal({ isOpen, onClose, skill, examType }
     'writing': writingIcon,
     'speaking': speakingIcon,
   };
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      if (skill?.id) {
-        fetchSkillDetails();
-      }
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, skill?.id]);
 
-  const fetchSkillDetails = async () => {
+  const getSkillType = () => {
+    const apiSkillType = (skillDetails?.skill_type || skill?.skill_type || '').toLowerCase();
+    if (apiSkillType) return apiSkillType;
+
+    const skillName = (skill?.name || '').toLowerCase();
+    if (skillName.includes('reading')) return 'reading';
+    if (skillName.includes('writing')) return 'writing';
+    if (skillName.includes('speaking')) return 'speaking';
+    if (skillName.includes('listening')) return 'listening';
+
+    return 'reading';
+  };
+
+  const fetchSkillDetails = useCallback(async () => {
+    if (!skill?.id) return;
+
     try {
       setLoading(true);
       const response = await getSkillById(skill.id, { with_sections: true });
@@ -43,7 +45,19 @@ export default function SelectExamModeModal({ isOpen, onClose, skill, examType }
     } finally {
       setLoading(false);
     }
-  };
+  }, [skill?.id]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      fetchSkillDetails();
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [fetchSkillDetails, isOpen]);
 
   if (!isOpen || !skill) return null;
 
@@ -54,11 +68,7 @@ export default function SelectExamModeModal({ isOpen, onClose, skill, examType }
   };
 
   const handleFullTestClick = () => {
-    // Xác định skill type từ skill name
-    const skillType = skill.name.toLowerCase().includes('reading') ? 'reading' :
-      skill.name.toLowerCase().includes('writing') ? 'writing' :
-        skill.name.toLowerCase().includes('speaking') ? 'speaking' :
-          skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
+    const skillType = getSkillType();
 
     // Tạo exam data cho full test
     const examData = {
@@ -77,11 +87,7 @@ export default function SelectExamModeModal({ isOpen, onClose, skill, examType }
   };
 
   const handleSectionClick = (section) => {
-    // Xác định skill type từ skill name
-    const skillType = skill.name.toLowerCase().includes('reading') ? 'reading' :
-      skill.name.toLowerCase().includes('writing') ? 'writing' :
-        skill.name.toLowerCase().includes('speaking') ? 'speaking' :
-          skill.name.toLowerCase().includes('listening') ? 'listening' : 'reading';
+    const skillType = getSkillType();
 
     // Tạo exam data cho section
     const examData = {
