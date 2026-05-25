@@ -8,6 +8,17 @@
                 const exams = @json($exams);
                 const currentTestId = {{ $skill->exam_test_id }};
                 const skillType = '{{ $skill->skill_type }}'; // Get current skill type
+                const questionTypeOptions = @json($questionTypeOptions);
+                const escapeHtml = (value) => String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+                const buildQuestionTypeOptionsHtml = (selectedValue = '') => Object.entries(questionTypeOptions)
+                    .map(([value, label]) => `<option value="${escapeHtml(value)}" ${value === selectedValue ? 'selected' : ''}>${escapeHtml(label)}</option>`)
+                    .join('');
+                const questionTypeOptionsHtml = buildQuestionTypeOptionsHtml();
 
                 // Event delegation for all button clicks
                 document.addEventListener('click', function (e) {
@@ -457,12 +468,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Question Type</label>
                                 <select class="form-select group-question-type-select" name="sections[${sectionIdx}][groups][${groupIndex}][question_type]">
-                                    <option value="multiple_choice">Multiple Choice</option>
-                                    <option value="yes_no_not_given">Yes/No/Not Given</option>
-                                    <option value="true_false_not_given">True/False/Not Given</option>
-                                    <option value="short_text">Short Text</option>
-                                    <option value="note_completion">Note Completion</option>
-                                    <option value="table_selection">Table Selection</option>
+                                    ${questionTypeOptionsHtml}
                                 </select>
                             </div>
                             <div class="mb-3 table-selection-options" style="display: none;">
@@ -528,6 +534,7 @@
                     const groupIdx = groupItem.dataset.groupIndex;
                     const questionsList = groupItem.querySelector('.questions-list');
                     const questionIndex = questionsList.querySelectorAll('.question-item').length;
+                    const selectedGroupType = groupItem.querySelector('.group-question-type-select')?.value || '';
 
                     questionsList.insertAdjacentHTML('beforeend', `
                     <div class="question-item bg-light p-3 rounded mb-2" data-question-index="${questionIndex}">
@@ -555,12 +562,7 @@
                                     <label class="form-label small">Question Type</label>
                                     <select class="form-select form-select-sm question-type-select" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][question_type]">
                                         <option value="">Chọn</option>
-                                        <option value="multiple_choice">Multiple Choice</option>
-                                        <option value="yes_no_not_given">Yes/No/Not Given</option>
-                                        <option value="true_false_not_given">True/False/Not Given</option>
-                                        <option value="short_text">Short Text</option>
-                                        <option value="note_completion">Note Completion</option>
-                                        <option value="table_selection">Table Selection</option>
+                                        ${buildQuestionTypeOptionsHtml(selectedGroupType)}
                                     </select>
                                 </div>
                             </div>

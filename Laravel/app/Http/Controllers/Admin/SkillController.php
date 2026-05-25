@@ -15,6 +15,55 @@ use Illuminate\Support\Str;
 
 class SkillController extends Controller
 {
+    private const DEFAULT_QUESTION_TYPE_OPTIONS = [
+        'multiple_choice' => 'Multiple Choice',
+        'yes_no_not_given' => 'Yes/No/Not Given',
+        'true_false_not_given' => 'True/False/Not Given',
+        'short_text' => 'Short Text',
+        'note_completion' => 'Note Completion',
+        'table_selection' => 'Table Selection',
+    ];
+
+    private const LISTENING_QUESTION_TYPE_OPTIONS = [
+        'multiple_choice' => 'Multiple choice',
+        'matching' => 'Matching',
+        'plan_map_diagram_labelling' => 'Plan / map / diagram labelling',
+        'form_completion' => 'Form completion',
+        'note_completion' => 'Note completion',
+        'table_completion' => 'Table completion',
+        'flow_chart_completion' => 'Flow-chart completion',
+        'summary_completion' => 'Summary completion',
+        'sentence_completion' => 'Sentence completion',
+        'short_answer_questions' => 'Short-answer questions',
+    ];
+
+    private const LEGACY_QUESTION_TYPE_OPTIONS = [
+        'short_text' => 'Short Text',
+        'fill_in_blank' => 'Fill in Blank',
+        'table_selection' => 'Table Selection',
+        'essay' => 'Essay',
+        'speaking' => 'Speaking',
+    ];
+
+    private static function questionTypeOptionsFor(string $skillType): array
+    {
+        return $skillType === 'listening'
+            ? self::LISTENING_QUESTION_TYPE_OPTIONS
+            : self::DEFAULT_QUESTION_TYPE_OPTIONS;
+    }
+
+    private static function questionTypeLabels(): array
+    {
+        return self::LISTENING_QUESTION_TYPE_OPTIONS
+            + self::DEFAULT_QUESTION_TYPE_OPTIONS
+            + self::LEGACY_QUESTION_TYPE_OPTIONS;
+    }
+
+    private static function questionTypeValues(): array
+    {
+        return array_keys(self::questionTypeLabels());
+    }
+
     /**
      * Display a listing of skills.
      */
@@ -154,7 +203,10 @@ class SkillController extends Controller
         ->get()
         ->keyBy(fn ($item) => Str::slug($item->name));
 
-        return view('admin.skills.edit', compact('skill', 'exams', 'skillFilters'));
+        $questionTypeOptions = self::questionTypeOptionsFor($skill->skill_type);
+        $questionTypeLabels = self::questionTypeLabels();
+
+        return view('admin.skills.edit', compact('skill', 'exams', 'skillFilters', 'questionTypeOptions', 'questionTypeLabels'));
     }
 
     /**
@@ -182,7 +234,7 @@ class SkillController extends Controller
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
-            'sections.*.groups.*.question_type' => 'nullable|in:multiple_choice,yes_no_not_given,true_false_not_given,short_text,note_completion,fill_in_blank,matching,table_selection,essay,speaking',
+            'sections.*.groups.*.question_type' => 'nullable|in:' . implode(',', self::questionTypeValues()),
             'sections.*.groups.*.instructions' => 'nullable|string',
             'sections.*.groups.*.number_of_options' => 'nullable|integer|min:2|max:10',
             'sections.*.groups.*.answer_inputs_inside_content' => 'nullable|string',
@@ -381,7 +433,7 @@ class SkillController extends Controller
 
             // Prepare metadata with answers array and other question-specific data
             $metadata = [
-                'question_type' => $questionData['question_type'] ?? 'multiple_choice',
+                'question_type' => $questionData['question_type'] ?? $group->question_type ?? 'multiple_choice',
                 'answer_label' => $questionData['answer_label'] ?? null,
             ];
 
