@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '';
 
-export const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
+export const containsInlinePlaceholders = (text) => /\{\{\s*[\w-]+\s*\}\}/.test(text || '');
 
 const TEXT_ANSWER_QUESTION_TYPES = new Set([
   'short_text',
@@ -23,6 +23,11 @@ const TWO_COLUMN_QUESTION_TYPES = new Set([
   'table_completion',
   'flow_chart_completion',
   'plan_map_diagram_labelling'
+]);
+
+const MULTI_SLOT_TEXT_QUESTION_TYPES = new Set([
+  'short_answer_questions',
+  'sentence_completion'
 ]);
 
 export const isNoteCompletionGroup = (group) =>
@@ -74,6 +79,12 @@ export const usesNoteCompletionLayout = (groups = []) =>
 export const isMultipleChoiceGroup = (group) =>
   (group?.type || '').toLowerCase() === 'multiple_choice';
 
+export const isShortAnswerGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'short_answer_questions';
+
+export const isSentenceCompletionGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'sentence_completion';
+
 export const parseMetadata = (metadata) => {
   if (!metadata) return {};
   if (typeof metadata !== 'string') return metadata;
@@ -99,6 +110,19 @@ export const getQuestionAnswerOptions = (question, fallbackOptions = []) => {
   }
 
   return fallbackOptions;
+};
+
+const getQuestionAnswerSlots = (question, questionType) => {
+  const metadata = parseMetadata(question?.metadata);
+
+  if (MULTI_SLOT_TEXT_QUESTION_TYPES.has(questionType) &&
+    Array.isArray(metadata.answers) &&
+    metadata.answers.length > 0
+  ) {
+    return metadata.answers;
+  }
+
+  return [null];
 };
 
 const normalizeOptions = (options) => {
@@ -169,15 +193,28 @@ const getGroupAnswerOptions = (group) => {
 export const normalizeListeningSection = (section, partNumber = 1, startQuestionNumber = 1) => {
   const groups = [];
   let questionNumber = startQuestionNumber;
+  const sectionAudioUrl = section?.audio_url || section?.audio_file || section?.media?.audio;
 
   (section?.question_groups || []).forEach((group) => {
-    const questions = (group.questions || []).map((question) => ({
-      id: question.id,
-      number: questionNumber++,
-      content: question.content,
-      correctAnswer: question.answer_content,
-      metadata: question.metadata
-    }));
+    const questionType = (group.question_type || '').toLowerCase();
+    const questions = (group.questions || []).flatMap((question) => {
+      const answerSlots = getQuestionAnswerSlots(question, questionType);
+      const shouldUseAnswerSlotIds = MULTI_SLOT_TEXT_QUESTION_TYPES.has(questionType) &&
+        answerSlots.length > 0 &&
+        answerSlots[0] !== null;
+
+      return answerSlots.map((answerSlot, answerIndex) => ({
+        id: shouldUseAnswerSlotIds
+          ? `${question.id}:${answerIndex}`
+          : question.id,
+        sourceQuestionId: question.id,
+        answerIndex: shouldUseAnswerSlotIds ? answerIndex : null,
+        number: questionNumber++,
+        content: question.content,
+        correctAnswer: answerSlot?.content ?? question.answer_content,
+        metadata: question.metadata
+      }));
+    });
 
     const { options, optionsWithContent } = getGroupAnswerOptions(group);
     const fallbackNumber = questions[0]?.number || startQuestionNumber;
@@ -188,7 +225,7 @@ export const normalizeListeningSection = (section, partNumber = 1, startQuestion
       type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
       instructions: group.instructions,
       groupContent: group.content,
-      audioUrl: group.audio_url,
+      audioUrl: group.audio_url || group.audio_file || group.audio || sectionAudioUrl,
       options,
       optionsWithContent,
       questions,
@@ -213,12 +250,16 @@ export const createPartTitle = (partNumber, groups = [], fallbackStart = 1) => {
 
 export const getCurrentPartAudio = ({ skillData, sectionData, currentPartGroups }) =>
   toStorageUrl(
+    currentPartGroups.find((group) => group.audioUrl)?.audioUrl ||
+    sectionData?.audio_url ||
+    sectionData?.audio_file ||
+    sectionData?.media?.audio ||
+    sectionData?.exam_skill?.audio_file ||
+    sectionData?.examSkill?.audio_file ||
+    sectionData?.skill?.audio_file ||
     skillData?.audio_file ||
     skillData?.audio_url ||
-    skillData?.media?.audio ||
-    sectionData?.exam_skill?.audio_file ||
-    sectionData?.skill?.audio_file ||
-    currentPartGroups[0]?.audioUrl
+    skillData?.media?.audio
   );
 
 export const getAnsweredCount = (answers = {}) =>

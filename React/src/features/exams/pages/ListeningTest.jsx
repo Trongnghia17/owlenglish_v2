@@ -11,6 +11,8 @@ import {
   getCurrentPartAudio,
   isNoteCompletionGroup,
   isMultipleChoiceGroup,
+  isSentenceCompletionGroup,
+  isShortAnswerGroup,
   normalizeListeningSection,
   usesNoteCompletionLayout,
   usesTwoColumnLayout
@@ -25,6 +27,12 @@ const getTimeLimitSeconds = (skill) => {
     ? minutes * 60
     : DEFAULT_TIME_LIMIT_SECONDS;
 };
+
+const getSubmitQuestionId = (question) =>
+  Number(question.sourceQuestionId ?? question.id);
+
+const getSubmitAnswerIndex = (question) =>
+  Number.isInteger(question.answerIndex) ? question.answerIndex : null;
 
 const ListeningTest = () => {
   const { skillId, sectionId } = useParams();
@@ -144,6 +152,8 @@ const ListeningTest = () => {
   const isNoteCompletionLayout = usesNoteCompletionLayout(currentPartGroups);
   const isTwoColumnLayout = !isNoteCompletionLayout && usesTwoColumnLayout(currentPartGroups);
   const isMultipleChoiceLayout = !isNoteCompletionLayout && !isTwoColumnLayout && currentPartGroups.some(isMultipleChoiceGroup);
+  const isShortAnswerLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && currentPartGroups.some(isShortAnswerGroup);
+  const isSentenceCompletionLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isShortAnswerLayout && currentPartGroups.some(isSentenceCompletionGroup);
 
   const currentPartAudio = useMemo(
     () => getCurrentPartAudio({ skillData, sectionData, currentPartGroups }),
@@ -160,14 +170,21 @@ const ListeningTest = () => {
   const handleSubmit = async () => {
     try {
       const allQuestionIds = questionGroups.flatMap((group) =>
-        group.questions.map((question) => question.id)
+        group.questions.map(getSubmitQuestionId)
       );
 
       const configuredTimeLimit = getTimeLimitSeconds(skillData);
-      const answersArray = allQuestionIds.map((questionId) => ({
-        question_id: questionId,
-        answer: String(answers[questionId] ?? '').trim() ? answers[questionId] : null
-      }));
+      const answersArray = questionGroups.flatMap((group) =>
+        group.questions.map((question) => {
+          const answer = answers[question.id];
+
+          return {
+            question_id: getSubmitQuestionId(question),
+            answer_index: getSubmitAnswerIndex(question),
+            answer: String(answer ?? '').trim() ? answer : null
+          };
+        })
+      );
 
       const submitData = {
         skill_id: skillId ? parseInt(skillId, 10) : null,
@@ -227,7 +244,7 @@ const ListeningTest = () => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''}`}>
+      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''} ${isShortAnswerLayout ? 'listening-test__content--short-answer' : ''} ${isSentenceCompletionLayout ? 'listening-test__content--sentence-completion' : ''}`}>
         {isNoteCompletionLayout ? (
           currentPartGroups.map((group, index) => (
             isNoteCompletionGroup(group) ? (
