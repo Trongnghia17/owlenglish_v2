@@ -43,7 +43,7 @@ const createNoteHtml = (content, questions = []) => {
 
 const createDefaultInstructions = (group) => `
   <strong>${getRangeText(group)}</strong><br />
-  Complete the notes below.<br />
+  Complete the table below.<br />
   Write <strong>ONE WORD ONLY</strong> for each answer.
 `;
 
