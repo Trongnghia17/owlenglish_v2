@@ -1,10 +1,17 @@
 import { useEffect, useRef } from 'react';
 
-export default function InlineAnswerContent({ content, questions = [], answers = {}, onAnswerChange }) {
+export default function InlineAnswerContent({
+  content,
+  questions = [],
+  answers = {},
+  onAnswerChange,
+  variant = 'default'
+}) {
   const containerRef = useRef(null);
   const placeholdersMetaRef = useRef([]);
   const latestHandlerRef = useRef(onAnswerChange);
   const latestAnswersRef = useRef(answers);
+  const isSentenceVariant = variant === 'sentence';
 
   useEffect(() => {
     latestHandlerRef.current = onAnswerChange;
@@ -24,7 +31,7 @@ export default function InlineAnswerContent({ content, questions = [], answers =
       return;
     }
 
-    const placeholderRegex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
+    const placeholderRegex = /\{\{\s*([\w-]+)\s*\}\}/g;
     const placeholderMeta = [];
     let questionIndex = 0;
 
@@ -48,15 +55,23 @@ export default function InlineAnswerContent({ content, questions = [], answers =
       if (!placeholderElement) return;
 
       const wrapper = document.createElement('span');
-      wrapper.className = 'listening-test__inline-input-wrapper';
+      wrapper.className = `listening-test__inline-input-wrapper ${isSentenceVariant ? 'listening-test__inline-input-wrapper--sentence' : ''}`.trim();
+
+      if (isSentenceVariant) {
+        const numberChip = document.createElement('span');
+        numberChip.className = 'listening-test__inline-input-number';
+        numberChip.textContent = meta.question.number?.toString() || '';
+        wrapper.appendChild(numberChip);
+      }
 
       const input = document.createElement('input');
       input.type = 'text';
-      input.className = 'listening-test__inline-input';
-      input.placeholder = meta.question.number?.toString() || '';
+      input.className = `listening-test__inline-input ${isSentenceVariant ? 'listening-test__inline-input--sentence' : ''}`.trim();
+      input.placeholder = isSentenceVariant ? '' : meta.question.number?.toString() || '';
       input.maxLength = 50;
       input.dataset.questionId = meta.question.id;
       input.autocomplete = 'off';
+      input.setAttribute('aria-label', `Answer ${meta.question.number || ''}`.trim());
       input.value = latestAnswersRef.current?.[meta.question.id] || '';
 
       const handleInput = (event) => {
@@ -85,7 +100,7 @@ export default function InlineAnswerContent({ content, questions = [], answers =
     return () => {
       placeholderMeta.forEach((meta) => meta.cleanup?.());
     };
-  }, [content, questions]);
+  }, [content, questions, isSentenceVariant]);
 
   useEffect(() => {
     placeholdersMetaRef.current.forEach(({ question, input }) => {
@@ -99,7 +114,7 @@ export default function InlineAnswerContent({ content, questions = [], answers =
 
   return (
     <div
-      className="listening-test__group-content-parsed"
+      className={`listening-test__group-content-parsed ${isSentenceVariant ? 'listening-test__group-content-parsed--sentence' : ''}`.trim()}
       ref={containerRef}
     />
   );

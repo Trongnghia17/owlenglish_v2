@@ -1,5 +1,9 @@
 import { memo } from 'react';
-import { containsInlinePlaceholders } from '../../utils/listeningTest';
+import {
+  containsInlinePlaceholders,
+  isChoiceAnswerQuestionType,
+  isTextAnswerQuestionType
+} from '../../utils/listeningTest';
 import ChoiceQuestions from './question-types/ChoiceQuestions';
 import MultipleChoiceQuestions from './question-types/MultipleChoiceQuestions';
 import NoteCompletionQuestions from './question-types/NoteCompletionQuestions';
@@ -18,7 +22,7 @@ function ListeningQuestionRenderer({ group, answers, onAnswerChange }) {
     );
   }
 
-  if (containsInlinePlaceholders(group.groupContent) || questionType === 'short_text') {
+  if (containsInlinePlaceholders(group.groupContent) || isTextAnswerQuestionType(questionType)) {
     return (
       <ShortTextQuestions
         group={group}
@@ -28,12 +32,13 @@ function ListeningQuestionRenderer({ group, answers, onAnswerChange }) {
     );
   }
 
-  if (questionType === 'multiple_choice') {
+  if (isChoiceAnswerQuestionType(questionType)) {
     return (
       <MultipleChoiceQuestions
         group={group}
         answers={answers}
         onAnswerChange={onAnswerChange}
+        showTips={questionType === 'multiple_choice'}
       />
     );
   }

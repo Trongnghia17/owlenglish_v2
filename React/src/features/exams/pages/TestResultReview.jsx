@@ -7,6 +7,29 @@ import './TestResultReview.css'; // CSS riêng cho review mode
 
 const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
 
+const TEXT_REVIEW_QUESTION_TYPES = new Set([
+  'short_text',
+  'note_completion',
+  'form_completion',
+  'table_completion',
+  'flow_chart_completion',
+  'summary_completion',
+  'sentence_completion',
+  'short_answer_questions',
+  'plan_map_diagram_labelling'
+]);
+
+const CHOICE_REVIEW_QUESTION_TYPES = new Set([
+  'multiple_choice',
+  'matching'
+]);
+
+const isTextReviewQuestionType = (questionType) =>
+  TEXT_REVIEW_QUESTION_TYPES.has((questionType || '').toLowerCase());
+
+const isChoiceReviewQuestionType = (questionType) =>
+  CHOICE_REVIEW_QUESTION_TYPES.has((questionType || '').toLowerCase());
+
 // Component hiển thị group content với inline inputs ở chế độ review (readonly)
 const GroupContentWithInlineInputsReview = ({ content, questions = [], userAnswers = {} }) => {
   const containerRef = useRef(null);
@@ -236,6 +259,7 @@ export default function TestResultReview() {
           
           switch (questionType) {
             case 'multiple_choice':
+            case 'matching':
               if (group.questions && group.questions.length > 0) {
                 const firstQuestion = group.questions[0];
                 if (firstQuestion.metadata) {
@@ -272,6 +296,13 @@ export default function TestResultReview() {
               
             case 'short_text':
             case 'note_completion':
+            case 'form_completion':
+            case 'table_completion':
+            case 'flow_chart_completion':
+            case 'summary_completion':
+            case 'sentence_completion':
+            case 'short_answer_questions':
+            case 'plan_map_diagram_labelling':
               options = [];
               break;
               
@@ -359,6 +390,7 @@ export default function TestResultReview() {
               
               switch (questionType) {
                 case 'multiple_choice':
+                case 'matching':
                   if (group.questions && group.questions.length > 0) {
                     const firstQuestion = group.questions[0];
                     if (firstQuestion.metadata) {
@@ -395,6 +427,13 @@ export default function TestResultReview() {
                   
                 case 'short_text':
                 case 'note_completion':
+                case 'form_completion':
+                case 'table_completion':
+                case 'flow_chart_completion':
+                case 'summary_completion':
+                case 'sentence_completion':
+                case 'short_answer_questions':
+                case 'plan_map_diagram_labelling':
                   options = [];
                   break;
                   
@@ -483,7 +522,7 @@ export default function TestResultReview() {
 
     // SHORT_TEXT
     const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
-    if (hasPlaceholders || questionType === 'short_text' || questionType === 'note_completion') {
+    if (hasPlaceholders || isTextReviewQuestionType(questionType)) {
       // Dạng 1: Inline placeholders trong group content
       if (hasPlaceholders) {
         return (
@@ -596,7 +635,7 @@ export default function TestResultReview() {
     }
 
     // MULTIPLE_CHOICE
-    if (questionType === 'multiple_choice') {
+    if (isChoiceReviewQuestionType(questionType)) {
       return group.questions.map((question) => {
         const answerData = userAnswers[question.id] || {};
         const isCorrect = answerData.isCorrect;

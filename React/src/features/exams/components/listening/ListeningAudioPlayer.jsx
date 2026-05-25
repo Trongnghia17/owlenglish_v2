@@ -38,10 +38,19 @@ export default function ListeningAudioPlayer({ audioUrl }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const isAudioAvailable = Boolean(audioUrl);
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !audioUrl) return;
+
+    if (!audio || !audioUrl) {
+      setCurrentTime(0);
+      setDuration(0);
+      setIsPlaying(false);
+      setIsMuted(false);
+      setPlaybackRate(1);
+      return;
+    }
 
     const updateCurrentTime = () => {
       setCurrentTime(audio.currentTime || 0);
@@ -140,24 +149,24 @@ export default function ListeningAudioPlayer({ audioUrl }) {
     setPlaybackRate(nextRate);
   };
 
-  if (!audioUrl) return null;
-
   return (
     <div className="listening-test__audio-section">
-      <audio
-        key={audioUrl}
-        ref={audioRef}
-        src={audioUrl}
-        preload="metadata"
-        className="listening-test__audio-native"
-      />
+      {audioUrl && (
+        <audio
+          key={audioUrl}
+          ref={audioRef}
+          src={audioUrl}
+          preload="metadata"
+          className="listening-test__audio-native"
+        />
+      )}
       <div className="listening-test__audio-controls">
-        <button type="button" className="listening-test__audio-icon-button" onClick={handleBack} aria-label="Tua lại 5 giây">
+        <button type="button" className="listening-test__audio-icon-button" onClick={handleBack} disabled={!isAudioAvailable} aria-label="Tua lại 5 giây">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M3.5 3.5V6H6M3.86 9.74A4.08 4.08 0 1 0 3.5 5.67" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <button type="button" className="listening-test__audio-play-button" onClick={handleToggle} aria-label={isPlaying ? 'Tạm dừng' : 'Phát audio'}>
+        <button type="button" className="listening-test__audio-play-button" onClick={handleToggle} disabled={!isAudioAvailable} aria-label={isPlaying ? 'Tạm dừng' : 'Phát audio'}>
           {isPlaying ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M8 6v12M16 6v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
@@ -168,7 +177,7 @@ export default function ListeningAudioPlayer({ audioUrl }) {
             </svg>
           )}
         </button>
-        <button type="button" className="listening-test__audio-icon-button" onClick={handleRestart} aria-label="Phát lại từ đầu">
+        <button type="button" className="listening-test__audio-icon-button" onClick={handleRestart} disabled={!isAudioAvailable} aria-label="Phát lại từ đầu">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M10.5 3.5V6H8M10.14 9.74A4.08 4.08 0 1 1 10.5 5.67" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -196,7 +205,7 @@ export default function ListeningAudioPlayer({ audioUrl }) {
             value={Math.min(currentTime, duration || currentTime)}
             onChange={handleSeekChange}
             onInput={handleSeekChange}
-            disabled={!duration}
+            disabled={!duration || !isAudioAvailable}
             aria-label="Tua audio"
           />
         </div>
@@ -204,7 +213,7 @@ export default function ListeningAudioPlayer({ audioUrl }) {
         <div className="listening-test__audio-time">
           {formatAudioTime(currentTime)} / {formatAudioTime(duration)}
         </div>
-        <button type="button" className="listening-test__audio-icon-button" onClick={handleMuteToggle} aria-label={isMuted ? 'Bật âm lượng' : 'Tắt âm lượng'}>
+        <button type="button" className="listening-test__audio-icon-button" onClick={handleMuteToggle} disabled={!isAudioAvailable} aria-label={isMuted ? 'Bật âm lượng' : 'Tắt âm lượng'}>
           {isMuted ? (
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
               <path d="M6.4165 2.74281C6.41639 2.66156 6.3922 2.58216 6.34701 2.51464C6.30181 2.44712 6.23762 2.3945 6.16255 2.36342C6.08748 2.33235 6.00488 2.3242 5.92519 2.34002C5.84549 2.35584 5.77227 2.39491 5.71475 2.45231L3.74075 4.42573C3.66457 4.50236 3.57394 4.56312 3.47411 4.60447C3.37428 4.64583 3.26723 4.66696 3.15917 4.66664H1.74984C1.59513 4.66664 1.44675 4.7281 1.33736 4.8375C1.22796 4.94689 1.1665 5.09527 1.1665 5.24998V8.74998C1.1665 8.90468 1.22796 9.05306 1.33736 9.16245C1.44675 9.27185 1.59513 9.33331 1.74984 9.33331H3.15917C3.26723 9.33299 3.37428 9.35412 3.47411 9.39548C3.57394 9.43683 3.66457 9.49759 3.74075 9.57423L5.71417 11.5482C5.77169 11.6059 5.84502 11.6451 5.92487 11.661C6.00472 11.6769 6.08749 11.6688 6.16271 11.6376C6.23793 11.6065 6.3022 11.5537 6.34738 11.4859C6.39256 11.4182 6.41662 11.3386 6.4165 11.2571V2.74281Z" stroke="currentColor" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
@@ -219,7 +228,7 @@ export default function ListeningAudioPlayer({ audioUrl }) {
             </svg>
           )}
         </button>
-        <button type="button" className="listening-test__audio-icon-button" onClick={handlePlaybackRateToggle} aria-label={`Tốc độ audio ${playbackRate}x`}>
+        <button type="button" className="listening-test__audio-icon-button" onClick={handlePlaybackRateToggle} disabled={!isAudioAvailable} aria-label={`Tốc độ audio ${playbackRate}x`}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path d="M6.99984 8.75C7.96634 8.75 8.74984 7.9665 8.74984 7C8.74984 6.0335 7.96634 5.25 6.99984 5.25C6.03334 5.25 5.24984 6.0335 5.24984 7C5.24984 7.9665 6.03334 8.75 6.99984 8.75Z" stroke="currentColor" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M11.0832 7C11.0832 7.23333 11.0598 7.46083 11.019 7.6825L12.3957 8.75583L11.229 10.7767L9.60734 10.1267C9.25234 10.4242 8.84484 10.6575 8.39984 10.8092L8.1665 12.5417H5.83317L5.59984 10.8092C5.15484 10.6575 4.74734 10.4242 4.39234 10.1267L2.77067 10.7767L1.604 8.75583L2.98067 7.6825C2.93984 7.46083 2.9165 7.23333 2.9165 7C2.9165 6.76667 2.93984 6.53917 2.98067 6.3175L1.604 5.24417L2.77067 3.22333L4.39234 3.87333C4.74734 3.57583 5.15484 3.3425 5.59984 3.19083L5.83317 1.45833H8.1665L8.39984 3.19083C8.84484 3.3425 9.25234 3.57583 9.60734 3.87333L11.229 3.22333L12.3957 5.24417L11.019 6.3175C11.0598 6.53917 11.0832 6.76667 11.0832 7Z" stroke="currentColor" strokeWidth="1.16667" strokeLinecap="round" strokeLinejoin="round" />

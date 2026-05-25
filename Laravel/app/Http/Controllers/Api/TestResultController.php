@@ -21,6 +21,7 @@ class TestResultController extends Controller
             'test_id' => 'nullable|exists:exam_tests,id',
             'answers' => 'required|array',
             'answers.*.question_id' => 'required|exists:exam_questions,id',
+            'answers.*.answer_index' => 'nullable|integer|min:0',
             'answers.*.answer' => 'nullable',
             'all_question_ids' => 'nullable|array',
             'all_question_ids.*' => 'exists:exam_questions,id',
@@ -46,14 +47,29 @@ class TestResultController extends Controller
             // Tạo map câu trả lời
             $answersMap = [];
             foreach ($validated['answers'] as $answerData) {
-                $answersMap[$answerData['question_id']] = $answerData['answer'] ?? null;
+                $questionId = $answerData['question_id'];
+                $answerIndex = $answerData['answer_index'] ?? null;
+
+                $answersMap[$this->answerMapKey($questionId, $answerIndex)] = $answerData['answer'] ?? null;
             }
 
             // Group by section (mỗi section là 1 part)
             $questionsBySection = [];
+            $questionIdCounts = array_count_values($allQuestionIds);
+            $questionOccurrences = [];
+
             foreach ($allQuestionIds as $questionId) {
                 $question = $questions->get($questionId);
                 if ($question) {
+                    $answerIndex = null;
+
+                    if (($questionIdCounts[$questionId] ?? 0) > 1) {
+                        $answerIndex = $questionOccurrences[$questionId] ?? 0;
+                        $questionOccurrences[$questionId] = $answerIndex + 1;
+                    } elseif (array_key_exists($this->answerMapKey($questionId, 0), $answersMap)) {
+                        $answerIndex = 0;
+                    }
+
                     // Lấy section_id từ questionGroup hoặc trực tiếp từ question
                     $sectionId = $question->questionGroup?->exam_section_id ?? $question->exam_section_id;
                     
@@ -65,7 +81,10 @@ class TestResultController extends Controller
                     }
                     $questionsBySection[$sectionId]['questions'][] = [
                         'question' => $question,
-                        'answer' => $answersMap[$questionId] ?? null
+                        'answer_index' => $answerIndex,
+                        'answer' => $answersMap[$this->answerMapKey($questionId, $answerIndex)]
+                            ?? $answersMap[$this->answerMapKey($questionId, null)]
+                            ?? null,
                     ];
                 }
             }
@@ -85,21 +104,23 @@ class TestResultController extends Controller
                 foreach ($sectionQuestions as $index => $data) {
                     $question = $data['question'];
                     $userAnswer = $data['answer'];
+                    $answerIndex = $data['answer_index'];
                     
                     // Chỉ check đúng/sai nếu có trả lời
                     $isCorrect = false;
                     if ($userAnswer !== null && trim($userAnswer) !== '') {
-                        $isCorrect = $this->checkAnswer($question, $userAnswer);
+                        $isCorrect = $this->checkAnswer($question, $userAnswer, $answerIndex);
                         if ($isCorrect) {
                             $correctCount++;
                         }
                     }
 
                     // Get correct answer from metadata
-                    $correctAnswer = $this->getCorrectAnswerText($question);
+                    $correctAnswer = $this->getCorrectAnswerText($question, $answerIndex);
 
                     $answersData[] = [
                         'question_id' => $question->id,
+                        'answer_index' => $answerIndex,
                         'question_number' => $index + 1, // Số thứ tự trong section
                         'user_answer' => $userAnswer,
                         'correct_answer' => $correctAnswer,
@@ -166,6 +187,7 @@ class TestResultController extends Controller
             'test_id' => 'nullable|exists:exam_tests,id',
             'answers' => 'required|array',
             'answers.*.question_id' => 'required|exists:exam_questions,id',
+            'answers.*.answer_index' => 'nullable|integer|min:0',
             'answers.*.answer' => 'required',
             'time_spent' => 'required|integer|min:0',
         ]);
@@ -187,6 +209,7 @@ class TestResultController extends Controller
             $answersData = collect($validated['answers'])->map(function ($answer) {
                 return [
                     'question_id' => $answer['question_id'],
+                    'answer_index' => $answer['answer_index'] ?? null,
                     'user_answer' => $answer['answer'],
                 ];
             })->toArray();
@@ -292,7 +315,7 @@ class TestResultController extends Controller
     /**
      * Check if answer is correct
      */
-    private function checkAnswer(ExamQuestion $question, $userAnswer): bool
+    private function checkAnswer(ExamQuestion $question, $userAnswer, ?int $answerIndex = null): bool
     {
         // Get correct answer from metadata
         $metadata = is_string($question->metadata) 
@@ -304,6 +327,13 @@ class TestResultController extends Controller
         }
 
         // Find correct answer(s)
+        if ($answerIndex !== null && isset($metadata['answers'][$answerIndex])) {
+            $correctAnswer = trim(strip_tags((string) ($metadata['answers'][$answerIndex]['content'] ?? '')));
+            $userAnswer = trim(strip_tags((string) $userAnswer));
+
+            return $correctAnswer !== '' && strcasecmp($correctAnswer, $userAnswer) === 0;
+        }
+
         $correctAnswers = collect($metadata['answers'])
             ->filter(fn($ans) => ($ans['is_correct'] ?? 0) == 1 || ($ans['is_correct'] ?? false) === true)
             ->map(function($ans) {
@@ -314,6 +344,17 @@ class TestResultController extends Controller
             })
             ->filter()
             ->toArray();
+
+        if (empty($correctAnswers)) {
+            $correctAnswers = collect($metadata['answers'])
+                ->map(function($ans) {
+                    $content = $ans['content'] ?? '';
+                    $content = strip_tags((string) $content);
+                    return trim($content);
+                })
+                ->filter()
+                ->toArray();
+        }
 
         if (empty($correctAnswers)) {
             return false;
@@ -335,7 +376,7 @@ class TestResultController extends Controller
     /**
      * Get correct answer text from question metadata
      */
-    private function getCorrectAnswerText(ExamQuestion $question): string
+    private function getCorrectAnswerText(ExamQuestion $question, ?int $answerIndex = null): string
     {
         $metadata = is_string($question->metadata) 
             ? json_decode($question->metadata, true) 
@@ -343,6 +384,11 @@ class TestResultController extends Controller
         
         if (!$metadata || !isset($metadata['answers'])) {
             return '';
+        }
+
+        if ($answerIndex !== null && isset($metadata['answers'][$answerIndex])) {
+            $content = $metadata['answers'][$answerIndex]['content'] ?? '';
+            return trim(strip_tags((string) $content));
         }
 
         // Find first correct answer
@@ -382,5 +428,10 @@ class TestResultController extends Controller
         if ($percentage >= 30) return 3.0;
         
         return 2.5;
+    }
+
+    private function answerMapKey(int|string $questionId, ?int $answerIndex): string
+    {
+        return $questionId . ':' . ($answerIndex ?? 'default');
     }
 }
