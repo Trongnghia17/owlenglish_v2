@@ -281,7 +281,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Sections & Questions Builder</h5>
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-action="add-section">
-                                    <i class="bi bi-plus-circle me-1"></i>Add Section 2
+                                    <i class="bi bi-plus-circle me-1"></i>Add Section
                                 </button>
                             </div>
                         </div>
@@ -545,7 +545,7 @@
 
                                                                 <!-- Question Type -->
                                                                 <div class="mb-3">
-                                                                    <label class="form-label">Question Type</label>
+                                                                    <label class="form-label">Question Type cha</label>
                                                                     <select class="form-select group-question-type-select"
                                                                         name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][question_type]">
                                                                         @php

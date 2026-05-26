@@ -190,20 +190,63 @@ class SkillController extends Controller
         ]);
 
         $skillFilters = ExamFilter::where('type', 'skill')
-        ->where('exam_type', $examFirst->type)
-        ->whereNull('parent_id')
-        ->with([
-            'children' => function ($q) {
-                $q->where('type', 'group')
-                  ->with(['children' => function ($qq) {
-                      $qq->where('type', 'value');
-                  }]);
-            }
-        ])
-        ->get()
-        ->keyBy(fn ($item) => Str::slug($item->name));
+            ->where('exam_type', $examFirst->type)
+            ->whereNull('parent_id')
+            ->with([
+                'children' => function ($q) {
+                    $q->where('type', 'group')
+                        ->with(['children' => function ($qq) {
+                            $qq->where('type', 'value');
+                        }]);
+                }
+            ])
+            ->get()
+            ->keyBy(fn($item) => Str::slug($item->name));
 
-        $questionTypeOptions = self::questionTypeOptionsFor($skill->skill_type);
+        // $questionTypeOptions = self::questionTypeOptionsFor($skill->skill_type);
+        if (
+    $examFirst->type === 'ielts' &&
+    strtolower($skill->skill_type) === 'writing'
+) {
+    // Writing IELTS (query đặc biệt)
+    $questionTypeOptions = ExamFilter::query()
+        ->where('type', 'value')
+        ->whereHas('parent', function ($q) {
+            $q->whereIn('slug', [
+                'theo-dang-task-1',
+                'theo-dang-task-2'
+            ]);
+        })
+        ->orderBy('sort_order')
+        ->pluck('name', 'slug')
+        ->mapWithKeys(fn ($name, $slug) => [
+            str_replace('-', '_', $slug) => $name
+        ])
+        ->toArray();
+
+} else {
+
+    // Các skill bình thường
+    $questionTypeOptions = ExamFilter::query()
+        ->where('type', 'value')
+        ->whereHas('parent', function ($q) use ($skill, $examFirst) {
+            $q->where('name', 'Theo dạng')
+                ->whereHas('parent', function ($q2) use ($skill, $examFirst) {
+                    $q2->where('type', 'skill')
+                        ->where('exam_type', $examFirst->type)
+                        ->whereRaw('LOWER(name) = ?', [
+                            strtolower($skill->skill_type)
+                        ]);
+                });
+        })
+        ->orderBy('sort_order')
+        ->pluck('name', 'slug')
+        ->mapWithKeys(fn ($name, $slug) => [
+            str_replace('-', '_', $slug) => $name
+        ])
+        ->toArray();
+}
+       
         $questionTypeLabels = self::questionTypeLabels();
 
         return view('admin.skills.edit', compact('skill', 'exams', 'skillFilters', 'questionTypeOptions', 'questionTypeLabels'));
