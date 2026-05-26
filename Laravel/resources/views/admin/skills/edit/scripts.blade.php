@@ -301,7 +301,7 @@
                 // Add section
                 function addSection() {
                     const container = document.getElementById('sectionsContainer');
-                    const isSpeakingOrWriting = (skillType === 'speaking' || skillType === 'writing');
+                    const isSpeakingOrWriting = (skillType === 'speaking111' || skillType === 'writing222');
                     // Determine which questions container to show
                     const questionsContainerHTML = isSpeakingOrWriting ? `
                     
@@ -341,7 +341,7 @@
                         </div>
                         <div class="card-body section-content collapse show" id="section-new-${sectionIndex}">
 
-                                    <div id="exam-filter-sidebar" data-skill="{{ $skill->skill_type ?? '' }}">
+                                    <div class="exam-filter-sidebar d-none" data-skill="{{ $skill->skill_type ?? '' }}">
                             @foreach($skillFilters as $skillSlug => $filterItem)
                         <div class="filter-skill {{ $skillSlug }} {{ $skillSlug != ($skill->skill_type ?? '') ? 'd-none' : '' }}"
                             data-skill="{{ $skill->skill_type  }}">
@@ -466,7 +466,7 @@
                                 <small class="form-text text-muted">Example: Questions 7 - 10, Complete the notes below, Write ONE WORD ONLY...</small>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Question Type</label>
+                                <label class="form-label">Question Type cha</label>
                                 <select class="form-select group-question-type-select" name="sections[${sectionIdx}][groups][${groupIndex}][question_type]">
                                     ${questionTypeOptionsHtml}
                                 </select>
@@ -518,6 +518,7 @@
                     queueEditorById(`group-instructions-new-${sectionIdx}-${groupIndex}`);
                     updateGroupNumbers(sectionItem);
                     updateNavigation();
+                    syncQuestionTypeWithFilters(sectionItem);
                 }
 
                 function updateGroupNumbers(sectionItem) {
@@ -557,13 +558,6 @@
                                 <div class="col-md-6">
                                     <label class="form-label small">Points</label>
                                     <input type="number" step="0.01" class="form-control form-control-sm" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][point]" value="1">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small">Question Type</label>
-                                    <select class="form-select form-select-sm question-type-select" name="sections[${sectionIdx}][groups][${groupIdx}][questions][${questionIndex}][question_type]">
-                                        <option value="">Chọn</option>
-                                        ${buildQuestionTypeOptionsHtml(selectedGroupType)}
-                                    </select>
                                 </div>
                             </div>
 
@@ -694,6 +688,7 @@
                                 </a>${directQuestionsHtml}
                             </div>`;
                         }
+                        
 
                         // Otherwise check for question groups (Listening/Reading)
                         const groups = section.querySelectorAll('.question-group-item');
@@ -721,6 +716,7 @@
                         </a>${groupsHtml}
                     </div>`;
                     }).join('');
+                    autoCheckSectionFilters();
                 }
 
                 const richTextEditorPrefixes = [
@@ -954,4 +950,93 @@
                 }
 
             })();
+
+           function autoCheckSectionFilters() {
+
+    document.querySelectorAll('.section-item').forEach((section, sIndex) => {
+
+        const sectionNumber = sIndex + 1;
+
+        const sectionCheckboxes = section.querySelectorAll(`
+            .filter-group[data-group-type="theo-phan"] .exam-filter-input
+        `);
+
+        sectionCheckboxes.forEach(checkbox => {
+
+            const label = normalize(
+                checkbox.closest('.form-check')
+                    ?.querySelector('.form-check-label')
+                    ?.textContent
+            );
+
+            checkbox.checked = false;
+
+            const patterns = [
+                `part ${sectionNumber}`,
+                `section ${sectionNumber}`,
+                `passage ${sectionNumber}`
+            ];
+
+            if (patterns.includes(label)) {
+                checkbox.checked = true;
+            }
+        });
+    });
+}
+
+// làm phần dạng
+
+function normalize(str) {
+    return str
+        ?.replace(/[^a-z0-9]/gi, ' ')
+        ?.replace(/\s+/g, ' ')
+        ?.trim()
+        ?.toLowerCase();
+}
+
+function syncQuestionTypeWithFilters(section) {
+
+    const sidebar = section.querySelector('.exam-filter-sidebar');
+    if (!sidebar) return;
+
+    // chỉ checkbox theo-dang
+    const typeCheckboxes = sidebar.querySelectorAll(`
+        .filter-group[data-group-type="theo-dang"] .exam-filter-input
+    `);
+
+    const selects = section.querySelectorAll('.group-question-type-select');
+
+    if (!typeCheckboxes.length || !selects.length) return;
+
+    // reset ONLY theo-dang
+    typeCheckboxes.forEach(cb => cb.checked = false);
+
+    selects.forEach(select => {
+
+        const selectedValue = normalize(select.value);
+
+        typeCheckboxes.forEach(checkbox => {
+
+            const label = normalize(
+                checkbox.closest('.form-check')
+                    ?.querySelector('.form-check-label')
+                    ?.textContent
+            );
+
+            if (label === selectedValue) {
+                checkbox.checked = true;
+            }
+        });
+    });
+}
+
+$(document).on('change', '.group-question-type-select', function () {
+
+    const section = this.closest('.section-item');
+
+    syncQuestionTypeWithFilters(section);
+
+    // gọi lại để giữ section checkbox
+    autoCheckSectionFilters();
+});
         </script>
