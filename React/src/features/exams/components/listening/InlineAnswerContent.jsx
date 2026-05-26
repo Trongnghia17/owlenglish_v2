@@ -86,7 +86,7 @@ export default function InlineAnswerContent({
         isFlowVariant ? 'listening-test__inline-input--flow' : '',
         isSummaryVariant ? 'listening-test__inline-input--summary' : ''
       ].filter(Boolean).join(' ');
-      input.placeholder = isPillVariant ? '' : meta.question.number?.toString() || '';
+      input.placeholder = isSummaryVariant ? '............' : isPillVariant ? '' : meta.question.number?.toString() || '';
       input.maxLength = isFlowVariant ? 1 : 50;
       input.dataset.questionId = meta.question.id;
       input.autocomplete = 'off';

@@ -19,9 +19,7 @@ const CHOICE_ANSWER_QUESTION_TYPES = new Set([
 ]);
 
 const TWO_COLUMN_QUESTION_TYPES = new Set([
-  'table_selection',
-  'table_completion',
-  'plan_map_diagram_labelling'
+  'table_selection'
 ]);
 
 const MULTI_SLOT_TEXT_QUESTION_TYPES = new Set([
@@ -32,6 +30,12 @@ const MULTI_SLOT_TEXT_QUESTION_TYPES = new Set([
 
 export const isNoteCompletionGroup = (group) =>
   (group?.type || '').toLowerCase() === 'note_completion';
+
+export const isTableCompletionGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'table_completion';
+
+export const isPlanMapDiagramLabellingGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'plan_map_diagram_labelling';
 
 export const isTextAnswerQuestionType = (questionType) =>
   TEXT_ANSWER_QUESTION_TYPES.has((questionType || '').toLowerCase());
