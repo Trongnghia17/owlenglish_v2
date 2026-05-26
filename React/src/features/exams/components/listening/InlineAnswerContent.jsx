@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { normalizeHtmlMediaSources } from '../../utils/listeningTest';
 
 export default function InlineAnswerContent({
   content,
@@ -44,7 +45,8 @@ export default function InlineAnswerContent({
     const placeholderMeta = [];
     let questionIndex = 0;
 
-    const processedContent = content.replace(placeholderRegex, (match) => {
+    const normalizedContent = normalizeHtmlMediaSources(content);
+    const processedContent = normalizedContent.replace(placeholderRegex, (match) => {
       const question = questions[questionIndex];
       questionIndex += 1;
 

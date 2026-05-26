@@ -29,6 +29,8 @@ function ListeningPlanMapDiagramLabellingGroup({
   onAnswerChange
 }) {
   const instructionsHtml = group.instructions || createDefaultInstructions(group);
+  const hasContentImage = /<img\b/i.test(group.groupContent || '');
+  const shouldShowFallbackImage = group.imageUrl && !hasContentImage;
 
   return (
     <section
@@ -45,10 +47,19 @@ function ListeningPlanMapDiagramLabellingGroup({
 
       <div className="listening-test__map-workspace">
         <div className="listening-test__map-card">
-          <ListeningHtmlContent
-            className="listening-test__map-content"
-            html={group.groupContent}
-          />
+          {group.groupContent && (
+            <ListeningHtmlContent
+              className="listening-test__map-content"
+              html={group.groupContent}
+            />
+          )}
+          {shouldShowFallbackImage && (
+            <img
+              className="listening-test__map-image"
+              src={group.imageUrl}
+              alt=""
+            />
+          )}
         </div>
 
         <PlanMapDiagramLabellingQuestions

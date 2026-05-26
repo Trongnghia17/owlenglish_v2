@@ -61,6 +61,9 @@ export const toStorageUrl = (path) => {
   if (/^https?:\/\//i.test(path)) {
     try {
       const url = new URL(path);
+      if (url.pathname.startsWith('/api/public/media/')) {
+        return path;
+      }
       if (url.pathname.startsWith('/storage/')) {
         return toPublicMediaUrl(url.pathname);
       }
@@ -71,7 +74,41 @@ export const toStorageUrl = (path) => {
     return path;
   }
 
+  if (/^\/?api\/public\/media\//i.test(path)) {
+    return `${API_BASE_URL}/${path.replace(/^\/+/, '')}`;
+  }
+
   return toPublicMediaUrl(path);
+};
+
+export const normalizeHtmlMediaSources = (html = '') => {
+  if (!html) return '';
+
+  return String(html).replace(
+    /(<img\b[^>]*?\bsrc=)(["'])([^"']+)\2/gi,
+    (match, prefix, quote, value) => {
+      const src = value.trim();
+
+      if (!src || /^(data:|blob:)/i.test(src)) {
+        return match;
+      }
+
+      if (/^https?:\/\//i.test(src)) {
+        try {
+          const url = new URL(src);
+          if (!url.pathname.startsWith('/storage/')) {
+            return match;
+          }
+        } catch {
+          return match;
+        }
+      } else if (!/^\/?storage\//i.test(src)) {
+        return match;
+      }
+
+      return `${prefix}${quote}${toStorageUrl(src)}${quote}`;
+    }
+  );
 };
 
 export const usesTwoColumnLayout = (groups = []) =>
@@ -256,6 +293,7 @@ export const normalizeListeningSection = (section, partNumber = 1, startQuestion
         number: questionNumber++,
         content: question.content,
         correctAnswer: answerSlot?.content ?? question.answer_content,
+        imageUrl: toStorageUrl(question.image_url || question.image || question.media?.image),
         metadata: question.metadata
       }));
     });
@@ -269,6 +307,9 @@ export const normalizeListeningSection = (section, partNumber = 1, startQuestion
       type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
       instructions: group.instructions,
       groupContent: group.content,
+      imageUrl: toStorageUrl(group.image_url || group.image || group.media?.image) ||
+        questions.find((question) => question.imageUrl)?.imageUrl ||
+        null,
       audioUrl: group.audio_url || group.audio_file || group.audio || sectionAudioUrl,
       options,
       optionsWithContent,
