@@ -5,6 +5,7 @@ import ListeningQuestionRenderer from './ListeningQuestionRenderer';
 import {
   containsInlinePlaceholders,
   isFlowChartCompletionGroup,
+  isMatchingGroup,
   isMultipleChoiceGroup,
   isSentenceCompletionGroup,
   isShortAnswerGroup,
@@ -54,6 +55,17 @@ const getFlowChartCompletionInstructions = (group) =>
   group.instructions ||
   'Complete the flow-chart below.<br />Choose answers from the box and write the correct letter next to each question.';
 
+const getMatchingInstructions = (group) => {
+  if (group.instructions) return group.instructions;
+
+  const letters = group.options?.length ? group.options : ['A', 'B', 'C'];
+  const letterText = letters.length > 1
+    ? `${letters[0]}-${letters[letters.length - 1]}`
+    : letters[0];
+
+  return `Choose answers from the box and write the correct letter, <strong>${letterText}</strong>, next to ${getRangeText(group)}.`;
+};
+
 function ListeningQuestionGroup({
   group,
   currentPartTab,
@@ -65,10 +77,12 @@ function ListeningQuestionGroup({
   onAnswerChange
 }) {
   const isMultipleChoice = isMultipleChoiceGroup(group);
+  const isMatching = isMatchingGroup(group);
   const isFlowChartCompletion = isFlowChartCompletionGroup(group);
   const isShortAnswer = isShortAnswerGroup(group);
   const isSummaryCompletion = isSummaryCompletionGroup(group);
   const isSentenceCompletion = isSentenceCompletionGroup(group);
+  const shouldShowMatchingRange = isMatching && !instructionIncludesQuestionRange(group.instructions);
   const shouldShowShortAnswerRange = isShortAnswer && !instructionIncludesQuestionRange(group.instructions);
   const shouldShowFlowChartCompletionRange = isFlowChartCompletion && !instructionIncludesQuestionRange(group.instructions);
   const shouldShowSummaryCompletionRange = isSummaryCompletion && !instructionIncludesQuestionRange(group.instructions);
@@ -77,7 +91,7 @@ function ListeningQuestionGroup({
   return (
     <div
       id={`question-group-${group.id}`}
-      className={`listening-test__question-group ${isMultipleChoice ? 'listening-test__question-group--multiple-choice' : ''} ${isFlowChartCompletion ? 'listening-test__question-group--flow-chart' : ''} ${isShortAnswer ? 'listening-test__question-group--short-answer' : ''} ${isSummaryCompletion ? 'listening-test__question-group--summary-completion' : ''} ${isSentenceCompletion ? 'listening-test__question-group--sentence-completion' : ''}`}
+      className={`listening-test__question-group ${isMultipleChoice ? 'listening-test__question-group--multiple-choice' : ''} ${isMatching ? 'listening-test__question-group--matching' : ''} ${isFlowChartCompletion ? 'listening-test__question-group--flow-chart' : ''} ${isShortAnswer ? 'listening-test__question-group--short-answer' : ''} ${isSummaryCompletion ? 'listening-test__question-group--summary-completion' : ''} ${isSentenceCompletion ? 'listening-test__question-group--sentence-completion' : ''}`}
     >
       {showPartTitle && <h2>Listening Part {currentPartTab}</h2>}
       {showAudio && <ListeningAudioPlayer audioUrl={audioUrl} />}
@@ -88,6 +102,16 @@ function ListeningQuestionGroup({
           <div
             className="listening-test__group-instructions"
             dangerouslySetInnerHTML={{ __html: getMultipleChoiceInstructions(group) }}
+          />
+        </div>
+      )}
+
+      {isMatching && (
+        <div className="listening-test__group-header listening-test__group-header--matching">
+          {shouldShowMatchingRange && <h3>{getRangeText(group)}</h3>}
+          <div
+            className="listening-test__group-instructions"
+            dangerouslySetInnerHTML={{ __html: getMatchingInstructions(group) }}
           />
         </div>
       )}
@@ -132,21 +156,21 @@ function ListeningQuestionGroup({
         </div>
       )}
 
-      {!isMultipleChoice && !isFlowChartCompletion && !isShortAnswer && !isSummaryCompletion && !isSentenceCompletion && group.instructions && (
+      {!isMultipleChoice && !isMatching && !isFlowChartCompletion && !isShortAnswer && !isSummaryCompletion && !isSentenceCompletion && group.instructions && (
         <div
           className="listening-test__group-instructions"
           dangerouslySetInnerHTML={{ __html: group.instructions }}
         />
       )}
 
-      {showGroupContent && !isMultipleChoice && !isFlowChartCompletion && !isSummaryCompletion && !isSentenceCompletion && group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
+      {showGroupContent && !isMultipleChoice && !isMatching && !isFlowChartCompletion && !isSummaryCompletion && !isSentenceCompletion && group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
         <ListeningHtmlContent
           className="listening-test__group-content"
           html={group.groupContent}
         />
       )}
 
-      <div className={`listening-test__questions-list ${isMultipleChoice ? 'listening-test__questions-list--multiple-choice' : ''} ${isFlowChartCompletion ? 'listening-test__questions-list--flow-chart' : ''} ${isShortAnswer ? 'listening-test__questions-list--short-answer' : ''} ${isSummaryCompletion ? 'listening-test__questions-list--summary-completion' : ''} ${isSentenceCompletion ? 'listening-test__questions-list--sentence-completion' : ''}`}>
+      <div className={`listening-test__questions-list ${isMultipleChoice ? 'listening-test__questions-list--multiple-choice' : ''} ${isMatching ? 'listening-test__questions-list--matching' : ''} ${isFlowChartCompletion ? 'listening-test__questions-list--flow-chart' : ''} ${isShortAnswer ? 'listening-test__questions-list--short-answer' : ''} ${isSummaryCompletion ? 'listening-test__questions-list--summary-completion' : ''} ${isSentenceCompletion ? 'listening-test__questions-list--sentence-completion' : ''}`}>
         <ListeningQuestionRenderer
           group={group}
           answers={answers}

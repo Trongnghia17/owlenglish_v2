@@ -3,6 +3,7 @@ import {
   containsInlinePlaceholders,
   isFlowChartCompletionGroup,
   isChoiceAnswerQuestionType,
+  isMatchingGroup,
   isSentenceCompletionGroup,
   isShortAnswerGroup,
   isSummaryCompletionGroup,
@@ -10,6 +11,7 @@ import {
 } from '../../utils/listeningTest';
 import ChoiceQuestions from './question-types/ChoiceQuestions';
 import FlowChartCompletionQuestions from './question-types/FlowChartCompletionQuestions';
+import MatchingQuestions from './question-types/MatchingQuestions';
 import MultipleChoiceQuestions from './question-types/MultipleChoiceQuestions';
 import NoteCompletionQuestions from './question-types/NoteCompletionQuestions';
 import SentenceCompletionQuestions from './question-types/SentenceCompletionQuestions';
@@ -63,6 +65,16 @@ function ListeningQuestionRenderer({ group, answers, onAnswerChange }) {
   if (isSentenceCompletionGroup(group)) {
     return (
       <SentenceCompletionQuestions
+        group={group}
+        answers={answers}
+        onAnswerChange={onAnswerChange}
+      />
+    );
+  }
+
+  if (isMatchingGroup(group)) {
+    return (
+      <MatchingQuestions
         group={group}
         answers={answers}
         onAnswerChange={onAnswerChange}

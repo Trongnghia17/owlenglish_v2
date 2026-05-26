@@ -37,6 +37,9 @@ export const isTableCompletionGroup = (group) =>
 export const isPlanMapDiagramLabellingGroup = (group) =>
   (group?.type || '').toLowerCase() === 'plan_map_diagram_labelling';
 
+export const isMatchingGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'matching';
+
 export const isTextAnswerQuestionType = (questionType) =>
   TEXT_ANSWER_QUESTION_TYPES.has((questionType || '').toLowerCase());
 
@@ -234,14 +237,41 @@ const getFlowChartOptions = (questions = []) => {
   };
 };
 
+const getMatchingOptions = (questions = []) => {
+  const firstQuestion = questions[0];
+  const firstMetadata = parseMetadata(firstQuestion?.metadata);
+  const firstAnswers = Array.isArray(firstMetadata.answers) ? firstMetadata.answers : [];
+  const answersSource = firstAnswers.length > 1
+    ? firstAnswers
+    : questions.flatMap((question) => {
+      const metadata = parseMetadata(question?.metadata);
+      return Array.isArray(metadata.answers) ? metadata.answers : [];
+    });
+  const optionsWithContent = answersSource
+    .map(normalizeAnswerOption)
+    .filter((option) => option.content || option.letter);
+  const uniqueOptions = optionsWithContent.filter((option, index, options) =>
+    options.findIndex((candidate) =>
+      candidate.letter === option.letter && candidate.content === option.content
+    ) === index
+  );
+
+  return {
+    options: uniqueOptions.map((option) => option.letter),
+    optionsWithContent: uniqueOptions,
+    optionTitle: firstMetadata.answer_label || 'Options'
+  };
+};
+
 const getGroupAnswerOptions = (group) => {
   const questionType = (group.question_type || '').toLowerCase();
   const groupOptions = normalizeOptions(group.options);
 
   switch (questionType) {
     case 'multiple_choice':
-    case 'matching':
       return getMultipleChoiceOptions(group.questions || []);
+    case 'matching':
+      return getMatchingOptions(group.questions || []);
     case 'flow_chart_completion':
       return getFlowChartOptions(group.questions || []);
     case 'yes_no_not_given':
