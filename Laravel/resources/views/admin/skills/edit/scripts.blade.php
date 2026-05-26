@@ -568,7 +568,6 @@
                             </div>
 
 
-
                             <div class="mb-3 answers-list-section">
                                 <div class="answers-list" data-question-id="${sectionIdx}-${groupIdx}-${questionIndex}">
                                     <!-- Answers will be added here -->

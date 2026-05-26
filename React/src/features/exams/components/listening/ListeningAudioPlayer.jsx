@@ -8,6 +8,14 @@ const WAVEFORM_BARS = [
 ];
 
 const PLAYBACK_RATES = [1, 1.25, 1.5, 0.75];
+const AUDIO_RELEASE_DELAY_MS = 300;
+
+const audioStateCache = new Map();
+
+let sharedAudio = null;
+let sharedAudioUrl = '';
+let mountedPlayerCount = 0;
+let releaseAudioTimer = null;
 
 const formatAudioTime = (seconds = 0) => {
   if (!Number.isFinite(seconds)) return '00:00';
@@ -31,6 +39,111 @@ const getPlayableDuration = (audio) => {
   return 0;
 };
 
+const createAudioState = (overrides = {}) => ({
+  isPlaying: false,
+  isMuted: false,
+  currentTime: 0,
+  duration: 0,
+  playbackRate: 1,
+  ...overrides
+});
+
+const getSharedAudio = () => {
+  if (typeof Audio === 'undefined') return null;
+
+  if (!sharedAudio) {
+    sharedAudio = new Audio();
+    sharedAudio.preload = 'metadata';
+  }
+
+  return sharedAudio;
+};
+
+const getRuntimeAudioState = (audio) => createAudioState({
+  isPlaying: Boolean(audio && !audio.paused && !audio.ended),
+  isMuted: Boolean(audio?.muted),
+  currentTime: audio?.currentTime || 0,
+  duration: audio ? getPlayableDuration(audio) : 0,
+  playbackRate: audio?.playbackRate || 1
+});
+
+const getCachedAudioState = (audioUrl, fallbackState = {}) => {
+  if (!audioUrl) return createAudioState(fallbackState);
+
+  return createAudioState(
+    audioStateCache.has(audioUrl)
+      ? audioStateCache.get(audioUrl)
+      : fallbackState
+  );
+};
+
+const saveSharedAudioState = (overrides = {}) => {
+  if (!sharedAudio || !sharedAudioUrl) return;
+
+  audioStateCache.set(sharedAudioUrl, {
+    ...getRuntimeAudioState(sharedAudio),
+    ...overrides
+  });
+};
+
+const restoreAudioTime = (audio, targetTime = 0) => {
+  if (!audio || !Number.isFinite(targetTime) || targetTime <= 0) return;
+
+  const playableDuration = getPlayableDuration(audio);
+  const nextTime = playableDuration ? Math.min(targetTime, playableDuration) : targetTime;
+
+  try {
+    audio.currentTime = nextTime;
+  } catch {
+    // Some browsers only allow setting currentTime after metadata is loaded.
+  }
+};
+
+const activateSharedAudio = (audioUrl) => {
+  const audio = getSharedAudio();
+
+  if (!audio) return null;
+
+  if (!audioUrl) {
+    saveSharedAudioState({ isPlaying: false });
+    audio.pause();
+    sharedAudioUrl = '';
+    return null;
+  }
+
+  if (sharedAudioUrl === audioUrl) {
+    return audio;
+  }
+
+  const shouldKeepPlaying = sharedAudioUrl
+    ? !audio.paused && !audio.ended
+    : false;
+
+  saveSharedAudioState();
+
+  const nextState = getCachedAudioState(audioUrl, {
+    isPlaying: shouldKeepPlaying,
+    isMuted: audio.muted,
+    playbackRate: audio.playbackRate || 1
+  });
+
+  sharedAudioUrl = audioUrl;
+  audio.src = audioUrl;
+  audio.preload = 'metadata';
+  audio.muted = nextState.isMuted;
+  audio.playbackRate = nextState.playbackRate;
+  audio.load();
+  restoreAudioTime(audio, nextState.currentTime);
+
+  if (shouldKeepPlaying || nextState.isPlaying) {
+    audio.play().catch((error) => {
+      console.error('Unable to continue audio playback:', error);
+    });
+  }
+
+  return audio;
+};
+
 export default function ListeningAudioPlayer({ audioUrl }) {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -41,54 +154,96 @@ export default function ListeningAudioPlayer({ audioUrl }) {
   const isAudioAvailable = Boolean(audioUrl);
 
   useEffect(() => {
-    const audio = audioRef.current;
+    mountedPlayerCount += 1;
 
-    if (!audio || !audioUrl) {
-      setCurrentTime(0);
-      setDuration(0);
-      setIsPlaying(false);
-      setIsMuted(false);
-      setPlaybackRate(1);
+    if (releaseAudioTimer) {
+      clearTimeout(releaseAudioTimer);
+      releaseAudioTimer = null;
+    }
+
+    return () => {
+      mountedPlayerCount = Math.max(0, mountedPlayerCount - 1);
+      saveSharedAudioState();
+
+      releaseAudioTimer = window.setTimeout(() => {
+        if (mountedPlayerCount > 0 || !sharedAudio) return;
+
+        saveSharedAudioState({ isPlaying: false });
+        sharedAudio.pause();
+      }, AUDIO_RELEASE_DELAY_MS);
+    };
+  }, []);
+
+  useEffect(() => {
+    const applyAudioState = (state) => {
+      setCurrentTime(state.currentTime);
+      setDuration(state.duration);
+      setIsPlaying(state.isPlaying);
+      setIsMuted(state.isMuted);
+      setPlaybackRate(state.playbackRate);
+    };
+
+    if (!audioUrl) {
+      activateSharedAudio(null);
+      audioRef.current = null;
+      applyAudioState(createAudioState());
       return;
     }
 
-    const updateCurrentTime = () => {
-      setCurrentTime(audio.currentTime || 0);
-      setDuration(getPlayableDuration(audio));
-    };
-    const updateDuration = () => setDuration(getPlayableDuration(audio));
-    const markPlaying = () => setIsPlaying(true);
-    const markPaused = () => setIsPlaying(false);
+    const audio = activateSharedAudio(audioUrl);
 
-    setCurrentTime(0);
-    setDuration(0);
-    setIsPlaying(false);
-    setIsMuted(audio.muted);
-    setPlaybackRate(audio.playbackRate || 1);
+    if (!audio) return;
+
+    audioRef.current = audio;
+
+    const updateCurrentTime = () => {
+      const nextState = getRuntimeAudioState(audio);
+      audioStateCache.set(audioUrl, nextState);
+      applyAudioState(nextState);
+    };
+    const updateDuration = () => {
+      const nextState = getRuntimeAudioState(audio);
+      audioStateCache.set(audioUrl, nextState);
+      applyAudioState(nextState);
+    };
+    const restoreAndUpdateDuration = () => {
+      restoreAudioTime(audio, getCachedAudioState(audioUrl).currentTime);
+      updateDuration();
+    };
+
+    applyAudioState(getRuntimeAudioState(audio));
 
     audio.addEventListener('timeupdate', updateCurrentTime);
-    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('loadedmetadata', restoreAndUpdateDuration);
     audio.addEventListener('durationchange', updateDuration);
     audio.addEventListener('progress', updateDuration);
     audio.addEventListener('canplay', updateDuration);
-    audio.addEventListener('play', markPlaying);
-    audio.addEventListener('pause', markPaused);
-    audio.addEventListener('ended', markPaused);
+    audio.addEventListener('play', updateDuration);
+    audio.addEventListener('pause', updateDuration);
+    audio.addEventListener('ended', updateDuration);
 
     return () => {
+      audioStateCache.set(audioUrl, getRuntimeAudioState(audio));
       audio.removeEventListener('timeupdate', updateCurrentTime);
-      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('loadedmetadata', restoreAndUpdateDuration);
       audio.removeEventListener('durationchange', updateDuration);
       audio.removeEventListener('progress', updateDuration);
       audio.removeEventListener('canplay', updateDuration);
-      audio.removeEventListener('play', markPlaying);
-      audio.removeEventListener('pause', markPaused);
-      audio.removeEventListener('ended', markPaused);
+      audio.removeEventListener('play', updateDuration);
+      audio.removeEventListener('pause', updateDuration);
+      audio.removeEventListener('ended', updateDuration);
     };
   }, [audioUrl]);
 
+  const getActiveAudio = () => {
+    const audio = activateSharedAudio(audioUrl);
+    audioRef.current = audio;
+
+    return audio;
+  };
+
   const handleToggle = async () => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
 
     if (audio.paused) {
@@ -103,23 +258,25 @@ export default function ListeningAudioPlayer({ audioUrl }) {
   };
 
   const handleRestart = () => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
 
     audio.currentTime = 0;
     setCurrentTime(0);
+    audioStateCache.set(audioUrl, getRuntimeAudioState(audio));
   };
 
   const handleBack = () => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
 
     audio.currentTime = Math.max(0, audio.currentTime - 5);
     setCurrentTime(audio.currentTime);
+    audioStateCache.set(audioUrl, getRuntimeAudioState(audio));
   };
 
   const handleSeekChange = (event) => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
 
     const nextTime = Number(event.target.value);
@@ -129,37 +286,31 @@ export default function ListeningAudioPlayer({ audioUrl }) {
     audio.currentTime = nextTime;
     setCurrentTime(nextTime);
     setDuration(playableDuration || duration);
+    audioStateCache.set(audioUrl, getRuntimeAudioState(audio));
   };
 
   const handleMuteToggle = () => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
 
     audio.muted = !audio.muted;
     setIsMuted(audio.muted);
+    audioStateCache.set(audioUrl, getRuntimeAudioState(audio));
   };
 
   const handlePlaybackRateToggle = () => {
-    const audio = audioRef.current;
+    const audio = getActiveAudio();
     if (!audio) return;
 
-    const currentIndex = PLAYBACK_RATES.indexOf(playbackRate);
+    const currentIndex = PLAYBACK_RATES.indexOf(audio.playbackRate || playbackRate);
     const nextRate = PLAYBACK_RATES[(currentIndex + 1) % PLAYBACK_RATES.length];
     audio.playbackRate = nextRate;
     setPlaybackRate(nextRate);
+    audioStateCache.set(audioUrl, getRuntimeAudioState(audio));
   };
 
   return (
     <div className="listening-test__audio-section">
-      {audioUrl && (
-        <audio
-          key={audioUrl}
-          ref={audioRef}
-          src={audioUrl}
-          preload="metadata"
-          className="listening-test__audio-native"
-        />
-      )}
       <div className="listening-test__audio-controls">
         <button type="button" className="listening-test__audio-icon-button" onClick={handleBack} disabled={!isAudioAvailable} aria-label="Tua lại 5 giây">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

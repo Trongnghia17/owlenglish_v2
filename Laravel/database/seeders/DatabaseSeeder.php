@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             ExamCollectionsSeeder::class,
             ExamFilterSeeder::class,
             ToeicExamFilterSeeder::class,
-            ExamSeeder::class,
+            // ExamSeeder::class,
         ]);
     }
 }

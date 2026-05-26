@@ -1,12 +1,15 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
+import { normalizeHtmlMediaSources } from '../../utils/listeningTest';
 
 function ListeningHtmlContent({ className, html }) {
-  if (!html) return null;
+  const normalizedHtml = useMemo(() => normalizeHtmlMediaSources(html), [html]);
+
+  if (!normalizedHtml) return null;
 
   return (
     <div
       className={className}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: normalizedHtml }}
     />
   );
 }

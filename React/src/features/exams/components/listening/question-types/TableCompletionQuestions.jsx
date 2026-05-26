@@ -1,32 +1,32 @@
 import { memo } from 'react';
 
-function NoteCompletionQuestions({ group, answers, onAnswerChange }) {
+function TableCompletionQuestions({ group, answers, onAnswerChange }) {
   return (
-    <aside className="listening-test__note-answer-card">
-      <div className="listening-test__note-answer-title">Your answer</div>
+    <aside className="listening-test__table-answer-card">
+      <div className="listening-test__table-answer-title">Your answer</div>
 
-      <div className="listening-test__note-answer-list">
+      <div className="listening-test__table-answer-list">
         {group.questions.map((question) => {
           const answer = answers[question.id] || '';
-          const inputId = `listening-note-answer-${question.id}`;
+          const inputId = `listening-table-answer-${question.id}`;
 
           return (
             <div
               key={question.id}
-              id={`listening-note-question-${question.id}`}
-              className={`listening-test__note-answer-row ${answer ? 'is-filled' : ''}`}
+              id={`listening-table-question-${question.id}`}
+              className={`listening-test__table-answer-row ${answer ? 'is-filled' : ''}`}
             >
               <label
-                className="listening-test__note-answer-number"
+                className="listening-test__table-answer-number"
                 htmlFor={inputId}
               >
                 {question.number}
               </label>
-              <div className="listening-test__note-answer-dropzone">
+              <div className="listening-test__table-answer-dropzone">
                 <input
                   id={inputId}
                   type="text"
-                  className="listening-test__note-answer-input"
+                  className="listening-test__table-answer-input"
                   placeholder="Type answer here"
                   value={answer}
                   onChange={(event) => onAnswerChange(question.id, event.target.value)}
@@ -36,7 +36,7 @@ function NoteCompletionQuestions({ group, answers, onAnswerChange }) {
                 {answer && (
                   <button
                     type="button"
-                    className="listening-test__note-answer-clear"
+                    className="listening-test__table-answer-clear"
                     aria-label={`Clear answer ${question.number}`}
                     onClick={() => onAnswerChange(question.id, '')}
                   />
@@ -50,4 +50,4 @@ function NoteCompletionQuestions({ group, answers, onAnswerChange }) {
   );
 }
 
-export default memo(NoteCompletionQuestions);
+export default memo(TableCompletionQuestions);

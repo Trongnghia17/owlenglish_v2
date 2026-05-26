@@ -698,9 +698,6 @@
                                                                                         </div>
                                                                                     </div>
 
-
-
-
                                                                                     <!-- Answers List Section -->
                                                                                     <div class="mb-3 answers-list-section">
                                                                                         <div class="answers-list"

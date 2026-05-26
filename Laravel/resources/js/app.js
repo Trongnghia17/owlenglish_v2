@@ -47,6 +47,27 @@ const hiddenAdminEditorToolbarLabels = [
 	'Font Background Color'
 ];
 
+function getAdminEditorCsrfToken() {
+	return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+function getAdminEditorUploadUrl() {
+	return window.adminEditorUploadUrl || document.querySelector('meta[name="ckeditor-upload-url"]')?.getAttribute('content') || '/admin/upload-image';
+}
+
+function getAdminEditorUploadHeaders() {
+	const headers = {
+		Accept: 'application/json'
+	};
+	const csrfToken = getAdminEditorCsrfToken();
+
+	if (csrfToken) {
+		headers['X-CSRF-TOKEN'] = csrfToken;
+	}
+
+	return headers;
+}
+
 function hideAdminEditorToolbarItems(root = document) {
 	if (typeof root.querySelectorAll !== 'function') return;
 
@@ -73,6 +94,11 @@ function adminEditorConfig(extra = {}) {
 	return {
 		...extra,
 		removePlugins: Array.from(removePlugins),
+		simpleUpload: {
+			uploadUrl: getAdminEditorUploadUrl(),
+			headers: getAdminEditorUploadHeaders(),
+			...(extra.simpleUpload || {})
+		},
 		toolbar: {
 			items: adminEditorToolbarItems,
 			...(extra.toolbar || {})
@@ -94,6 +120,11 @@ function adminEditorFallbackConfig(extra = {}) {
 	return {
 		...extra,
 		removePlugins: Array.from(removePlugins),
+		simpleUpload: {
+			uploadUrl: getAdminEditorUploadUrl(),
+			headers: getAdminEditorUploadHeaders(),
+			...(extra.simpleUpload || {})
+		},
 		toolbar: {
 			items: adminEditorToolbarItems,
 			...(extra.toolbar || {})
