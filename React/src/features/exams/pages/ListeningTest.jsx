@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { getSkillById, getSectionById, submitTestResult } from '../api/exams.api';
 import ListeningContentPanel from '../components/listening/ListeningContentPanel';
+import ListeningFormCompletionGroup from '../components/listening/ListeningFormCompletionGroup';
 import ListeningNoteCompletionGroup from '../components/listening/ListeningNoteCompletionGroup';
 import ListeningPlanMapDiagramLabellingGroup from '../components/listening/ListeningPlanMapDiagramLabellingGroup';
 import ListeningQuestionGroup from '../components/listening/ListeningQuestionGroup';
@@ -12,6 +13,7 @@ import {
   getAnsweredCount,
   getCurrentPartAudio,
   isFlowChartCompletionGroup,
+  isFormCompletionGroup,
   isMatchingGroup,
   isNoteCompletionGroup,
   isMultipleChoiceGroup,
@@ -157,15 +159,16 @@ const ListeningTest = () => {
   );
 
   const isNoteCompletionLayout = usesNoteCompletionLayout(currentPartGroups);
-  const isTableCompletionLayout = !isNoteCompletionLayout && currentPartGroups.some(isTableCompletionGroup);
-  const isPlanMapDiagramLabellingLayout = !isNoteCompletionLayout && !isTableCompletionLayout && currentPartGroups.some(isPlanMapDiagramLabellingGroup);
-  const isTwoColumnLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && usesTwoColumnLayout(currentPartGroups);
-  const isMatchingLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && currentPartGroups.some(isMatchingGroup);
-  const isMultipleChoiceLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMatchingLayout && currentPartGroups.some(isMultipleChoiceGroup);
-  const isFlowChartCompletionLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMatchingLayout && !isMultipleChoiceLayout && currentPartGroups.some(isFlowChartCompletionGroup);
-  const isShortAnswerLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && currentPartGroups.some(isShortAnswerGroup);
-  const isSummaryCompletionLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && !isShortAnswerLayout && currentPartGroups.some(isSummaryCompletionGroup);
-  const isSentenceCompletionLayout = !isNoteCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && !isShortAnswerLayout && !isSummaryCompletionLayout && currentPartGroups.some(isSentenceCompletionGroup);
+  const isFormCompletionLayout = !isNoteCompletionLayout && currentPartGroups.some(isFormCompletionGroup);
+  const isTableCompletionLayout = !isNoteCompletionLayout && !isFormCompletionLayout && currentPartGroups.some(isTableCompletionGroup);
+  const isPlanMapDiagramLabellingLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && currentPartGroups.some(isPlanMapDiagramLabellingGroup);
+  const isTwoColumnLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && usesTwoColumnLayout(currentPartGroups);
+  const isMatchingLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && currentPartGroups.some(isMatchingGroup);
+  const isMultipleChoiceLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMatchingLayout && currentPartGroups.some(isMultipleChoiceGroup);
+  const isFlowChartCompletionLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMatchingLayout && !isMultipleChoiceLayout && currentPartGroups.some(isFlowChartCompletionGroup);
+  const isShortAnswerLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && currentPartGroups.some(isShortAnswerGroup);
+  const isSummaryCompletionLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && !isShortAnswerLayout && currentPartGroups.some(isSummaryCompletionGroup);
+  const isSentenceCompletionLayout = !isNoteCompletionLayout && !isFormCompletionLayout && !isTableCompletionLayout && !isPlanMapDiagramLabellingLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && !isShortAnswerLayout && !isSummaryCompletionLayout && currentPartGroups.some(isSentenceCompletionGroup);
 
   const currentPartAudio = useMemo(
     () => getCurrentPartAudio({ skillData, sectionData, currentPartGroups }),
@@ -256,11 +259,35 @@ const ListeningTest = () => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isTableCompletionLayout ? 'listening-test__content--table-completion' : ''} ${isPlanMapDiagramLabellingLayout ? 'listening-test__content--map-labelling' : ''} ${isMatchingLayout ? 'listening-test__content--matching' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''} ${isFlowChartCompletionLayout ? 'listening-test__content--flow-chart' : ''} ${isShortAnswerLayout ? 'listening-test__content--short-answer' : ''} ${isSummaryCompletionLayout ? 'listening-test__content--summary-completion' : ''} ${isSentenceCompletionLayout ? 'listening-test__content--sentence-completion' : ''}`}>
+      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isFormCompletionLayout ? 'listening-test__content--form-completion' : ''} ${isTableCompletionLayout ? 'listening-test__content--table-completion' : ''} ${isPlanMapDiagramLabellingLayout ? 'listening-test__content--map-labelling' : ''} ${isMatchingLayout ? 'listening-test__content--matching' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''} ${isFlowChartCompletionLayout ? 'listening-test__content--flow-chart' : ''} ${isShortAnswerLayout ? 'listening-test__content--short-answer' : ''} ${isSummaryCompletionLayout ? 'listening-test__content--summary-completion' : ''} ${isSentenceCompletionLayout ? 'listening-test__content--sentence-completion' : ''}`}>
         {isNoteCompletionLayout ? (
           currentPartGroups.map((group, index) => (
             isNoteCompletionGroup(group) ? (
               <ListeningNoteCompletionGroup
+                key={group.id}
+                group={group}
+                currentPartTab={currentPartTab}
+                audioUrl={currentPartAudio}
+                showAudio={index === 0}
+                answers={answers}
+                onAnswerChange={handleAnswerSelect}
+              />
+            ) : (
+              <ListeningQuestionGroup
+                key={group.id}
+                group={group}
+                currentPartTab={currentPartTab}
+                audioUrl={currentPartAudio}
+                showAudio={index === 0}
+                answers={answers}
+                onAnswerChange={handleAnswerSelect}
+              />
+            )
+          ))
+        ) : isFormCompletionLayout ? (
+          currentPartGroups.map((group, index) => (
+            isFormCompletionGroup(group) ? (
+              <ListeningFormCompletionGroup
                 key={group.id}
                 group={group}
                 currentPartTab={currentPartTab}

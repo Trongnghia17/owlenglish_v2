@@ -31,6 +31,9 @@ const MULTI_SLOT_TEXT_QUESTION_TYPES = new Set([
 export const isNoteCompletionGroup = (group) =>
   (group?.type || '').toLowerCase() === 'note_completion';
 
+export const isFormCompletionGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'form_completion';
+
 export const isTableCompletionGroup = (group) =>
   (group?.type || '').toLowerCase() === 'table_completion';
 

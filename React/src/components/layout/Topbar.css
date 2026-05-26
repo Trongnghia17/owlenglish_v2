@@ -11,7 +11,7 @@
 }
 
 .topbar__left{ display:flex; align-items:center; gap:56px; }
-.topbar__logo{ height:70px; width:165px; object-fit:contain; }
+.topbar__logo{ height:50px; width:165px; object-fit:contain; }
 
 .topbar__nav{ display:flex; align-items:center; }
 .topbar__link{
