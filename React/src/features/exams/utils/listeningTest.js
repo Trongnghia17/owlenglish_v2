@@ -21,12 +21,12 @@ const CHOICE_ANSWER_QUESTION_TYPES = new Set([
 const TWO_COLUMN_QUESTION_TYPES = new Set([
   'table_selection',
   'table_completion',
-  'flow_chart_completion',
   'plan_map_diagram_labelling'
 ]);
 
 const MULTI_SLOT_TEXT_QUESTION_TYPES = new Set([
   'short_answer_questions',
+  'summary_completion',
   'sentence_completion'
 ]);
 
@@ -79,8 +79,14 @@ export const usesNoteCompletionLayout = (groups = []) =>
 export const isMultipleChoiceGroup = (group) =>
   (group?.type || '').toLowerCase() === 'multiple_choice';
 
+export const isFlowChartCompletionGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'flow_chart_completion';
+
 export const isShortAnswerGroup = (group) =>
   (group?.type || '').toLowerCase() === 'short_answer_questions';
+
+export const isSummaryCompletionGroup = (group) =>
+  (group?.type || '').toLowerCase() === 'summary_completion';
 
 export const isSentenceCompletionGroup = (group) =>
   (group?.type || '').toLowerCase() === 'sentence_completion';
@@ -110,6 +116,16 @@ export const getQuestionAnswerOptions = (question, fallbackOptions = []) => {
   }
 
   return fallbackOptions;
+};
+
+const normalizeAnswerOption = (answer, index) => {
+  const answerObject = typeof answer === 'string' ? { content: answer } : answer || {};
+  const content = stripParagraphWrapper(answerObject.content || answerObject.text || '');
+
+  return {
+    letter: answerObject.letter || answerObject.label || String.fromCharCode(65 + index),
+    content
+  };
 };
 
 const getQuestionAnswerSlots = (question, questionType) => {
@@ -147,10 +163,33 @@ const getMultipleChoiceOptions = (questions = []) => {
 
   return {
     options: metadata.answers.map((_, index) => String.fromCharCode(65 + index)),
-    optionsWithContent: metadata.answers.map((answer, index) => ({
-      letter: String.fromCharCode(65 + index),
-      content: stripParagraphWrapper(answer.content || '')
-    }))
+    optionsWithContent: metadata.answers.map(normalizeAnswerOption)
+  };
+};
+
+const getFlowChartOptions = (questions = []) => {
+  const firstQuestion = questions[0];
+  const firstMetadata = parseMetadata(firstQuestion?.metadata);
+  const firstAnswers = Array.isArray(firstMetadata.answers) ? firstMetadata.answers : [];
+  const answersSource = firstAnswers.length > 1
+    ? firstAnswers
+    : questions.flatMap((question) => {
+      const metadata = parseMetadata(question?.metadata);
+      return Array.isArray(metadata.answers) ? metadata.answers : [];
+    });
+  const optionsWithContent = answersSource
+    .map(normalizeAnswerOption)
+    .filter((option) => option.content || option.letter);
+  const uniqueOptions = optionsWithContent.filter((option, index, options) =>
+    options.findIndex((candidate) =>
+      candidate.letter === option.letter && candidate.content === option.content
+    ) === index
+  );
+
+  return {
+    options: uniqueOptions.map((option) => option.letter),
+    optionsWithContent: uniqueOptions,
+    optionTitle: firstMetadata.answer_label || 'Options'
   };
 };
 
@@ -162,6 +201,8 @@ const getGroupAnswerOptions = (group) => {
     case 'multiple_choice':
     case 'matching':
       return getMultipleChoiceOptions(group.questions || []);
+    case 'flow_chart_completion':
+      return getFlowChartOptions(group.questions || []);
     case 'yes_no_not_given':
       return {
         options: groupOptions.length > 0 ? groupOptions : ['Yes', 'No', 'Not Given'],
@@ -176,7 +217,6 @@ const getGroupAnswerOptions = (group) => {
     case 'note_completion':
     case 'form_completion':
     case 'table_completion':
-    case 'flow_chart_completion':
     case 'summary_completion':
     case 'sentence_completion':
     case 'short_answer_questions':
@@ -216,7 +256,7 @@ export const normalizeListeningSection = (section, partNumber = 1, startQuestion
       }));
     });
 
-    const { options, optionsWithContent } = getGroupAnswerOptions(group);
+    const { options, optionsWithContent, optionTitle } = getGroupAnswerOptions(group);
     const fallbackNumber = questions[0]?.number || startQuestionNumber;
 
     groups.push({
@@ -228,6 +268,7 @@ export const normalizeListeningSection = (section, partNumber = 1, startQuestion
       audioUrl: group.audio_url || group.audio_file || group.audio || sectionAudioUrl,
       options,
       optionsWithContent,
+      optionTitle,
       questions,
       startNumber: questions[0]?.number || fallbackNumber,
       endNumber: questions[questions.length - 1]?.number || fallbackNumber

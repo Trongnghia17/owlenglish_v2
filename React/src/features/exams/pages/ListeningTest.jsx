@@ -9,10 +9,12 @@ import {
   createPartTitle,
   getAnsweredCount,
   getCurrentPartAudio,
+  isFlowChartCompletionGroup,
   isNoteCompletionGroup,
   isMultipleChoiceGroup,
   isSentenceCompletionGroup,
   isShortAnswerGroup,
+  isSummaryCompletionGroup,
   normalizeListeningSection,
   usesNoteCompletionLayout,
   usesTwoColumnLayout
@@ -152,8 +154,10 @@ const ListeningTest = () => {
   const isNoteCompletionLayout = usesNoteCompletionLayout(currentPartGroups);
   const isTwoColumnLayout = !isNoteCompletionLayout && usesTwoColumnLayout(currentPartGroups);
   const isMultipleChoiceLayout = !isNoteCompletionLayout && !isTwoColumnLayout && currentPartGroups.some(isMultipleChoiceGroup);
-  const isShortAnswerLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && currentPartGroups.some(isShortAnswerGroup);
-  const isSentenceCompletionLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isShortAnswerLayout && currentPartGroups.some(isSentenceCompletionGroup);
+  const isFlowChartCompletionLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && currentPartGroups.some(isFlowChartCompletionGroup);
+  const isShortAnswerLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && currentPartGroups.some(isShortAnswerGroup);
+  const isSummaryCompletionLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && !isShortAnswerLayout && currentPartGroups.some(isSummaryCompletionGroup);
+  const isSentenceCompletionLayout = !isNoteCompletionLayout && !isTwoColumnLayout && !isMultipleChoiceLayout && !isFlowChartCompletionLayout && !isShortAnswerLayout && !isSummaryCompletionLayout && currentPartGroups.some(isSentenceCompletionGroup);
 
   const currentPartAudio = useMemo(
     () => getCurrentPartAudio({ skillData, sectionData, currentPartGroups }),
@@ -244,7 +248,7 @@ const ListeningTest = () => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''} ${isShortAnswerLayout ? 'listening-test__content--short-answer' : ''} ${isSentenceCompletionLayout ? 'listening-test__content--sentence-completion' : ''}`}>
+      <div className={`listening-test__content ${fontSize !== 'normal' ? `listening-test__content--${fontSize}` : ''} ${isTwoColumnLayout ? 'listening-test__content--two-column' : ''} ${isNoteCompletionLayout ? 'listening-test__content--note-completion' : ''} ${isMultipleChoiceLayout ? 'listening-test__content--multiple-choice' : ''} ${isFlowChartCompletionLayout ? 'listening-test__content--flow-chart' : ''} ${isShortAnswerLayout ? 'listening-test__content--short-answer' : ''} ${isSummaryCompletionLayout ? 'listening-test__content--summary-completion' : ''} ${isSentenceCompletionLayout ? 'listening-test__content--sentence-completion' : ''}`}>
         {isNoteCompletionLayout ? (
           currentPartGroups.map((group, index) => (
             isNoteCompletionGroup(group) ? (

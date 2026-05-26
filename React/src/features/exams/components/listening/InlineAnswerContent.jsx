@@ -5,17 +5,26 @@ export default function InlineAnswerContent({
   questions = [],
   answers = {},
   onAnswerChange,
+  onQuestionFocus,
   variant = 'default'
 }) {
   const containerRef = useRef(null);
   const placeholdersMetaRef = useRef([]);
   const latestHandlerRef = useRef(onAnswerChange);
+  const latestQuestionFocusHandlerRef = useRef(onQuestionFocus);
   const latestAnswersRef = useRef(answers);
+  const isFlowVariant = variant === 'flow';
   const isSentenceVariant = variant === 'sentence';
+  const isSummaryVariant = variant === 'summary';
+  const isPillVariant = isFlowVariant || isSentenceVariant || isSummaryVariant;
 
   useEffect(() => {
     latestHandlerRef.current = onAnswerChange;
   }, [onAnswerChange]);
+
+  useEffect(() => {
+    latestQuestionFocusHandlerRef.current = onQuestionFocus;
+  }, [onQuestionFocus]);
 
   useEffect(() => {
     latestAnswersRef.current = answers;
@@ -55,9 +64,14 @@ export default function InlineAnswerContent({
       if (!placeholderElement) return;
 
       const wrapper = document.createElement('span');
-      wrapper.className = `listening-test__inline-input-wrapper ${isSentenceVariant ? 'listening-test__inline-input-wrapper--sentence' : ''}`.trim();
+      wrapper.className = [
+        'listening-test__inline-input-wrapper',
+        isPillVariant ? 'listening-test__inline-input-wrapper--sentence' : '',
+        isFlowVariant ? 'listening-test__inline-input-wrapper--flow' : '',
+        isSummaryVariant ? 'listening-test__inline-input-wrapper--summary' : ''
+      ].filter(Boolean).join(' ');
 
-      if (isSentenceVariant) {
+      if (isPillVariant) {
         const numberChip = document.createElement('span');
         numberChip.className = 'listening-test__inline-input-number';
         numberChip.textContent = meta.question.number?.toString() || '';
@@ -66,32 +80,94 @@ export default function InlineAnswerContent({
 
       const input = document.createElement('input');
       input.type = 'text';
-      input.className = `listening-test__inline-input ${isSentenceVariant ? 'listening-test__inline-input--sentence' : ''}`.trim();
-      input.placeholder = isSentenceVariant ? '' : meta.question.number?.toString() || '';
-      input.maxLength = 50;
+      input.className = [
+        'listening-test__inline-input',
+        isPillVariant ? 'listening-test__inline-input--sentence' : '',
+        isFlowVariant ? 'listening-test__inline-input--flow' : '',
+        isSummaryVariant ? 'listening-test__inline-input--summary' : ''
+      ].filter(Boolean).join(' ');
+      input.placeholder = isPillVariant ? '' : meta.question.number?.toString() || '';
+      input.maxLength = isFlowVariant ? 1 : 50;
       input.dataset.questionId = meta.question.id;
       input.autocomplete = 'off';
       input.setAttribute('aria-label', `Answer ${meta.question.number || ''}`.trim());
       input.value = latestAnswersRef.current?.[meta.question.id] || '';
 
+      const syncValueState = (value) => {
+        wrapper.classList.toggle('has-value', String(value ?? '').trim() !== '');
+      };
+      syncValueState(input.value);
+
       const handleInput = (event) => {
-        latestHandlerRef.current?.(meta.question.id, event.target.value);
+        const nextValue = isFlowVariant
+          ? event.target.value.toUpperCase().slice(0, 1)
+          : event.target.value;
+        event.target.value = nextValue;
+        syncValueState(nextValue);
+        latestHandlerRef.current?.(meta.question.id, nextValue);
       };
 
-      const stopPropagation = (event) => event.stopPropagation();
+      const handleFocus = (event) => {
+        event.stopPropagation();
+        latestQuestionFocusHandlerRef.current?.(meta.question.id);
+      };
+
+      const handleDragOver = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        event.dataTransfer.dropEffect = 'copy';
+        wrapper.classList.add('is-drop-target');
+        latestQuestionFocusHandlerRef.current?.(meta.question.id);
+      };
+
+      const handleDragLeave = (event) => {
+        if (event.relatedTarget && wrapper.contains(event.relatedTarget)) return;
+        wrapper.classList.remove('is-drop-target');
+      };
+
+      const handleDrop = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const droppedValue = (
+          event.dataTransfer.getData('application/x-flow-chart-answer') ||
+          event.dataTransfer.getData('text/plain')
+        ).trim().toUpperCase().slice(0, 1);
+
+        wrapper.classList.remove('is-drop-target');
+
+        if (!droppedValue) return;
+
+        input.value = droppedValue;
+        syncValueState(droppedValue);
+        latestQuestionFocusHandlerRef.current?.(meta.question.id);
+        latestHandlerRef.current?.(meta.question.id, droppedValue);
+      };
 
       input.addEventListener('input', handleInput);
-      input.addEventListener('focus', stopPropagation);
-      input.addEventListener('click', stopPropagation);
+      input.addEventListener('focus', handleFocus);
+      input.addEventListener('click', handleFocus);
+
+      if (isFlowVariant) {
+        wrapper.addEventListener('dragenter', handleDragOver);
+        wrapper.addEventListener('dragover', handleDragOver);
+        wrapper.addEventListener('dragleave', handleDragLeave);
+        wrapper.addEventListener('drop', handleDrop);
+      }
 
       wrapper.appendChild(input);
       placeholderElement.replaceWith(wrapper);
 
       meta.input = input;
+      meta.wrapper = wrapper;
       meta.cleanup = () => {
         input.removeEventListener('input', handleInput);
-        input.removeEventListener('focus', stopPropagation);
-        input.removeEventListener('click', stopPropagation);
+        input.removeEventListener('focus', handleFocus);
+        input.removeEventListener('click', handleFocus);
+        wrapper.removeEventListener('dragenter', handleDragOver);
+        wrapper.removeEventListener('dragover', handleDragOver);
+        wrapper.removeEventListener('dragleave', handleDragLeave);
+        wrapper.removeEventListener('drop', handleDrop);
       };
     });
 
@@ -100,21 +176,27 @@ export default function InlineAnswerContent({
     return () => {
       placeholderMeta.forEach((meta) => meta.cleanup?.());
     };
-  }, [content, questions, isSentenceVariant]);
+  }, [content, questions, isFlowVariant, isPillVariant, isSummaryVariant]);
 
   useEffect(() => {
-    placeholdersMetaRef.current.forEach(({ question, input }) => {
+    placeholdersMetaRef.current.forEach(({ question, input, wrapper }) => {
       if (!input) return;
       const nextValue = answers?.[question.id] || '';
       if (input.value !== nextValue) {
         input.value = nextValue;
       }
+      wrapper?.classList.toggle('has-value', String(nextValue ?? '').trim() !== '');
     });
   }, [answers]);
 
   return (
     <div
-      className={`listening-test__group-content-parsed ${isSentenceVariant ? 'listening-test__group-content-parsed--sentence' : ''}`.trim()}
+      className={[
+        'listening-test__group-content-parsed',
+        isPillVariant ? 'listening-test__group-content-parsed--sentence' : '',
+        isFlowVariant ? 'listening-test__group-content-parsed--flow' : '',
+        isSummaryVariant ? 'listening-test__group-content-parsed--summary' : ''
+      ].filter(Boolean).join(' ')}
       ref={containerRef}
     />
   );

@@ -317,6 +317,13 @@ class TestResultController extends Controller
      */
     private function checkAnswer(ExamQuestion $question, $userAnswer, ?int $answerIndex = null): bool
     {
+        $userAnswer = trim(strip_tags((string) $userAnswer));
+        $fallbackCorrectAnswer = trim(strip_tags((string) ($question->answer_content ?? '')));
+
+        if ($answerIndex === null && $fallbackCorrectAnswer !== '' && strcasecmp($fallbackCorrectAnswer, $userAnswer) === 0) {
+            return true;
+        }
+
         // Get correct answer from metadata
         $metadata = is_string($question->metadata) 
             ? json_decode($question->metadata, true) 
@@ -326,10 +333,21 @@ class TestResultController extends Controller
             return false;
         }
 
+        if ($this->isFlowChartCompletionQuestion($question)) {
+            $flowCorrectAnswers = $this->getFlowChartCorrectAnswers($metadata['answers']);
+
+            foreach ($flowCorrectAnswers as $correctAnswer) {
+                if (strcasecmp($correctAnswer, $userAnswer) === 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // Find correct answer(s)
         if ($answerIndex !== null && isset($metadata['answers'][$answerIndex])) {
             $correctAnswer = trim(strip_tags((string) ($metadata['answers'][$answerIndex]['content'] ?? '')));
-            $userAnswer = trim(strip_tags((string) $userAnswer));
 
             return $correctAnswer !== '' && strcasecmp($correctAnswer, $userAnswer) === 0;
         }
@@ -360,9 +378,6 @@ class TestResultController extends Controller
             return false;
         }
 
-        // Normalize user answer
-        $userAnswer = trim(strip_tags($userAnswer));
-
         // Check if user answer matches any correct answer (case-insensitive)
         foreach ($correctAnswers as $correctAnswer) {
             if (strcasecmp($correctAnswer, $userAnswer) === 0) {
@@ -378,12 +393,21 @@ class TestResultController extends Controller
      */
     private function getCorrectAnswerText(ExamQuestion $question, ?int $answerIndex = null): string
     {
+        if ($answerIndex === null && $question->answer_content) {
+            return trim(strip_tags((string) $question->answer_content));
+        }
+
         $metadata = is_string($question->metadata) 
             ? json_decode($question->metadata, true) 
             : $question->metadata;
         
         if (!$metadata || !isset($metadata['answers'])) {
             return '';
+        }
+
+        if ($this->isFlowChartCompletionQuestion($question)) {
+            $flowCorrectAnswers = $this->getFlowChartCorrectAnswers($metadata['answers']);
+            return $flowCorrectAnswers[0] ?? '';
         }
 
         if ($answerIndex !== null && isset($metadata['answers'][$answerIndex])) {
@@ -401,6 +425,46 @@ class TestResultController extends Controller
 
         $content = $correctAnswer['content'] ?? '';
         return trim(strip_tags($content));
+    }
+
+    private function isFlowChartCompletionQuestion(ExamQuestion $question): bool
+    {
+        $metadata = is_string($question->metadata)
+            ? json_decode($question->metadata, true)
+            : $question->metadata;
+
+        return ($question->questionGroup?->question_type === 'flow_chart_completion') ||
+            (($metadata['question_type'] ?? null) === 'flow_chart_completion');
+    }
+
+    private function getFlowChartCorrectAnswers(array $answers): array
+    {
+        $correctAnswers = [];
+
+        foreach ($answers as $index => $answer) {
+            $isCorrect = ($answer['is_correct'] ?? 0) == 1 || ($answer['is_correct'] ?? false) === true;
+
+            if (!$isCorrect) {
+                continue;
+            }
+
+            $correctAnswers[] = chr(65 + $index);
+
+            $content = trim(strip_tags((string) ($answer['content'] ?? '')));
+            if ($content !== '') {
+                $correctAnswers[] = $content;
+            }
+        }
+
+        if (empty($correctAnswers) && count($answers) === 1) {
+            $content = trim(strip_tags((string) ($answers[0]['content'] ?? '')));
+
+            if ($content !== '') {
+                $correctAnswers[] = $content;
+            }
+        }
+
+        return array_values(array_unique(array_filter($correctAnswers)));
     }
 
     /**
