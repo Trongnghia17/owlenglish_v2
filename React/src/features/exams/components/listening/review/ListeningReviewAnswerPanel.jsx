@@ -6,7 +6,6 @@ export default function ListeningReviewAnswerPanel({
   expandedExplanations,
   activeQuestionId,
   onToggleExplanation,
-  onQuestionSelect,
   onQuestionFocus,
   onLocate
 }) {
@@ -23,7 +22,6 @@ export default function ListeningReviewAnswerPanel({
             expandedExplanations={expandedExplanations}
             activeQuestionId={activeQuestionId}
             onToggleExplanation={onToggleExplanation}
-            onQuestionSelect={onQuestionSelect}
             onQuestionFocus={onQuestionFocus}
             onLocate={onLocate}
           />

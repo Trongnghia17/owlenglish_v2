@@ -4,7 +4,6 @@ import { getTestResult, getSkillById, getSectionById } from '../api/exams.api';
 import ListeningReview from '../components/listening/review/ListeningReview';
 import {
   buildListeningReviewData,
-  getQuestionExplanation,
   getResultAnswerKey,
   isListeningReviewResult
 } from '../components/listening/review/listeningReviewUtils';
@@ -216,21 +215,6 @@ export default function TestResultReview() {
 
     fetchData();
   }, [resultId]);
-
-  useEffect(() => {
-    if (!isListeningReview || questionGroups.length === 0) return;
-
-    setExpandedExplanations((current) => {
-      if (Object.keys(current).length > 0) return current;
-
-      const allQuestions = questionGroups.flatMap((group) => group.questions || []);
-      const firstQuestionWithExplanation = allQuestions.find(getQuestionExplanation) || allQuestions[0];
-
-      return firstQuestionWithExplanation
-        ? { [firstQuestionWithExplanation.id]: true }
-        : current;
-    });
-  }, [isListeningReview, questionGroups]);
 
   const processListeningExamData = (data, type) => {
     const listeningReviewData = buildListeningReviewData(data, type);
@@ -530,8 +514,10 @@ export default function TestResultReview() {
     }));
   };
 
-  const selectExplanation = (questionId) => {
-    setExpandedExplanations({ [questionId]: true });
+  const toggleListeningExplanation = (questionId) => {
+    setExpandedExplanations(prev => (
+      prev[questionId] ? {} : { [questionId]: true }
+    ));
   };
 
   const handleLocate = (locateText) => {
@@ -581,8 +567,7 @@ export default function TestResultReview() {
         questionGroups={questionGroups}
         userAnswers={userAnswers}
         expandedExplanations={expandedExplanations}
-        onToggleExplanation={toggleExplanation}
-        onSelectQuestion={selectExplanation}
+        onToggleExplanation={toggleListeningExplanation}
         onLocate={handleLocate}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}

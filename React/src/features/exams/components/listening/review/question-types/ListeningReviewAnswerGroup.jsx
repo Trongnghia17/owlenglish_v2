@@ -13,7 +13,6 @@ function ListeningReviewAnswerItem({
   expandedExplanations,
   activeQuestionId,
   onToggleExplanation,
-  onQuestionSelect,
   onQuestionFocus,
   onLocate
 }) {
@@ -33,24 +32,9 @@ function ListeningReviewAnswerItem({
   const isExpanded = Boolean(expandedExplanations[question.id]);
   const isActive = String(activeQuestionId ?? '') === String(question.id);
 
-  const handleSelect = () => {
-    onQuestionSelect(question);
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-
-    event.preventDefault();
-    handleSelect();
-  };
-
   return (
     <div
       className={`listening-review__answer-item ${stateClass} ${isExpanded ? 'is-expanded' : ''} ${isActive ? 'is-active' : ''}`}
-      role="button"
-      tabIndex={0}
-      onClick={handleSelect}
-      onKeyDown={handleKeyDown}
     >
       <div className="listening-review__answer-input-row">
         <span className="listening-review__answer-number">{question.number}</span>
@@ -109,7 +93,6 @@ export default function ListeningReviewAnswerGroup({
   expandedExplanations,
   activeQuestionId,
   onToggleExplanation,
-  onQuestionSelect,
   onQuestionFocus,
   onLocate,
   typeClass = 'default',
@@ -134,7 +117,6 @@ export default function ListeningReviewAnswerGroup({
             expandedExplanations={expandedExplanations}
             activeQuestionId={activeQuestionId}
             onToggleExplanation={onToggleExplanation}
-            onQuestionSelect={onQuestionSelect}
             onQuestionFocus={onQuestionFocus}
             onLocate={onLocate}
           />

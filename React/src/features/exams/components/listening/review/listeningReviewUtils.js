@@ -153,12 +153,81 @@ const buildQuestionNumberMap = (questions = []) =>
 const getQuestionForMarker = ({ markerNumber, questions, questionNumberMap, markerIndex }) =>
   questionNumberMap.get(String(markerNumber)) || questions[markerIndex] || null;
 
-const getQuestionAnchorHtml = ({ question, markerText, answerText }) => {
-  if (!question) return escapeHtml(markerText);
+const getQuestionMarkerLabel = (question) => `(Q${question.number})`;
 
-  const label = `${markerText}${answerText ? ` ${answerText}` : ''}`;
+const getQuestionAnchorHtml = ({ question, fallbackText, answerText }) => {
+  if (!question) return escapeHtml(fallbackText);
 
-  return `<button type="button" class="listening-review__inline-answer" data-question-id="${escapeAttribute(question.id)}">${escapeHtml(label)}</button>`;
+  const label = `${getQuestionMarkerLabel(question)}${answerText ? ` ${answerText}` : ''}`;
+
+  return `<span class="listening-review__inline-answer" data-question-id="${escapeAttribute(question.id)}">${escapeHtml(label)}</span>`;
+};
+
+const getFollowingAnswerMatch = (contentAfterMarker, answerText) => {
+  const normalizedAnswer = stripHtmlToText(answerText);
+  const leadingWhitespace = contentAfterMarker.match(/^\s*/)?.[0] || '';
+  const answerStart = leadingWhitespace.length;
+
+  if (!normalizedAnswer) {
+    const fallbackAnswer = contentAfterMarker.slice(answerStart).match(/^[^\s<.,;:!?()[\]{}]+/u)?.[0] || '';
+
+    return {
+      length: fallbackAnswer ? answerStart + fallbackAnswer.length : 0,
+      text: fallbackAnswer
+    };
+  }
+
+  const candidate = contentAfterMarker.slice(answerStart, answerStart + normalizedAnswer.length);
+  const nextCharacter = contentAfterMarker.charAt(answerStart + normalizedAnswer.length);
+  const isWholeAnswer = candidate.toLowerCase() === normalizedAnswer.toLowerCase() &&
+    !/[a-zA-Z0-9]/.test(nextCharacter);
+
+  return {
+    length: isWholeAnswer ? answerStart + normalizedAnswer.length : 0,
+    text: isWholeAnswer ? candidate : normalizedAnswer
+  };
+};
+
+const replaceQuestionMarkers = ({ content, questions, questionNumberMap, userAnswers }) => {
+  const markerRegex = /\(\s*Q\s*(\d*)\s*\)/gi;
+  let markerIndex = 0;
+  let cursor = 0;
+  let output = '';
+  let match;
+
+  while ((match = markerRegex.exec(content)) !== null) {
+    const [fullMatch, markerNumber] = match;
+    const question = getQuestionForMarker({
+      markerNumber,
+      questions,
+      questionNumberMap,
+      markerIndex
+    });
+    markerIndex += 1;
+
+    output += content.slice(cursor, match.index);
+
+    if (!question) {
+      output += fullMatch;
+      cursor = markerRegex.lastIndex;
+      continue;
+    }
+
+    const answerData = getReviewAnswerData(userAnswers, question);
+    const answerText = getReviewCorrectAnswer(answerData, question) ||
+      stripHtmlToText(answerData.userAnswer || '');
+    const followingAnswer = getFollowingAnswerMatch(content.slice(markerRegex.lastIndex), answerText);
+
+    output += getQuestionAnchorHtml({
+      question,
+      fallbackText: fullMatch,
+      answerText: followingAnswer.text
+    });
+
+    cursor = markerRegex.lastIndex + followingAnswer.length;
+  }
+
+  return output + content.slice(cursor);
 };
 
 export const getListeningReviewContentHtml = (group, userAnswers) => {
@@ -169,7 +238,6 @@ export const getListeningReviewContentHtml = (group, userAnswers) => {
 
   const questionNumberMap = buildQuestionNumberMap(questions);
   let placeholderIndex = 0;
-  let markerIndex = 0;
 
   const normalizedContent = normalizeHtmlMediaSources(content);
 
@@ -191,26 +259,17 @@ export const getListeningReviewContentHtml = (group, userAnswers) => {
 
       return getQuestionAnchorHtml({
         question,
-        markerText: `(Q${markerNumber})`,
+        fallbackText: match,
         answerText
       });
     });
   }
 
-  return normalizedContent.replace(/\((Q\s*(\d+))\)/gi, (match, markerText, markerNumber) => {
-    const question = getQuestionForMarker({
-      markerNumber,
-      questions,
-      questionNumberMap,
-      markerIndex
-    });
-    markerIndex += 1;
-
-    return getQuestionAnchorHtml({
-      question,
-      markerText: `(${markerText.replace(/\s+/g, '')})`,
-      answerText: ''
-    });
+  return replaceQuestionMarkers({
+    content: normalizedContent,
+    questions,
+    questionNumberMap,
+    userAnswers
   });
 };
 
