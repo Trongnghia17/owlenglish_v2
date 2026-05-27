@@ -325,7 +325,7 @@
 
                                 @if($skillFilter)
                                 @foreach($skillFilter->children as $group)
-                                    <div class="mb-3">
+                                    <!-- <div class="mb-3">
                                      <strong>{{ $group->name }}</strong>
                                         @foreach($group->children as $value)
                                     <div class="form-check">
@@ -342,7 +342,7 @@
                                     </label>
                                     </div>
                                     @endforeach
-                                    </div>
+                                    </div> -->
                                     @endforeach
                                     @endif<!-- Section Title -->
                                             <div class="mb-3">

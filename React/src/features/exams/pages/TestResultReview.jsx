@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef, memo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { getTestResult, getSkillById, getSectionById } from '../api/exams.api';
+import ListeningReview from '../components/listening/review/ListeningReview';
+import {
+  buildListeningReviewData,
+  getQuestionExplanation,
+  getResultAnswerKey,
+  isListeningReviewResult
+} from '../components/listening/review/listeningReviewUtils';
 import TestLayout from '../components/TestLayout';
 import './ReadingTest.css'; // Sử dụng cùng CSS với ReadingTest
+import './ListeningTest.css';
 import './TestResultReview.css'; // CSS riêng cho review mode
 
 const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
@@ -60,7 +68,6 @@ const GroupContentWithInlineInputsReview = ({ content, questions = [], userAnswe
       const correctAnswer = answerData.correctAnswer || question.correctAnswer || '';
 
       const placeholderId = `inline-placeholder-review-${question.id}`;
-      const colorClass = isCorrect ? 'correct' : 'incorrect';
       
       return `<span class="reading-test__inline-placeholder" data-placeholder-id="${placeholderId}" data-is-correct="${isCorrect}" data-user-answer="${userAnswer}" data-correct-answer="${correctAnswer}"></span>`;
     });
@@ -133,11 +140,14 @@ export default function TestResultReview() {
   const [timeRemaining] = useState(0); // No timer in review mode
   const [expandedExplanations, setExpandedExplanations] = useState({});
   const [userAnswers, setUserAnswers] = useState({}); // Store user's answers from result
+  const [isListeningReview, setIsListeningReview] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setExpandedExplanations({});
+        setIsListeningReview(false);
 
         // Fetch test result if not in state
         let testResult = result;
@@ -157,7 +167,7 @@ export default function TestResultReview() {
         const answersMap = {};
         if (testResult.answers && Array.isArray(testResult.answers)) {
           testResult.answers.forEach(ans => {
-            answersMap[ans.question_id] = {
+            answersMap[getResultAnswerKey(ans)] = {
               userAnswer: ans.user_answer,
               correctAnswer: ans.correct_answer,
               isCorrect: ans.is_correct
@@ -170,14 +180,29 @@ export default function TestResultReview() {
         if (testResult.exam_skill_id) {
           const response = await getSkillById(testResult.exam_skill_id, { with_sections: true });
           if (response.data.success) {
-            setSkillData(response.data.data);
-            processExamData(response.data.data, testResult, 'skill');
+            const skill = response.data.data;
+            const shouldUseListeningReview = isListeningReviewResult(testResult, skill);
+            setSkillData(skill);
+            setSectionData(null);
+            setIsListeningReview(shouldUseListeningReview);
+            if (shouldUseListeningReview) {
+              processListeningExamData(skill, 'skill');
+            } else {
+              processExamData(skill, testResult, 'skill');
+            }
           }
         } else if (testResult.exam_section_id) {
           const response = await getSectionById(testResult.exam_section_id, { with_questions: true });
           if (response.data.success) {
-            setSectionData(response.data.data);
-            processExamData(response.data.data, testResult, 'section');
+            const section = response.data.data;
+            const shouldUseListeningReview = isListeningReviewResult(testResult, section);
+            setSectionData(section);
+            setIsListeningReview(shouldUseListeningReview);
+            if (shouldUseListeningReview) {
+              processListeningExamData(section, 'section');
+            } else {
+              processExamData(section, testResult, 'section');
+            }
           }
         }
       } catch (error) {
@@ -191,6 +216,30 @@ export default function TestResultReview() {
 
     fetchData();
   }, [resultId]);
+
+  useEffect(() => {
+    if (!isListeningReview || questionGroups.length === 0) return;
+
+    setExpandedExplanations((current) => {
+      if (Object.keys(current).length > 0) return current;
+
+      const allQuestions = questionGroups.flatMap((group) => group.questions || []);
+      const firstQuestionWithExplanation = allQuestions.find(getQuestionExplanation) || allQuestions[0];
+
+      return firstQuestionWithExplanation
+        ? { [firstQuestionWithExplanation.id]: true }
+        : current;
+    });
+  }, [isListeningReview, questionGroups]);
+
+  const processListeningExamData = (data, type) => {
+    const listeningReviewData = buildListeningReviewData(data, type);
+
+    setCurrentPartTab(1);
+    setPassages([]);
+    setQuestionGroups(listeningReviewData.groups);
+    setParts(listeningReviewData.parts);
+  };
 
   const processExamData = (data, testResult, type) => {
     if (type === 'section') {
@@ -481,6 +530,10 @@ export default function TestResultReview() {
     }));
   };
 
+  const selectExplanation = (questionId) => {
+    setExpandedExplanations({ [questionId]: true });
+  };
+
   const handleLocate = (locateText) => {
     if (!locateText) return;
     
@@ -501,7 +554,7 @@ export default function TestResultReview() {
     );
   }
 
-  if (!passages || passages.length === 0 || questionGroups.length === 0) {
+  if ((!isListeningReview && (!passages || passages.length === 0)) || questionGroups.length === 0) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <div style={{ textAlign: 'center' }}>
@@ -515,6 +568,27 @@ export default function TestResultReview() {
 
   const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+
+  if (isListeningReview) {
+    return (
+      <ListeningReview
+        skillData={skillData}
+        sectionData={sectionData}
+        result={result}
+        parts={parts}
+        currentPartTab={currentPartTab}
+        setCurrentPartTab={setCurrentPartTab}
+        questionGroups={questionGroups}
+        userAnswers={userAnswers}
+        expandedExplanations={expandedExplanations}
+        onToggleExplanation={toggleExplanation}
+        onSelectQuestion={selectExplanation}
+        onLocate={handleLocate}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
+      />
+    );
+  }
 
   // Render câu hỏi ở chế độ review (readonly with colors)
   const renderReviewQuestions = (group) => {
