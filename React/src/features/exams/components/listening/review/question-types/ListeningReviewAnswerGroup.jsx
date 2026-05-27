@@ -58,7 +58,7 @@ function ListeningReviewAnswerItem({
           }}
           aria-expanded={isExpanded}
         >
-          {isExpanded ? 'Thu gọn' : 'Chi tiết'}
+          {isExpanded ? 'Thu gọn' : 'Thu gọn'}
         </button>
       </div>
 

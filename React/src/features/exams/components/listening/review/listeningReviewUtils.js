@@ -144,90 +144,34 @@ export const getQuestionLocateText = (question) => {
 export const getReviewCorrectAnswer = (answerData, question) =>
   stripHtmlToText(answerData.correctAnswer || question?.correctAnswer || '');
 
-const buildQuestionNumberMap = (questions = []) =>
-  questions.reduce((numberMap, question) => {
-    numberMap.set(String(question.number), question);
-    return numberMap;
-  }, new Map());
-
-const getQuestionForMarker = ({ markerNumber, questions, questionNumberMap, markerIndex }) =>
-  questionNumberMap.get(String(markerNumber)) || questions[markerIndex] || null;
-
-const getQuestionMarkerLabel = (question) => `(Q${question.number})`;
-
 const getQuestionAnchorHtml = ({ question, fallbackText, answerText }) => {
   if (!question) return escapeHtml(fallbackText);
 
-  const label = `${getQuestionMarkerLabel(question)}${answerText ? ` ${answerText}` : ''}`;
+  const label = stripHtmlToText(answerText);
+
+  if (!label) return '';
 
   return `<span class="listening-review__inline-answer" data-question-id="${escapeAttribute(question.id)}">${escapeHtml(label)}</span>`;
 };
 
-const getFollowingAnswerMatch = (contentAfterMarker, answerText) => {
-  const normalizedAnswer = stripHtmlToText(answerText);
-  const leadingWhitespace = contentAfterMarker.match(/^\s*/)?.[0] || '';
-  const answerStart = leadingWhitespace.length;
-
-  if (!normalizedAnswer) {
-    const fallbackAnswer = contentAfterMarker.slice(answerStart).match(/^[^\s<.,;:!?()[\]{}]+/u)?.[0] || '';
-
-    return {
-      length: fallbackAnswer ? answerStart + fallbackAnswer.length : 0,
-      text: fallbackAnswer
-    };
-  }
-
-  const candidate = contentAfterMarker.slice(answerStart, answerStart + normalizedAnswer.length);
-  const nextCharacter = contentAfterMarker.charAt(answerStart + normalizedAnswer.length);
-  const isWholeAnswer = candidate.toLowerCase() === normalizedAnswer.toLowerCase() &&
-    !/[a-zA-Z0-9]/.test(nextCharacter);
-
-  return {
-    length: isWholeAnswer ? answerStart + normalizedAnswer.length : 0,
-    text: isWholeAnswer ? candidate : normalizedAnswer
-  };
-};
-
-const replaceQuestionMarkers = ({ content, questions, questionNumberMap, userAnswers }) => {
-  const markerRegex = /\(\s*Q\s*(\d*)\s*\)/gi;
+const replaceBoldAnswerMarkers = ({ content, questions }) => {
+  const boldRegex = /<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>|<span\b(?=[^>]*style=["'][^"']*font-weight\s*:\s*(?:bold|[6-9]00))[^>]*>([\s\S]*?)<\/span>/gi;
   let markerIndex = 0;
-  let cursor = 0;
-  let output = '';
-  let match;
 
-  while ((match = markerRegex.exec(content)) !== null) {
-    const [fullMatch, markerNumber] = match;
-    const question = getQuestionForMarker({
-      markerNumber,
-      questions,
-      questionNumberMap,
-      markerIndex
-    });
+  return content.replace(boldRegex, (match, tagName, tagContent, spanContent) => {
+    const question = questions[markerIndex];
+    const answerText = stripHtmlToText(tagContent || spanContent || '');
+
+    if (!question || !answerText) return match;
+
     markerIndex += 1;
 
-    output += content.slice(cursor, match.index);
-
-    if (!question) {
-      output += fullMatch;
-      cursor = markerRegex.lastIndex;
-      continue;
-    }
-
-    const answerData = getReviewAnswerData(userAnswers, question);
-    const answerText = getReviewCorrectAnswer(answerData, question) ||
-      stripHtmlToText(answerData.userAnswer || '');
-    const followingAnswer = getFollowingAnswerMatch(content.slice(markerRegex.lastIndex), answerText);
-
-    output += getQuestionAnchorHtml({
+    return getQuestionAnchorHtml({
       question,
-      fallbackText: fullMatch,
-      answerText: followingAnswer.text
+      fallbackText: match,
+      answerText
     });
-
-    cursor = markerRegex.lastIndex + followingAnswer.length;
-  }
-
-  return output + content.slice(cursor);
+  });
 };
 
 export const getListeningReviewContentHtml = (group, userAnswers) => {
@@ -236,19 +180,13 @@ export const getListeningReviewContentHtml = (group, userAnswers) => {
 
   if (!content) return '';
 
-  const questionNumberMap = buildQuestionNumberMap(questions);
   let placeholderIndex = 0;
 
   const normalizedContent = normalizeHtmlMediaSources(content);
 
   if (/\{\{\s*[\w-]+\s*\}\}/.test(normalizedContent)) {
-    return normalizedContent.replace(/\{\{\s*([\w-]+)\s*\}\}/g, (match, markerNumber) => {
-      const question = getQuestionForMarker({
-        markerNumber,
-        questions,
-        questionNumberMap,
-        markerIndex: placeholderIndex
-      });
+    return normalizedContent.replace(/\{\{\s*[\w-]+\s*\}\}/g, (match) => {
+      const question = questions[placeholderIndex];
       placeholderIndex += 1;
 
       if (!question) return match;
@@ -265,11 +203,9 @@ export const getListeningReviewContentHtml = (group, userAnswers) => {
     });
   }
 
-  return replaceQuestionMarkers({
+  return replaceBoldAnswerMarkers({
     content: normalizedContent,
-    questions,
-    questionNumberMap,
-    userAnswers
+    questions
   });
 };
 
