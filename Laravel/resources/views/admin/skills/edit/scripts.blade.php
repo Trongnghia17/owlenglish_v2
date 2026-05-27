@@ -384,13 +384,6 @@
                                 <input type="hidden" id="section-feedback-new-${sectionIndex}" name="sections[${sectionIndex}][feedback]">
                                 <div id="section-feedback-new-${sectionIndex}-editor"></div>
                             </div>
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input type="hidden" name="sections[${sectionIndex}][answer_inputs_inside_content]" value="0">
-                                    <input class="form-check-input" type="checkbox" name="sections[${sectionIndex}][answer_inputs_inside_content]" value="1">
-                                    <label class="form-check-label">Answer inputs inside content</label>
-                                </div>
-                            </div>
                             ${questionsContainerHTML}
                         </div>
                     </div>
@@ -475,31 +468,6 @@
                                 <label class="form-label">Number of Options</label>
                                 <input type="number" class="form-control" name="sections[${sectionIdx}][groups][${groupIndex}][number_of_options]" value="4" min="2" max="10" placeholder="Enter number of options (e.g., 4)">
                                 <small class="form-text text-muted">Number of dropdown options for table selection questions</small>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input type="hidden" name="sections[${sectionIdx}][groups][${groupIndex}][answer_inputs_inside_content]" value="0">
-                                        <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIndex}][answer_inputs_inside_content]" value="1">
-                                        <label class="form-check-label">Answer inputs inside content</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input type="hidden" name="sections[${sectionIdx}][groups][${groupIndex}][split_questions_side_by_side]" value="0">
-                                        <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIndex}][split_questions_side_by_side]" value="1">
-                                        <label class="form-check-label">Split content and questions side by side</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input type="hidden" name="sections[${sectionIdx}][groups][${groupIndex}][allow_drag_drop]" value="0">
-                                        <input class="form-check-input" type="checkbox" name="sections[${sectionIdx}][groups][${groupIndex}][allow_drag_drop]" value="1">
-                                        <label class="form-check-label">Allow drag and drop answers</label>
-                                    </div>
-                                </div>
                             </div>
                             <div class="questions-container mt-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">

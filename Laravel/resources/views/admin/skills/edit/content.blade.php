@@ -371,19 +371,6 @@
                                                 <div id="section-feedback-{{ $sectionIndex }}-editor"></div>
                                             </div>
 
-                                            <!-- Answer Inputs Inside Content -->
-                                            <div class="mb-3">
-                                                <div class="form-check">
-                                                    <input type="hidden" name="sections[{{ $sectionIndex }}][answer_inputs_inside_content]" value="0">
-                                                    <input class="form-check-input" type="checkbox"
-                                                        name="sections[{{ $sectionIndex }}][answer_inputs_inside_content]"
-                                                        value="1" {{ old('sections.' . $sectionIndex . '.answer_inputs_inside_content', $section->metadata['answer_inputs_inside_content'] ?? false) ? 'checked' : '' }}>
-                                                    <label class="form-check-label">
-                                                        Answer inputs inside content
-                                                    </label>
-                                                </div>
-                                            </div>
-
                                             @if($skill->isSpeaking() || $skill->isWriting())
                                                 <!-- Direct Questions (for Speaking/Writing) -->
                                                 <div class="direct-questions-container mt-4">
@@ -572,43 +559,6 @@
                                                                         value="{{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.number_of_options', $group->options['number_of_options'] ?? 4) }}"
                                                                         min="2" max="10" placeholder="Enter number of options (e.g., 4)">
                                                                     <small class="form-text text-muted">Number of dropdown options for table selection questions</small>
-                                                                </div>
-
-                                                                <!-- Group Options -->
-                                                                <div class="row mb-3">
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-check">
-                                                                            <input type="hidden" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][answer_inputs_inside_content]" value="0">
-                                                                            <input class="form-check-input" type="checkbox"
-                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][answer_inputs_inside_content]"
-                                                                                value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.answer_inputs_inside_content', $group->options['answer_inputs_inside_content'] ?? false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Answer inputs inside
-                                                                                content</label>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-check">
-                                                                            <input type="hidden" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][split_questions_side_by_side]" value="0">
-                                                                            <input class="form-check-input" type="checkbox"
-                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][split_questions_side_by_side]"
-                                                                                value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.split_questions_side_by_side', $group->options['split_questions_side_by_side'] ?? false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Split content and
-                                                                                questions side by side</label>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="row mb-3">
-                                                                    <div class="col-md-6">
-                                                                        <div class="form-check">
-                                                                            <input type="hidden" name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][allow_drag_drop]" value="0">
-                                                                            <input class="form-check-input" type="checkbox"
-                                                                                name="sections[{{ $sectionIndex }}][groups][{{ $groupIndex }}][allow_drag_drop]"
-                                                                                value="1" {{ old('sections.' . $sectionIndex . '.groups.' . $groupIndex . '.allow_drag_drop', $group->options['allow_drag_drop'] ?? false) ? 'checked' : '' }}>
-                                                                            <label class="form-check-label">Allow drag and drop
-                                                                                answers</label>
-                                                                        </div>
-                                                                    </div>
                                                                 </div>
 
                                                                 <!-- Questions -->
