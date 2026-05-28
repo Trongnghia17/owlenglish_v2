@@ -11,7 +11,7 @@
                 </div>
                 <div>
                     <a href="{{ route('admin.skills.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Thêm đê thi mới
+                        <i class="bi bi-plus-circle me-2"></i>Thêm đề thi mới
                     </a>
                 </div>
             </div>
@@ -186,9 +186,9 @@
             @else
                 <div class="text-center py-5">
                     <i class="bi bi-inbox display-1 text-muted"></i>
-                    <p class="text-muted mt-3">Chưa có đê thi nào</p>
+                    <p class="text-muted mt-3">Chưa có đề thi nào</p>
                     <a href="{{ route('admin.skills.create') }}" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Thêm đê thi đầu tiên
+                        <i class="bi bi-plus-circle me-2"></i>Thêm đề thi đầu tiên
                     </a>
                 </div>
             @endif

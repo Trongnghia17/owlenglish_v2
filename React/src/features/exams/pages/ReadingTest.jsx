@@ -1,423 +1,249 @@
-import { useState, useEffect, useRef, memo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { getSkillById, getSectionById, submitTestResult, saveTestDraft } from '../api/exams.api';
+
+import {
+  getSkillById,
+  getSectionById,
+  submitTestResult
+} from '../api/exams.api';
+
 import TestLayout from '../components/TestLayout';
+
+import ReadingPassagePanel from '../components/reading/ReadingPassagePanel';
+import ReadingQuestionGroup from '../components/reading/ReadingQuestionGroup';
+
+import ReadingNoteCompletionGroup from '../components/reading/ReadingNoteCompletionGroup';
+import ReadingTableCompletionGroup from '../components/reading/ReadingTableCompletionGroup';
+import ReadingFlowChartCompletionGroup from '../components/reading/ReadingFlowChartCompletionGroup';
+import ReadingDiagramLabelCompletionGroup from '../components/reading/ReadingDiagramLabelCompletionGroup';
+
+import {
+  normalizeReadingSection,
+
+  createReadingPartTitle,
+
+  getAnsweredCount,
+
+  usesReadingTwoColumnLayout,
+
+  usesReadingNoteCompletionLayout,
+
+  isReadingMultipleChoiceGroup,
+
+  isReadingTrueFalseNotGivenGroup,
+
+  isReadingYesNoNotGivenGroup,
+
+  isReadingMatchingInformationGroup,
+
+  isReadingMatchingHeadingsGroup,
+
+  isReadingMatchingFeaturesGroup,
+
+  isReadingMatchingSentenceEndingsGroup,
+
+  isReadingSentenceCompletionGroup,
+
+  isReadingSummaryCompletionGroup,
+
+  isReadingNoteCompletionGroup,
+
+  isReadingTableCompletionGroup,
+
+  isReadingFlowChartCompletionGroup,
+
+  isReadingDiagramLabelCompletionGroup,
+
+  isReadingShortAnswerGroup
+} from '../utils/readingTest';
+
 import './ReadingTest.css';
 
-const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
+const DEFAULT_TIME_LIMIT_SECONDS = 3600;
 
-const GroupContentWithInlineInputs = ({ content, questions = [], answers = {}, onAnswerChange }) => {
-  const containerRef = useRef(null);
-  const placeholdersMetaRef = useRef([]);
-  const latestHandlerRef = useRef(onAnswerChange);
+const getTimeLimitSeconds = (skill) => {
+  const minutes = Number(skill?.time_limit);
 
-  useEffect(() => {
-    latestHandlerRef.current = onAnswerChange;
-  }, [onAnswerChange]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    if (!content) {
-      container.innerHTML = '';
-      placeholdersMetaRef.current = [];
-      return;
-    }
-
-    const placeholderRegex = /\{\{\s*([a-zA-Z0-9]+)\s*\}\}/g;
-    const placeholderMeta = [];
-    let questionIndex = 0;
-
-    const processedContent = content.replace(placeholderRegex, (match) => {
-      const question = questions[questionIndex];
-      questionIndex += 1;
-
-      if (!question) {
-        return match;
-      }
-
-      const placeholderId = `inline-placeholder-${question.id}`;
-      placeholderMeta.push({ placeholderId, question });
-      return `<span class="reading-test__inline-placeholder" data-placeholder-id="${placeholderId}"></span>`;
-    });
-
-    container.innerHTML = processedContent;
-
-    placeholderMeta.forEach((meta) => {
-      const placeholderElement = container.querySelector(`[data-placeholder-id="${meta.placeholderId}"]`);
-      if (!placeholderElement) return;
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'reading-test__inline-input';
-      input.placeholder = meta.question.number?.toString() || '';
-      input.maxLength = 50;
-      input.dataset.questionId = meta.question.id;
-
-      const handleInput = (event) => {
-        latestHandlerRef.current?.(meta.question.id, event.target.value);
-      };
-
-      const stopPropagation = (event) => event.stopPropagation();
-
-      input.addEventListener('input', handleInput);
-      input.addEventListener('focus', stopPropagation);
-      input.addEventListener('click', stopPropagation);
-
-      const wrapper = document.createElement('span');
-      wrapper.className = 'reading-test__inline-input-wrapper';
-      wrapper.appendChild(input);
-
-      placeholderElement.replaceWith(wrapper);
-
-      meta.input = input;
-      meta.cleanup = () => {
-        input.removeEventListener('input', handleInput);
-        input.removeEventListener('focus', stopPropagation);
-        input.removeEventListener('click', stopPropagation);
-      };
-    });
-
-    placeholdersMetaRef.current = placeholderMeta;
-
-    return () => {
-      placeholderMeta.forEach((meta) => meta.cleanup?.());
-    };
-  }, [content, questions]);
-
-  useEffect(() => {
-    placeholdersMetaRef.current.forEach(({ question, input }) => {
-      if (!input) return;
-      const nextValue = answers?.[question.id] || '';
-      if (input.value !== nextValue) {
-        input.value = nextValue;
-      }
-    });
-  }, [answers]);
-
-  return (
-    <div
-      className="reading-test__group-content-parsed"
-      ref={containerRef}
-    />
-  );
+  return Number.isFinite(minutes) && minutes > 0
+    ? minutes * 60
+    : DEFAULT_TIME_LIMIT_SECONDS;
 };
 
-const PassageContent = memo(function PassageContent({
-  fontSize,
-  content
-}) {
-  return (
-    <div
-      className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison: only re-render if these actually change
-  if (prevProps.fontSize !== nextProps.fontSize) return false;
-  if (prevProps.content !== nextProps.content) return false;
-  
-  // No relevant changes, skip re-render
-  return true;
-});
+const getSubmitQuestionId = (question) =>
+  Number(question.sourceQuestionId ?? question.id);
 
-export default function ReadingTest() {
+const getSubmitAnswerIndex = (question) =>
+  Number.isInteger(question.answerIndex)
+    ? question.answerIndex
+    : null;
+
+const ReadingTest = () => {
   const { skillId, sectionId } = useParams();
+
   const location = useLocation();
+
   const navigate = useNavigate();
+
   const examData = location.state?.examData;
 
-  // State để quản lý câu hỏi hiện tại và câu trả lời
   const [answers, setAnswers] = useState({});
-  const [timeRemaining, setTimeRemaining] = useState(1800); // 30 phút = 1800 giây
-  const [currentPartTab, setCurrentPartTab] = useState(1); // Tab hiện tại
+
+  const [timeRemaining, setTimeRemaining] = useState(
+    DEFAULT_TIME_LIMIT_SECONDS
+  );
+
+  const [currentPartTab, setCurrentPartTab] = useState(1);
+
   const [loading, setLoading] = useState(true);
+
   const [skillData, setSkillData] = useState(null);
+
   const [sectionData, setSectionData] = useState(null);
-  const [questionGroups, setQuestionGroups] = useState([]); // Lưu theo groups
-  const [passages, setPassages] = useState([]); // Nhiều passages theo part
-  const [parts, setParts] = useState([]); // Danh sách các parts
-  const [fontSize, setFontSize] = useState('normal'); // Font size
 
-  // Keep latest values for interval callbacks without recreating intervals.
-  const timeRemainingRef = useRef(timeRemaining);
-  const answersRef = useRef(answers);
-  const skillDataRef = useRef(skillData);
+  const [questionGroups, setQuestionGroups] = useState([]);
+
+  const [parts, setParts] = useState([]);
+
+  const [fontSize, setFontSize] = useState('normal');
 
   useEffect(() => {
-    timeRemainingRef.current = timeRemaining;
-  }, [timeRemaining]);
+    const applySkillData = (skill) => {
+      setSkillData(skill);
 
-  useEffect(() => {
-    answersRef.current = answers;
-  }, [answers]);
+      setTimeRemaining(getTimeLimitSeconds(skill));
+    };
 
-  useEffect(() => {
-    skillDataRef.current = skillData;
-  }, [skillData]);
+    const fetchSectionTest = async () => {
+      const [sectionResponse, skillResponse] = await Promise.all([
+        getSectionById(sectionId, {
+          with_questions: true
+        }),
 
-  // Lấy dữ liệu từ API
-  useEffect(() => {
+        skillId
+          ? getSkillById(skillId)
+          : Promise.resolve(null)
+      ]);
+
+      if (skillResponse?.data?.success) {
+        applySkillData(skillResponse.data.data);
+      }
+
+      if (!sectionResponse.data.success) return;
+
+      const section = sectionResponse.data.data;
+
+      const { groups } = normalizeReadingSection(
+        section,
+        1,
+        1
+      );
+
+      setSectionData(section);
+
+      setQuestionGroups(groups);
+
+      setParts([
+        {
+          id: section.id,
+          part: 1,
+          title: createReadingPartTitle(
+            1,
+            groups,
+            1
+          )
+        }
+      ]);
+    };
+
+    const fetchFullSkillTest = async () => {
+      const response = await getSkillById(skillId, {
+        with_sections: true
+      });
+
+      if (!response.data.success) return;
+
+      const skill = response.data.data;
+
+      const allGroups = [];
+
+      const allParts = [];
+
+      let questionNumber = 1;
+
+      applySkillData(skill);
+
+      (skill.sections || []).forEach(
+        (section, sectionIndex) => {
+          const partNumber = sectionIndex + 1;
+
+          const partStartNumber = questionNumber;
+
+          const {
+            groups,
+            nextQuestionNumber
+          } = normalizeReadingSection(
+            section,
+            partNumber,
+            questionNumber
+          );
+
+          allGroups.push(...groups);
+
+          allParts.push({
+            id: section.id,
+            part: partNumber,
+            title: createReadingPartTitle(
+              partNumber,
+              groups,
+              partStartNumber
+            )
+          });
+
+          questionNumber = nextQuestionNumber;
+        }
+      );
+
+      setSectionData(null);
+
+      setQuestionGroups(allGroups);
+
+      setParts(allParts);
+    };
+
     const fetchExamData = async () => {
       try {
         setLoading(true);
-        
+
+        setAnswers({});
+
+        setCurrentPartTab(1);
+
+        setQuestionGroups([]);
+
+        setParts([]);
+
+        setSkillData(null);
+
+        setSectionData(null);
+
+        setTimeRemaining(
+          DEFAULT_TIME_LIMIT_SECONDS
+        );
+
         if (sectionId) {
-          // Lấy data cho section cụ thể (1 part)
-          const response = await getSectionById(sectionId, { with_questions: true });
-          if (response.data.success) {
-            const section = response.data.data;
-            setSectionData(section);
-            
-            // Lấy passage content từ section
-            setPassages([{
-              id: section.id,
-              part: 1,
-              title: section.title || 'Reading Passage',
-              subtitle: '',
-              content: section.content || ''
-            }]);
-            
-            setParts([{ id: section.id, part: 1, title: `Part 1 (1-${section.question_groups?.reduce((sum, g) => sum + (g.questions?.length || 0), 0) || 0})` }]);
-            
-            // Lấy question groups
-            const allGroups = [];
-            let questionNumber = 1;
-            if (section.question_groups) {
-              section.question_groups.forEach(group => {
-                const questions = [];
-                if (group.questions) {
-                  group.questions.forEach((q) => {
-                    questions.push({
-                      id: q.id,
-                      number: questionNumber++,
-                      content: q.content,
-                      correctAnswer: q.answer_content,
-                      metadata: q.metadata
-                    });
-                  });
-                }
-                
-                // Parse options based on question_type
-                let options = [];
-                let optionsWithContent = null;
-                const questionType = (group.question_type || '').toLowerCase();
-                const groupOptions = group.options || {};
-                
-                switch (questionType) {
-                  case 'multiple_choice':
-                    // Get from metadata.answers
-                    if (group.questions && group.questions.length > 0) {
-                      const firstQuestion = group.questions[0];
-                      if (firstQuestion.metadata) {
-                        const metadata = typeof firstQuestion.metadata === 'string' 
-                          ? JSON.parse(firstQuestion.metadata) 
-                          : firstQuestion.metadata;
-                        
-                        if (metadata.answers && Array.isArray(metadata.answers)) {
-                          options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
-                          optionsWithContent = metadata.answers.map((answer, index) => {
-                            let content = answer.content || '';
-                            content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
-                            return {
-                              letter: String.fromCharCode(65 + index),
-                              content: content
-                            };
-                          });
-                        }
-                      }
-                    }
-                    break;
-                    
-                  case 'yes_no_not_given':
-                    options = (group.options && group.options.length > 0) 
-                      ? group.options 
-                      : ['Yes', 'No', 'Not Given'];
-                    break;
-                    
-                  case 'true_false_not_given':
-                    options = (group.options && group.options.length > 0) 
-                      ? group.options 
-                      : ['True', 'False', 'Not Given'];
-                    break;
-                    
-                  case 'table_selection':
-                    options = (group.options && group.options.length > 0) ? group.options : [];
-                    break;
-                    
-                  case 'short_text':
-                  case 'note_completion':
-                    // No options needed for text input
-                    options = [];
-                    break;
-                    
-                  default:
-                    // Other types use group.options if available
-                    options = (group.options && group.options.length > 0) ? group.options : [];
-                    break;
-                }
-                
-                allGroups.push({
-                  id: group.id,
-                  part: 1,
-                  type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
-                  instructions: group.instructions,
-                  groupContent: group.content,
-                  options: options,
-                  optionsWithContent: optionsWithContent,
-                  numberOfOptions: groupOptions.number_of_options || 7,
-                  questions: questions,
-                  startNumber: questions[0]?.number || 1,
-                  endNumber: questions[questions.length - 1]?.number || 1
-                });
-              });
-            }
-            setQuestionGroups(allGroups);
-          }
+          await fetchSectionTest();
         } else if (skillId) {
-          // Lấy data cho full test (nhiều parts/sections)
-          const response = await getSkillById(skillId, { with_sections: true });
-          if (response.data.success) {
-            const skill = response.data.data;
-            setSkillData(skill);
-            
-            // Lấy tất cả question groups từ tất cả sections
-            const allGroups = [];
-            const allPassages = [];
-            const allParts = [];
-            let questionNumber = 1;
-            
-            if (skill.sections && skill.sections.length > 0) {
-              skill.sections.forEach((section, sectionIndex) => {
-                const partNumber = sectionIndex + 1;
-                const groupStartIndex = allGroups.length;
-                
-                // Lưu passage cho mỗi part
-                allPassages.push({
-                  id: section.id,
-                  part: partNumber,
-                  title: section.title || `Reading Passage ${partNumber}`,
-                  subtitle: '',
-                  content: section.content || ''
-                });
-                
-                // Lấy question groups
-                if (section.question_groups) {
-                  section.question_groups.forEach(group => {
-                    const questions = [];
-                    if (group.questions) {
-                      group.questions.forEach((q) => {
-                        questions.push({
-                          id: q.id,
-                          number: questionNumber++,
-                          content: q.content,
-                          correctAnswer: q.answer_content,
-                          metadata: q.metadata
-                        });
-                      });
-                    }
-                    
-                    // Parse options based on question_type
-                    let options = [];
-                    let optionsWithContent = null;
-                    const questionType = (group.question_type || '').toLowerCase();
-                    const groupOptions = group.options || {};
-                    
-                    switch (questionType) {
-                      case 'multiple_choice':
-                        // Get from metadata.answers
-                        if (group.questions && group.questions.length > 0) {
-                          const firstQuestion = group.questions[0];
-                          if (firstQuestion.metadata) {
-                            const metadata = typeof firstQuestion.metadata === 'string' 
-                              ? JSON.parse(firstQuestion.metadata) 
-                              : firstQuestion.metadata;
-                            
-                            if (metadata.answers && Array.isArray(metadata.answers)) {
-                              options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
-                              optionsWithContent = metadata.answers.map((answer, index) => {
-                                let content = answer.content || '';
-                                content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
-                                return {
-                                  letter: String.fromCharCode(65 + index),
-                                  content: content
-                                };
-                              });
-                            }
-                          }
-                        }
-                        break;
-                        
-                      case 'yes_no_not_given':
-                        options = (group.options && group.options.length > 0) 
-                          ? group.options 
-                          : ['Yes', 'No', 'Not Given'];
-                        break;
-                        
-                      case 'true_false_not_given':
-                        options = (group.options && group.options.length > 0) 
-                          ? group.options 
-                          : ['True', 'False', 'Not Given'];
-                        break;
-                        
-                      case 'table_selection':
-                        options = (group.options && group.options.length > 0) ? group.options : [];
-                        break;
-                        
-                      case 'short_text':
-                      case 'note_completion':
-                        // No options needed for text input
-                        options = [];
-                        break;
-                        
-                      default:
-                        // Other types use group.options if available
-                        options = (group.options && group.options.length > 0) ? group.options : [];
-                        break;
-                    }
-                    
-                    allGroups.push({
-                      id: group.id,
-                      part: partNumber,
-                      type: group.question_type || 'TRUE_FALSE_NOT_GIVEN',
-                      instructions: group.instructions,
-                      groupContent: group.content,
-                      options: options,
-                      optionsWithContent: optionsWithContent,
-                      numberOfOptions: groupOptions.number_of_options || 7,
-                      questions: questions,
-                      startNumber: questions[0]?.number || questionNumber,
-                      endNumber: questions[questions.length - 1]?.number || questionNumber
-                    });
-                  });
-                }
-                
-                const firstQuestionNum = allGroups[groupStartIndex]?.startNumber || questionNumber;
-                const lastQuestionNum = allGroups[allGroups.length - 1]?.endNumber || questionNumber;
-                allParts.push({
-                  id: section.id,
-                  part: partNumber,
-                  title: `Part ${partNumber} (${firstQuestionNum}-${lastQuestionNum})`
-                });
-              });
-              
-              setPassages(allPassages);
-              setParts(allParts);
-            }
-            
-            setQuestionGroups(allGroups);
-            
-            // Set thời gian từ skill
-            if (skill.time_limit) {
-              setTimeRemaining(skill.time_limit * 60); // Convert minutes to seconds
-            }
-          }
+          await fetchFullSkillTest();
         }
       } catch (error) {
-        console.error('Error fetching exam data:', error);
-        alert('Không thể tải dữ liệu bài thi. Vui lòng thử lại.');
+        console.error(
+          'Error fetching reading exam:',
+          error
+        );
+
+        alert(
+          'Không thể tải dữ liệu bài đọc. Vui lòng thử lại.'
+        );
       } finally {
         setLoading(false);
       }
@@ -426,345 +252,453 @@ export default function ReadingTest() {
     fetchExamData();
   }, [skillId, sectionId]);
 
-  // Xử lý chọn đáp án
-  const handleAnswerSelect = (questionId, answer) => {
-    setAnswers({
-      ...answers,
-      [questionId]: answer
-    });
-  };
+  const currentPartGroups = useMemo(
+    () =>
+      questionGroups.filter(
+        (group) =>
+          group.part === currentPartTab
+      ),
+    [questionGroups, currentPartTab]
+  );
 
-  // Xử lý nộp bài
+  const currentPassage = useMemo(() => {
+    return (
+      currentPartGroups[0]?.passage ||
+      sectionData?.passage ||
+      ''
+    );
+  }, [currentPartGroups, sectionData]);
+
+  const isNoteCompletionLayout =
+    usesReadingNoteCompletionLayout(
+      currentPartGroups
+    );
+
+  const isTableCompletionLayout =
+    !isNoteCompletionLayout &&
+    currentPartGroups.some(
+      isReadingTableCompletionGroup
+    );
+
+  const isDiagramLabelLayout =
+    !isNoteCompletionLayout &&
+    !isTableCompletionLayout &&
+    currentPartGroups.some(
+      isReadingDiagramLabelCompletionGroup
+    );
+
+  const isFlowChartLayout =
+    !isNoteCompletionLayout &&
+    !isTableCompletionLayout &&
+    !isDiagramLabelLayout &&
+    currentPartGroups.some(
+      isReadingFlowChartCompletionGroup
+    );
+
+  const isMatchingLayout =
+    currentPartGroups.some(
+      isReadingMatchingInformationGroup
+    ) ||
+    currentPartGroups.some(
+      isReadingMatchingHeadingsGroup
+    ) ||
+    currentPartGroups.some(
+      isReadingMatchingFeaturesGroup
+    ) ||
+    currentPartGroups.some(
+      isReadingMatchingSentenceEndingsGroup
+    );
+
+  const isMultipleChoiceLayout =
+    currentPartGroups.some(
+      isReadingMultipleChoiceGroup
+    );
+
+  const isTFNGLayout =
+    currentPartGroups.some(
+      isReadingTrueFalseNotGivenGroup
+    );
+
+  const isYNNGLayout =
+    currentPartGroups.some(
+      isReadingYesNoNotGivenGroup
+    );
+
+  const isSentenceCompletionLayout =
+    currentPartGroups.some(
+      isReadingSentenceCompletionGroup
+    );
+
+  const isSummaryCompletionLayout =
+    currentPartGroups.some(
+      isReadingSummaryCompletionGroup
+    );
+
+  const isShortAnswerLayout =
+    currentPartGroups.some(
+      isReadingShortAnswerGroup
+    );
+
+  const isTwoColumnLayout =
+    usesReadingTwoColumnLayout(
+      currentPartGroups
+    );
+
+  const handleAnswerSelect = useCallback(
+    (questionId, answer) => {
+      setAnswers((currentAnswers) => ({
+        ...currentAnswers,
+        [questionId]: answer
+      }));
+    },
+    []
+  );
+
   const handleSubmit = async () => {
     try {
-      // Xác nhận trước khi nộp
-      const unansweredCount = questionGroups.reduce((count, group) => {
-        return count + group.questions.filter(q => !answers[q.id]).length;
-      }, 0);
-
-      if (unansweredCount > 0) {
-        const confirmSubmit = window.confirm(
-          `Bạn còn ${unansweredCount} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài?`
+      const allQuestionIds =
+        questionGroups.flatMap((group) =>
+          group.questions.map(
+            getSubmitQuestionId
+          )
         );
-        if (!confirmSubmit) return;
-      } else {
-        const confirmSubmit = window.confirm('Bạn có chắc chắn muốn nộp bài?');
-        if (!confirmSubmit) return;
-      }
 
-      // Chuẩn bị dữ liệu để submit
-      const timeSpent = (skillData?.time_limit * 60 || 1800) - timeRemaining;
-      
-      // Lấy tất cả question IDs
-      const allQuestionIds = questionGroups.flatMap(g => g.questions.map(q => q.id));
-      
-      // Chuyển đổi answers từ object sang array (bao gồm cả câu chưa trả lời)
-      const answersArray = allQuestionIds.map(questionId => ({
-        question_id: questionId,
-        answer: answers[questionId] || null
-      }));
+      const configuredTimeLimit =
+        getTimeLimitSeconds(skillData);
+
+      const answersArray =
+        questionGroups.flatMap((group) =>
+          group.questions.map((question) => {
+            const answer =
+              answers[question.id];
+
+            return {
+              question_id:
+                getSubmitQuestionId(
+                  question
+                ),
+
+              answer_index:
+                getSubmitAnswerIndex(
+                  question
+                ),
+
+              answer: String(
+                answer ?? ''
+              ).trim()
+                ? answer
+                : null
+            };
+          })
+        );
 
       const submitData = {
-        skill_id: skillId ? parseInt(skillId) : null,
-        section_id: sectionId ? parseInt(sectionId) : null,
+        skill_id: skillId
+          ? parseInt(skillId, 10)
+          : null,
+
+        section_id: sectionId
+          ? parseInt(sectionId, 10)
+          : null,
+
         test_id: examData?.id || null,
+
         answers: answersArray,
-        all_question_ids: allQuestionIds,
-        time_spent: timeSpent, // Thời gian làm bài (giây)
-        total_questions: allQuestionIds.length,
-        answered_questions: Object.keys(answers).length
+
+        all_question_ids:
+          allQuestionIds,
+
+        time_spent: Math.max(
+          0,
+          configuredTimeLimit -
+          timeRemaining
+        ),
+
+        total_questions:
+          allQuestionIds.length,
+
+        answered_questions:
+          getAnsweredCount(answers)
       };
 
-      console.log('Submitting:', submitData);
-
-      // Gửi kết quả lên server
-      const response = await submitTestResult(submitData);
+      const response =
+        await submitTestResult(
+          submitData
+        );
 
       if (response.data.success) {
-        // Chuyển đến trang kết quả
-        navigate(`/test-result/${response.data.data.id}`);
-      } else {
-        throw new Error(response.data.message || 'Không thể nộp bài');
-      }
-    } catch (error) {
-      console.error('Error submitting test:', error);
-      alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
-    }
-  };
-
-  // Auto-save câu trả lời mỗi 30 giây
-  useEffect(() => {
-    if (Object.keys(answers).length === 0) return;
-
-    const autoSaveInterval = setInterval(async () => {
-      try {
-        const timeSpent = (skillDataRef.current?.time_limit * 60 || 1800) - (timeRemainingRef.current || 0);
-        
-        const latestAnswers = answersRef.current || {};
-        const answersArray = Object.entries(latestAnswers).map(([questionId, answer]) => ({
-          question_id: parseInt(questionId),
-          answer: answer
-        }));
-
-        const draftData = {
-          skill_id: skillId ? parseInt(skillId) : null,
-          section_id: sectionId ? parseInt(sectionId) : null,
-          test_id: examData?.id || null,
-          answers: answersArray,
-          time_spent: timeSpent
-        };
-
-        await saveTestDraft(draftData);
-      } catch (error) {
-        console.error('Auto-save error:', error);
-      }
-    }, 30000); // 30 giây
-
-    return () => clearInterval(autoSaveInterval);
-  }, [answers, skillId, sectionId, examData]);
-
-  // Loading state
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', color: '#6B7280', marginBottom: '16px' }}>
-            Đang tải dữ liệu bài thi...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (!passages || passages.length === 0 || questionGroups.length === 0) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '18px', color: '#EF4444', marginBottom: '16px' }}>
-            Không tìm thấy dữ liệu bài thi
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
-  const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
-
-  // Render câu hỏi dựa trên loại question type
-  const renderQuestionsByType = (group, answers, handleAnswerSelect) => {
-    const questionType = (group.type || '').toLowerCase();
-
-    // 1. DẠNG SHORT_TEXT - Điền vào chỗ trống inline (có {{ placeholders }})
-    const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
-    if (hasPlaceholders || questionType === 'short_text' || questionType === 'note_completion') {
-      if (hasPlaceholders) {
-        return (
-          <div className="reading-test__question-group-with-inputs">
-            <GroupContentWithInlineInputs
-              content={group.groupContent}
-              questions={group.questions}
-              answers={answers}
-              onAnswerChange={handleAnswerSelect}
-            />
-          </div>
+        navigate(
+          `/test-result/${response.data.data.id}`
         );
+
+        return;
       }
-      
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item reading-test__question-item--input">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">
-              {question.number}
-            </div>
-            <div
-              className="reading-test__question-text"
-              dangerouslySetInnerHTML={{ __html: question.content }}
-            />
-          </div>
-          <div className="reading-test__answer-input-wrapper">
-            <input
-              type="text"
-              className="reading-test__answer-input"
-              placeholder="Type your answer here..."
-              value={answers[question.id] || ''}
-              onChange={(e) => handleAnswerSelect(question.id, e.target.value)}
-              maxLength={100}
-            />
-          </div>
-        </div>
-      ));
-    }
 
-    // 2. DẠNG MULTIPLE_CHOICE - Render với optionsWithContent
-    if (questionType === 'multiple_choice') {
-      return group.questions.map((question) => (
-        <div key={question.id} className="reading-test__question-item">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">{question.number}</div>
-            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-          </div>
-          <div className="reading-test__options">
-            {(group.optionsWithContent || []).map((option) => (
-              <label key={option.letter} className={`reading-test__option ${answers[question.id] === option.letter ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option.letter}
-                  checked={answers[question.id] === option.letter}
-                  onChange={() => handleAnswerSelect(question.id, option.letter)}
-                />
-                <span className="reading-test__option-text">
-                  <strong style={{ marginRight: '8px' }}>{option.letter}.</strong>
-                  <span dangerouslySetInnerHTML={{ __html: option.content }} style={{ display: 'inline' }} />
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-      ));
-    }
+      throw new Error(
+        response.data.message ||
+        'Không thể nộp bài'
+      );
+    } catch (error) {
+      console.error(
+        'Error submitting reading test:',
+        error
+      );
 
-    // 3. DẠNG TABLE_SELECTION - Render table with checkboxes
-    if (questionType === 'table_selection') {
-      const numberOfOptions = group.numberOfOptions || 6;
-      const optionLetters = Array.from({ length: numberOfOptions }, (_, i) => String.fromCharCode(65 + i)); // A, B, C, D, E, F
-      
-      return (
-        <div className="reading-test__selection-table-wrapper">
-          {/* Header */}
-          <div className="reading-test__selection-header">
-            <div className="reading-test__selection-header-spacer"></div>
-            {optionLetters.map((letter) => (
-              <div key={letter} className="reading-test__selection-header-cell">
-                {letter}
-              </div>
-            ))}
-          </div>
-          
-          {/* Rows */}
-          {group.questions.map((question) => (
-            <div key={question.id} className="reading-test__selection-row">
-              <div className="reading-test__selection-question">
-                <span className="reading-test__question-number">{question.number}</span>
-                <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
-              </div>
-              <div className="reading-test__selection-options">
-                {optionLetters.map((letter) => (
-                  <div key={letter} className="reading-test__selection-option-cell">
-                    <label className="reading-test__checkbox-wrapper">
-                      <input
-                        type="radio"
-                        name={`question-${question.id}`}
-                        value={letter}
-                        checked={answers[question.id] === letter}
-                        onChange={() => handleAnswerSelect(question.id, letter)}
-                        className="reading-test__checkbox-input"
-                      />
-                      <span className="reading-test__checkbox-custom"></span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+      alert(
+        'Có lỗi xảy ra khi nộp bài.'
       );
     }
-
-    // 4. DẠNG CÒN LẠI - Render radio buttons với group.options
-    // Áp dụng cho: yes_no_not_given, true_false_not_given, và các loại khác
-    return group.questions.map((question) => (
-      <div key={question.id} className="reading-test__question-item">
-        <div className="reading-test__question-row">
-          <div className="reading-test__question-number">{question.number}</div>
-          <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
-        </div>
-        {group.options && group.options.length > 0 && (
-          <div className="reading-test__options">
-            {group.options.map((option) => (
-              <label key={option} className={`reading-test__option ${answers[question.id] === option ? 'selected' : ''}`}>
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={option}
-                  checked={answers[question.id] === option}
-                  onChange={() => handleAnswerSelect(question.id, option)}
-                />
-                <span className="reading-test__option-text">{option}</span>
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-    ));
   };
-  
+
+  if (loading) {
+    return (
+      <div className="reading-test__loading">
+        <div>
+          Đang tải dữ liệu bài đọc...
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    !questionGroups ||
+    questionGroups.length === 0
+  ) {
+    return (
+      <div className="reading-test__loading">
+        <div
+          style={{
+            color: '#EF4444'
+          }}
+        >
+          Không tìm thấy dữ liệu bài đọc
+        </div>
+      </div>
+    );
+  }
+
   return (
     <TestLayout
       examData={examData}
       skillData={skillData}
       sectionData={sectionData}
       timeRemaining={timeRemaining}
-      setTimeRemaining={setTimeRemaining}
+      setTimeRemaining={
+        setTimeRemaining
+      }
       parts={parts}
-      currentPartTab={currentPartTab}
-      setCurrentPartTab={setCurrentPartTab}
-      questionGroups={questionGroups}
+      currentPartTab={
+        currentPartTab
+      }
+      setCurrentPartTab={
+        setCurrentPartTab
+      }
+      questionGroups={
+        questionGroups
+      }
       answers={answers}
       onSubmit={handleSubmit}
       showQuestionNumbers={true}
       fontSize={fontSize}
-      onFontSizeChange={setFontSize}
+      onFontSizeChange={
+        setFontSize
+      }
     >
-      {/* Main Content - Passage và Questions */}
-      <div className="reading-test__content-wrapper">
-        {/* Passage Panel */}
-        <div className="reading-test__passage">
-          <div className="reading-test__passage-header">
-            <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
-            {currentPassage.subtitle && (
-              <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
-            )}
-          </div>
-          <PassageContent
-            fontSize={fontSize}
-            content={currentPassage.content}
-          />
-        </div>
+      <div
+        className={`
+          reading-test__content
 
-        {/* Questions Panel */}
-        <div className={`reading-test__questions reading-test__questions--${fontSize}`}>
-          {currentPartGroups.map((group) => (
-            <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
-              {/* Group Header */}
-              <div className="reading-test__group-header">
-                <h3>Questions {group.startNumber} - {group.endNumber}</h3>
-                {group.instructions && (
-                  <div 
-                    className="reading-test__group-instructions"
-                    dangerouslySetInnerHTML={{ __html: group.instructions }}
+          ${fontSize !== 'normal'
+            ? `reading-test__content--${fontSize}`
+            : ''
+          }
+
+          ${isTwoColumnLayout
+            ? 'reading-test__content--two-column'
+            : ''
+          }
+
+          ${isMatchingLayout
+            ? 'reading-test__content--matching'
+            : ''
+          }
+
+          ${isMultipleChoiceLayout
+            ? 'reading-test__content--multiple-choice'
+            : ''
+          }
+
+          ${isTFNGLayout
+            ? 'reading-test__content--tfng'
+            : ''
+          }
+
+          ${isYNNGLayout
+            ? 'reading-test__content--ynng'
+            : ''
+          }
+
+          ${isSummaryCompletionLayout
+            ? 'reading-test__content--summary-completion'
+            : ''
+          }
+
+          ${isSentenceCompletionLayout
+            ? 'reading-test__content--sentence-completion'
+            : ''
+          }
+
+          ${isShortAnswerLayout
+            ? 'reading-test__content--short-answer'
+            : ''
+          }
+        `}
+      >
+        <ReadingPassagePanel
+          currentPartTab={
+            currentPartTab
+          }
+          passage={currentPassage}
+          groups={currentPartGroups}
+        />
+
+        <div className="reading-test__right-column">
+          {isNoteCompletionLayout ? (
+            currentPartGroups.map(
+              (group) =>
+                isReadingNoteCompletionGroup(
+                  group
+                ) ? (
+                  <ReadingNoteCompletionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
                   />
-                )}
-              </div>
-
-              {/* Group Content */}
-              {group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
-                <div
-                  className="reading-test__group-content"
-                  dangerouslySetInnerHTML={{ __html: group.groupContent }}
+                ) : (
+                  <ReadingQuestionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                )
+            )
+          ) : isTableCompletionLayout ? (
+            currentPartGroups.map(
+              (group) =>
+                isReadingTableCompletionGroup(
+                  group
+                ) ? (
+                  <ReadingTableCompletionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                ) : (
+                  <ReadingQuestionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                )
+            )
+          ) : isFlowChartLayout ? (
+            currentPartGroups.map(
+              (group) =>
+                isReadingFlowChartCompletionGroup(
+                  group
+                ) ? (
+                  <ReadingFlowChartCompletionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                ) : (
+                  <ReadingQuestionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                )
+            )
+          ) : isDiagramLabelLayout ? (
+            currentPartGroups.map(
+              (group) =>
+                isReadingDiagramLabelCompletionGroup(
+                  group
+                ) ? (
+                  <ReadingDiagramLabelCompletionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                ) : (
+                  <ReadingQuestionGroup
+                    key={group.id}
+                    group={group}
+                    answers={
+                      answers
+                    }
+                    onAnswerChange={
+                      handleAnswerSelect
+                    }
+                  />
+                )
+            )
+          ) : (
+            currentPartGroups.map(
+              (group) => (
+                <ReadingQuestionGroup
+                  key={group.id}
+                  group={group}
+                  answers={
+                    answers
+                  }
+                  onAnswerChange={
+                    handleAnswerSelect
+                  }
                 />
-              )}
-
-              {/* Questions */}
-              <div className="reading-test__questions-list">
-                {renderQuestionsByType(group, answers, handleAnswerSelect)}
-              </div>
-            </div>
-          ))}
+              )
+            )
+          )}
         </div>
       </div>
     </TestLayout>
   );
-}
+};
+
+export default ReadingTest;

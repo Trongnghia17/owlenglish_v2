@@ -344,6 +344,7 @@ class SkillController extends Controller
 
         // Extract sections data before updating skill
         $sectionsData = $validated['sections'] ?? [];
+        
         unset($validated['sections']);
         // Update skill basic info
         $skill->update($validated);
