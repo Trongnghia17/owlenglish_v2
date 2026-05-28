@@ -577,6 +577,202 @@
     font-weight: 700;
 }
 
+.listening-review__mc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.listening-review__mc-question-block {
+    overflow: hidden;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    background: #FFFFFF;
+}
+
+.listening-review__mc-question-block.is-active {
+    /*box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12);*/
+}
+
+.listening-review__mc-question-head {
+    min-height: 68px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px 12px;
+    background: rgba(249, 250, 251, 0.6);
+}
+
+.listening-review__mc-statuses {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: 0;
+}
+
+.listening-review__mc-status-badge {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    white-space: nowrap;
+}
+
+.listening-review__mc-status-badge.is-correct {
+    border-color: #D1FAE5;
+    background: #ECFDF5;
+    color: #10B981;
+}
+
+.listening-review__mc-status-badge.is-incorrect {
+    border-color: #FFE4E6;
+    background: #FFF1F2;
+    color: #F43F5E;
+}
+
+.listening-review__mc-status-badge.is-unanswered {
+    border-color: #E5E7EB;
+    background: #F8FAFC;
+    color: #717182;
+}
+
+.listening-review__mc-question-text {
+    padding: 0 20px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(249, 250, 251, 0.6);
+    color: #1F2937;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 22.75px;
+}
+
+.listening-review__mc-question-text p {
+    margin: 0;
+}
+
+.listening-review__mc-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 20px;
+}
+
+.listening-review__mc-option {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 14px;
+    background: #FFFFFF;
+}
+
+.listening-review__mc-option.is-correct {
+    border-color: #D1FAE5;
+}
+
+.listening-review__mc-option.is-incorrect {
+    border-color: #FFE4E6;
+}
+
+.listening-review__mc-option-letter {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #F8FAFC;
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+}
+
+.listening-review__mc-option.is-correct .listening-review__mc-option-letter {
+    background: #ECFDF5;
+    color: #10B981;
+}
+
+.listening-review__mc-option.is-incorrect .listening-review__mc-option-letter {
+    background: #FFF1F2;
+    color: #F43F5E;
+}
+
+.listening-review__mc-option-text {
+    min-width: 0;
+    flex: 1;
+    color: #10B981 ;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22.75px;
+    overflow-wrap: anywhere;
+}
+
+.listening-review__mc-option.is-correct .listening-review__mc-option-text,
+.listening-review__mc-option.is-correct .listening-review__mc-option-text * {
+    color: #10B981;
+}
+
+.listening-review__mc-option.is-incorrect .listening-review__mc-option-text,
+.listening-review__mc-option.is-incorrect .listening-review__mc-option-text * {
+    color: #F43F5E;
+}
+
+.listening-review__mc-option-text p {
+    display: inline;
+    margin: 0;
+}
+
+.listening-review__mc-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 20px 20px;
+}
+
+.listening-review__mc-action {
+    width: 130px;
+    height: 44px;
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.listening-review__mc-action--detail {
+    background: #045CCE;
+    color: #FFFFFF;
+}
+
+.listening-review__mc-action--collapse {
+    background: #CBD5E1;
+    color: #1F2937;
+}
+
+.listening-review__mc-detail {
+    padding: 0 20px 20px;
+    color: #1F2937;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 22.75px;
+}
+
 .listening-review__detail-button {
     flex: 0 0 auto;
     margin-left: auto;

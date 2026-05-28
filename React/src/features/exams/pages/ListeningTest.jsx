@@ -43,6 +43,20 @@ const getSubmitQuestionId = (question) =>
 const getSubmitAnswerIndex = (question) =>
   Number.isInteger(question.answerIndex) ? question.answerIndex : null;
 
+const formatSubmitAnswer = (answer) => {
+  if (Array.isArray(answer)) {
+    const normalizedAnswers = answer
+      .map((value) => String(value ?? '').trim())
+      .filter(Boolean);
+
+    return normalizedAnswers.length > 0 ? normalizedAnswers.join(',') : null;
+  }
+
+  const normalizedAnswer = String(answer ?? '').trim();
+
+  return normalizedAnswer ? normalizedAnswer : null;
+};
+
 const ListeningTest = () => {
   const { skillId, sectionId } = useParams();
   const location = useLocation();
@@ -196,7 +210,7 @@ const ListeningTest = () => {
           return {
             question_id: getSubmitQuestionId(question),
             answer_index: getSubmitAnswerIndex(question),
-            answer: String(answer ?? '').trim() ? answer : null
+            answer: formatSubmitAnswer(answer)
           };
         })
       );

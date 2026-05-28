@@ -149,6 +149,19 @@ export const parseMetadata = (metadata) => {
   }
 };
 
+export const isCorrectAnswerOption = (answer) =>
+  answer?.is_correct === '1' ||
+  answer?.is_correct === 1 ||
+  answer?.is_correct === true;
+
+export const hasAnswerValue = (answer) => {
+  if (Array.isArray(answer)) {
+    return answer.some((value) => String(value ?? '').trim() !== '');
+  }
+
+  return String(answer ?? '').trim() !== '';
+};
+
 export const stripParagraphWrapper = (content = '') =>
   content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
 
@@ -163,6 +176,13 @@ export const getQuestionAnswerOptions = (question, fallbackOptions = []) => {
   }
 
   return fallbackOptions;
+};
+
+export const getCorrectAnswerOptionCount = (question) => {
+  const metadata = parseMetadata(question?.metadata);
+  const answers = Array.isArray(metadata.answers) ? metadata.answers : [];
+
+  return answers.filter(isCorrectAnswerOption).length;
 };
 
 const normalizeAnswerOption = (answer, index) => {
@@ -382,4 +402,4 @@ export const getCurrentPartAudio = ({ skillData, sectionData, currentPartGroups 
   );
 
 export const getAnsweredCount = (answers = {}) =>
-  Object.values(answers).filter((answer) => String(answer ?? '').trim() !== '').length;
+  Object.values(answers).filter(hasAnswerValue).length;

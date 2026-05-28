@@ -1,12 +1,74 @@
 import { memo } from 'react';
-import { getQuestionAnswerOptions } from '../../../utils/listeningTest';
+import {
+  getCorrectAnswerOptionCount,
+  getQuestionAnswerOptions
+} from '../../../utils/listeningTest';
+
+const WORD_NUMBER_MAP = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6
+};
+
+const getInstructionAnswerCount = (text = '') => {
+  const normalizedText = String(text).toLowerCase();
+  const digitMatch = normalizedText.match(/choose\s+(\d+)/i);
+
+  if (digitMatch) {
+    return Number(digitMatch[1]);
+  }
+
+  const wordMatch = normalizedText.match(/choose\s+(one|two|three|four|five|six)/i);
+
+  return wordMatch ? WORD_NUMBER_MAP[wordMatch[1]] : 1;
+};
+
+const getSelectedAnswers = (answer) => {
+  if (Array.isArray(answer)) {
+    return answer.filter((value) => String(value ?? '').trim() !== '');
+  }
+
+  return String(answer ?? '').trim() ? [answer] : [];
+};
 
 function MultipleChoiceQuestions({ group, answers, onAnswerChange, showTips = true }) {
+  const groupInstructionText = [group.instructions, group.groupContent]
+    .filter(Boolean)
+    .join(' ');
+  const instructionAnswerCount = group.questions?.length === 1
+    ? getInstructionAnswerCount(groupInstructionText)
+    : 1;
+
+  const handleMultiAnswerChange = (questionId, optionLetter, selectedAnswers, maxSelections) => {
+    const isSelected = selectedAnswers.includes(optionLetter);
+
+    if (isSelected) {
+      onAnswerChange(
+        questionId,
+        selectedAnswers.filter((answer) => answer !== optionLetter)
+      );
+      return;
+    }
+
+    if (maxSelections && selectedAnswers.length >= maxSelections) {
+      return;
+    }
+
+    onAnswerChange(questionId, [...selectedAnswers, optionLetter]);
+  };
+
   return (
     <div className={`listening-test__mc-layout ${showTips ? '' : 'listening-test__mc-layout--single'}`}>
       <div className="listening-test__mc-questions">
         {group.questions.map((question) => {
           const questionOptions = getQuestionAnswerOptions(question, group.optionsWithContent || []);
+          const correctAnswerCount = getCorrectAnswerOptionCount(question);
+          const maxSelections = Math.max(correctAnswerCount, instructionAnswerCount);
+          const allowsMultipleAnswers = maxSelections > 1;
+          const selectedAnswers = getSelectedAnswers(answers[question.id]);
 
           return (
             <div key={question.id} className="listening-test__mc-card">
@@ -21,14 +83,21 @@ function MultipleChoiceQuestions({ group, answers, onAnswerChange, showTips = tr
                 {questionOptions.map((option) => (
                   <label
                     key={option.letter}
-                    className={`listening-test__mc-option ${answers[question.id] === option.letter ? 'selected' : ''}`}
+                    className={`listening-test__mc-option ${selectedAnswers.includes(option.letter) ? 'selected' : ''}`}
                   >
                     <input
-                      type="radio"
+                      type={allowsMultipleAnswers ? 'checkbox' : 'radio'}
                       name={`question-${question.id}`}
                       value={option.letter}
-                      checked={answers[question.id] === option.letter}
-                      onChange={() => onAnswerChange(question.id, option.letter)}
+                      checked={selectedAnswers.includes(option.letter)}
+                      onChange={() => {
+                        if (allowsMultipleAnswers) {
+                          handleMultiAnswerChange(question.id, option.letter, selectedAnswers, maxSelections);
+                          return;
+                        }
+
+                        onAnswerChange(question.id, option.letter);
+                      }}
                     />
                     <span className="listening-test__mc-letter">{option.letter}</span>
                     <span

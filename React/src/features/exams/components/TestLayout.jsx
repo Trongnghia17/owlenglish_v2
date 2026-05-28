@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/images/logo.png'
 import closeIcon from '@/assets/images/nutx.svg'
@@ -10,6 +10,14 @@ import doneImg from '@/assets/images/cudaxong.png'
 import notDoneImg from '@/assets/images/cuchuaxong.png'
 import './TestLayout.css';
 import { getNotes, createNote, updateNote, deleteNote } from '../api/notes.api';
+
+const hasAnswerValue = (answer) => {
+  if (Array.isArray(answer)) {
+    return answer.some((value) => String(value ?? '').trim() !== '');
+  }
+
+  return String(answer ?? '').trim() !== '';
+};
 
 export default function TestLayout({
   examData,
@@ -74,7 +82,7 @@ export default function TestLayout({
         if (savedNotes) {
           try {
             setNotes(JSON.parse(savedNotes));
-          } catch (e) {
+          } catch {
             setNotes([]);
           }
         }
@@ -97,16 +105,16 @@ export default function TestLayout({
   };
 
   // Xử lý nộp bài
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     const totalQuestions = questionGroups.reduce((total, group) => {
       return total + (group.questions?.length || 0);
     }, 0);
 
-    const answeredCount = Object.keys(answers).filter(key => answers[key] && answers[key].trim() !== '').length;
+    const answeredCount = Object.keys(answers).filter(key => hasAnswerValue(answers[key])).length;
     const isComplete = answeredCount === totalQuestions;
     setIsTestComplete(isComplete);
     setShowSubmitModal(true);
-  };
+  }, [answers, questionGroups]);
 
   useEffect(() => {
     handleSubmitRef.current = handleSubmit;
@@ -251,7 +259,7 @@ export default function TestLayout({
               });
               setShowNoteButton(true);
             }
-          } catch (error) {
+          } catch {
             setShowNoteButton(false);
           }
         } else if (!e.target.closest('.test-layout__note-button-float')) {
@@ -483,7 +491,7 @@ export default function TestLayout({
               {allQuestionsInPart.map((q, index) => (
                 <button
                   key={q.id}
-                  className={`test-layout__question-number-item ${answers[q.id] ? 'answered' : ''
+                  className={`test-layout__question-number-item ${hasAnswerValue(answers[q.id]) ? 'answered' : ''
                     }`}
                   onClick={() => handleQuestionClick(q.number || index + 1)}
                 >

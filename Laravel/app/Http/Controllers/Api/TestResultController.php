@@ -333,6 +333,10 @@ class TestResultController extends Controller
             return false;
         }
 
+        if ($this->isMultipleChoiceQuestion($question)) {
+            return $this->checkMultipleChoiceAnswer($metadata['answers'], $userAnswer);
+        }
+
         if ($this->isFlowChartCompletionQuestion($question)) {
             $flowCorrectAnswers = $this->getFlowChartCorrectAnswers($metadata['answers']);
 
@@ -410,6 +414,14 @@ class TestResultController extends Controller
             return $flowCorrectAnswers[0] ?? '';
         }
 
+        if ($this->isMultipleChoiceQuestion($question)) {
+            $correctLetters = $this->getMultipleChoiceCorrectLetters($metadata['answers']);
+
+            if (!empty($correctLetters)) {
+                return implode(', ', $correctLetters);
+            }
+        }
+
         if ($answerIndex !== null && isset($metadata['answers'][$answerIndex])) {
             $content = $metadata['answers'][$answerIndex]['content'] ?? '';
             return trim(strip_tags((string) $content));
@@ -425,6 +437,107 @@ class TestResultController extends Controller
 
         $content = $correctAnswer['content'] ?? '';
         return trim(strip_tags($content));
+    }
+
+    private function isMultipleChoiceQuestion(ExamQuestion $question): bool
+    {
+        $metadata = is_string($question->metadata)
+            ? json_decode($question->metadata, true)
+            : $question->metadata;
+
+        return ($question->questionGroup?->question_type === 'multiple_choice') ||
+            (($metadata['question_type'] ?? null) === 'multiple_choice');
+    }
+
+    private function checkMultipleChoiceAnswer(array $answers, string $userAnswer): bool
+    {
+        $selectedLetters = $this->normalizeChoiceTokens($userAnswer);
+        $correctLetters = $this->getMultipleChoiceCorrectLetters($answers);
+
+        if (!empty($correctLetters) && $this->sameAnswerSet($selectedLetters, $correctLetters)) {
+            return true;
+        }
+
+        $selectedContents = $this->normalizeChoiceContentTokens($userAnswer);
+        $correctContents = $this->getMultipleChoiceCorrectContents($answers);
+
+        return !empty($correctContents) && $this->sameAnswerSet($selectedContents, $correctContents);
+    }
+
+    private function getMultipleChoiceCorrectLetters(array $answers): array
+    {
+        $correctLetters = [];
+
+        foreach ($answers as $index => $answer) {
+            $isCorrect = ($answer['is_correct'] ?? 0) == 1 || ($answer['is_correct'] ?? false) === true;
+
+            if ($isCorrect) {
+                $correctLetters[] = chr(65 + $index);
+            }
+        }
+
+        return array_values(array_unique($correctLetters));
+    }
+
+    private function getMultipleChoiceCorrectContents(array $answers): array
+    {
+        $correctContents = [];
+
+        foreach ($answers as $answer) {
+            $isCorrect = ($answer['is_correct'] ?? 0) == 1 || ($answer['is_correct'] ?? false) === true;
+
+            if (!$isCorrect) {
+                continue;
+            }
+
+            $content = trim(strip_tags((string) ($answer['content'] ?? '')));
+
+            if ($content !== '') {
+                $correctContents[] = strtolower($content);
+            }
+        }
+
+        return array_values(array_unique($correctContents));
+    }
+
+    private function normalizeChoiceTokens(string $answer): array
+    {
+        $tokens = preg_split('/[,;]+/', $answer);
+
+        if ($tokens === false) {
+            return [];
+        }
+
+        $normalized = array_map(
+            fn($token) => strtoupper(trim(strip_tags((string) $token))),
+            $tokens
+        );
+
+        return array_values(array_unique(array_filter($normalized)));
+    }
+
+    private function normalizeChoiceContentTokens(string $answer): array
+    {
+        $tokens = preg_split('/[,;]+/', $answer);
+
+        if ($tokens === false) {
+            return [];
+        }
+
+        $normalized = array_map(
+            fn($token) => strtolower(trim(strip_tags((string) $token))),
+            $tokens
+        );
+
+        return array_values(array_unique(array_filter($normalized)));
+    }
+
+    private function sameAnswerSet(array $left, array $right): bool
+    {
+        sort($left);
+        sort($right);
+
+        return $left === $right;
     }
 
     private function isFlowChartCompletionQuestion(ExamQuestion $question): bool
