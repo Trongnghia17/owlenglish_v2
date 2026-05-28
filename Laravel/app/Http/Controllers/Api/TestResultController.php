@@ -320,17 +320,15 @@ class TestResultController extends Controller
         $userAnswer = trim(strip_tags((string) $userAnswer));
         $fallbackCorrectAnswer = trim(strip_tags((string) ($question->answer_content ?? '')));
 
-        if ($answerIndex === null && $fallbackCorrectAnswer !== '' && strcasecmp($fallbackCorrectAnswer, $userAnswer) === 0) {
-            return true;
-        }
-
         // Get correct answer from metadata
         $metadata = is_string($question->metadata) 
             ? json_decode($question->metadata, true) 
             : $question->metadata;
         
         if (!$metadata || !isset($metadata['answers'])) {
-            return false;
+            return $answerIndex === null &&
+                $fallbackCorrectAnswer !== '' &&
+                strcasecmp($fallbackCorrectAnswer, $userAnswer) === 0;
         }
 
         if ($this->isMultipleChoiceQuestion($question)) {
@@ -397,16 +395,14 @@ class TestResultController extends Controller
      */
     private function getCorrectAnswerText(ExamQuestion $question, ?int $answerIndex = null): string
     {
-        if ($answerIndex === null && $question->answer_content) {
-            return trim(strip_tags((string) $question->answer_content));
-        }
+        $fallbackCorrectAnswer = trim(strip_tags((string) ($question->answer_content ?? '')));
 
         $metadata = is_string($question->metadata) 
             ? json_decode($question->metadata, true) 
             : $question->metadata;
         
         if (!$metadata || !isset($metadata['answers'])) {
-            return '';
+            return $fallbackCorrectAnswer;
         }
 
         if ($this->isFlowChartCompletionQuestion($question)) {
@@ -432,7 +428,7 @@ class TestResultController extends Controller
             ->first(fn($ans) => ($ans['is_correct'] ?? 0) == 1 || ($ans['is_correct'] ?? false) === true);
 
         if (!$correctAnswer) {
-            return '';
+            return $fallbackCorrectAnswer;
         }
 
         $content = $correctAnswer['content'] ?? '';
@@ -554,14 +550,12 @@ class TestResultController extends Controller
     {
         $correctAnswers = [];
 
-        foreach ($answers as $index => $answer) {
+        foreach ($answers as $answer) {
             $isCorrect = ($answer['is_correct'] ?? 0) == 1 || ($answer['is_correct'] ?? false) === true;
 
             if (!$isCorrect) {
                 continue;
             }
-
-            $correctAnswers[] = chr(65 + $index);
 
             $content = trim(strip_tags((string) ($answer['content'] ?? '')));
             if ($content !== '') {

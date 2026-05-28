@@ -2,6 +2,7 @@ import DefaultListeningReview from './DefaultListeningReview';
 import FlowChartCompletionReview from './FlowChartCompletionReview';
 import MatchingReview from './MatchingReview';
 import MultipleChoiceReview from './MultipleChoiceReview';
+import PlanMapDiagramLabellingReview from './PlanMapDiagramLabellingReview';
 import SentenceCompletionReview from './SentenceCompletionReview';
 import ShortAnswerReview from './ShortAnswerReview';
 import SummaryCompletionReview from './SummaryCompletionReview';
@@ -18,7 +19,7 @@ const REVIEW_RENDERERS = {
   note_completion: TextCompletionReview,
   form_completion: TextCompletionReview,
   table_completion: TextCompletionReview,
-  plan_map_diagram_labelling: TextCompletionReview
+  plan_map_diagram_labelling: PlanMapDiagramLabellingReview
 };
 
 export const getListeningReviewRenderer = (questionType) =>

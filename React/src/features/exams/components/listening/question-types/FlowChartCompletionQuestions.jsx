@@ -60,21 +60,21 @@ function FlowChartCompletionQuestions({ group, answers, onAnswerChange }) {
       .filter(Boolean)
   );
 
-  const handleOptionSelect = (letter) => {
-    const selectedLetter = normalizeFlowLetter(letter);
+  const handleOptionSelect = (option) => {
+    const selectedLetter = normalizeFlowLetter(option.letter);
     const targetQuestion =
       group.questions.find((question) => question.id === activeQuestionId) ||
       group.questions.find((question) => !String(answers[question.id] || '').trim()) ||
       group.questions[0];
 
-    if (!targetQuestion) return;
+    if (!targetQuestion || !selectedLetter) return;
 
     setActiveQuestionId(targetQuestion.id);
     onAnswerChange(targetQuestion.id, selectedLetter);
   };
 
-  const handleOptionDragStart = (event, letter) => {
-    const selectedLetter = normalizeFlowLetter(letter);
+  const handleOptionDragStart = (event, option) => {
+    const selectedLetter = normalizeFlowLetter(option.letter);
 
     if (!selectedLetter) {
       event.preventDefault();
@@ -194,7 +194,7 @@ function FlowChartCompletionQuestions({ group, answers, onAnswerChange }) {
           <div className="listening-test__flow-options-title">{group.optionTitle || 'Options'}</div>
           <div className="listening-test__flow-options-list">
             {options.map((option) => {
-              const letter = String(option.letter || '').toUpperCase();
+              const letter = normalizeFlowLetter(option.letter);
 
               return (
                 <button
@@ -207,8 +207,8 @@ function FlowChartCompletionQuestions({ group, answers, onAnswerChange }) {
                     draggingLetter === letter ? 'is-dragging' : ''
                   ].filter(Boolean).join(' ')}
                   aria-grabbed={draggingLetter === letter}
-                  onClick={() => handleOptionSelect(letter)}
-                  onDragStart={(event) => handleOptionDragStart(event, letter)}
+                  onClick={() => handleOptionSelect(option)}
+                  onDragStart={(event) => handleOptionDragStart(event, option)}
                   onDragEnd={handleOptionDragEnd}
                 >
                   <span className="listening-test__flow-option-letter">{option.letter}</span>

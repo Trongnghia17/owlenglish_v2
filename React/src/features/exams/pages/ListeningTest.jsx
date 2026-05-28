@@ -23,6 +23,7 @@ import {
   isSummaryCompletionGroup,
   isTableCompletionGroup,
   normalizeListeningSection,
+  parseMetadata,
   usesNoteCompletionLayout,
   usesTwoColumnLayout
 } from '../utils/listeningTest';
@@ -43,7 +44,39 @@ const getSubmitQuestionId = (question) =>
 const getSubmitAnswerIndex = (question) =>
   Number.isInteger(question.answerIndex) ? question.answerIndex : null;
 
-const formatSubmitAnswer = (answer) => {
+const stripHtmlToText = (value = '') =>
+  String(value)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const getFlowChartTextAnswer = (answer, question, group) => {
+  const normalizedAnswer = String(answer ?? '').trim();
+
+  if (!/^[A-Z]$/i.test(normalizedAnswer)) {
+    return normalizedAnswer;
+  }
+
+  const normalizedLetter = normalizedAnswer.toUpperCase();
+  const groupOption = (group?.optionsWithContent || []).find(
+    (option) => String(option.letter || '').trim().toUpperCase() === normalizedLetter
+  );
+  const groupOptionText = stripHtmlToText(groupOption?.content || '');
+
+  if (groupOptionText) {
+    return groupOptionText;
+  }
+
+  const metadata = parseMetadata(question?.metadata);
+  const answers = Array.isArray(metadata.answers) ? metadata.answers : [];
+  const answerIndex = normalizedLetter.charCodeAt(0) - 65;
+  const answerText = stripHtmlToText(answers[answerIndex]?.content || '');
+
+  return answerText || normalizedLetter;
+};
+
+const formatSubmitAnswer = (answer, question, group) => {
   if (Array.isArray(answer)) {
     const normalizedAnswers = answer
       .map((value) => String(value ?? '').trim())
@@ -53,6 +86,12 @@ const formatSubmitAnswer = (answer) => {
   }
 
   const normalizedAnswer = String(answer ?? '').trim();
+
+  if ((group?.type || '').toLowerCase() === 'flow_chart_completion') {
+    const flowChartAnswer = getFlowChartTextAnswer(normalizedAnswer, question, group);
+
+    return flowChartAnswer || null;
+  }
 
   return normalizedAnswer ? normalizedAnswer : null;
 };
@@ -210,7 +249,7 @@ const ListeningTest = () => {
           return {
             question_id: getSubmitQuestionId(question),
             answer_index: getSubmitAnswerIndex(question),
-            answer: formatSubmitAnswer(answer)
+            answer: formatSubmitAnswer(answer, question, group)
           };
         })
       );

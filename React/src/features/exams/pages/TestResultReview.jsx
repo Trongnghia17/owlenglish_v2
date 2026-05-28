@@ -175,8 +175,22 @@ export default function TestResultReview() {
         }
         setUserAnswers(answersMap);
 
-        // Fetch exam data based on result
-        if (testResult.exam_skill_id) {
+        // Section results also include exam_skill_id, so prefer the section scope first.
+        if (testResult.exam_section_id) {
+          const response = await getSectionById(testResult.exam_section_id, { with_questions: true });
+          if (response.data.success) {
+            const section = response.data.data;
+            const shouldUseListeningReview = isListeningReviewResult(testResult, section);
+            setSkillData(null);
+            setSectionData(section);
+            setIsListeningReview(shouldUseListeningReview);
+            if (shouldUseListeningReview) {
+              processListeningExamData(section, 'section');
+            } else {
+              processExamData(section, testResult, 'section');
+            }
+          }
+        } else if (testResult.exam_skill_id) {
           const response = await getSkillById(testResult.exam_skill_id, { with_sections: true });
           if (response.data.success) {
             const skill = response.data.data;
@@ -188,19 +202,6 @@ export default function TestResultReview() {
               processListeningExamData(skill, 'skill');
             } else {
               processExamData(skill, testResult, 'skill');
-            }
-          }
-        } else if (testResult.exam_section_id) {
-          const response = await getSectionById(testResult.exam_section_id, { with_questions: true });
-          if (response.data.success) {
-            const section = response.data.data;
-            const shouldUseListeningReview = isListeningReviewResult(testResult, section);
-            setSectionData(section);
-            setIsListeningReview(shouldUseListeningReview);
-            if (shouldUseListeningReview) {
-              processListeningExamData(section, 'section');
-            } else {
-              processExamData(section, testResult, 'section');
             }
           }
         }
