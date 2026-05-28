@@ -21,12 +21,6 @@ export default function ListeningReviewContentPanel({
       );
     });
 
-    if (!activeQuestionId) return;
-
-    const activeAnchor = contentElement.querySelector(
-      `[data-question-id="${CSS.escape(String(activeQuestionId))}"]`
-    );
-    activeAnchor?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
   }, [activeQuestionId, contentHtml]);
 
   return (
