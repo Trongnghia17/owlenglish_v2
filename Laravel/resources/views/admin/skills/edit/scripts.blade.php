@@ -999,12 +999,8 @@ function syncQuestionTypeWithFilters(section) {
 }
 
 $(document).on('change', '.group-question-type-select', function () {
-
     const section = this.closest('.section-item');
-
     syncQuestionTypeWithFilters(section);
-
-    // gọi lại để giữ section checkbox
     autoCheckSectionFilters();
 });
         </script>
