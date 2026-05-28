@@ -261,7 +261,7 @@ class ExamController extends Controller
 
 
         $sections = $query
-            ->paginate(3)
+            ->paginate(9)
             ->appends($request->all());
 
         $sections->getCollection()->transform(function ($section) {
