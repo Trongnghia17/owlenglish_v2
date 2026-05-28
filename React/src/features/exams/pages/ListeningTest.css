@@ -657,7 +657,7 @@
 
 .listening-test__question-group--multiple-choice .listening-test__group-header h3 {
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: normal;
   padding: 0;
@@ -666,7 +666,7 @@
 
 .listening-test__question-group--matching .listening-test__group-header h3 {
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: normal;
   padding: 0;
@@ -677,7 +677,7 @@
   background: transparent;
   border: 0;
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   padding: 0;
@@ -743,7 +743,7 @@
 
 .listening-test__question-group--sentence-completion .listening-test__group-header h3 {
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: normal;
   padding: 0;
@@ -754,7 +754,7 @@
   background: transparent;
   border: 0;
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   padding: 0;
@@ -1383,7 +1383,7 @@
 
 .listening-test__mc-option.selected .listening-test__mc-option-text,
 .listening-test__mc-option.selected .listening-test__mc-option-text * {
-  color: #1D6DFF;
+  color: #1D6DFF !important;
 }
 
 .listening-test__mc-option-text p {
@@ -1658,7 +1658,7 @@
 .listening-test__group-content-parsed--sentence {
   padding: 16px 20px;
   color: #0A0A0A;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.9;
   letter-spacing: 0;
@@ -1846,6 +1846,17 @@
 
 .listening-test__inline-input-wrapper--summary.has-value {
   border-color: #DBEAFE;
+}
+.listening-test__questions-list .has-value{
+  border-color: #DBEAFE;
+}
+.listening-test__questions-list .has-value input {
+  color: #3B82F6;
+  border-bottom:none;
+}
+
+.listening-test__questions-list .has-value span {
+  color: #3B82F6;
 }
 
 .listening-test__inline-input-wrapper--summary.has-value .listening-test__inline-input-number {
@@ -3563,7 +3574,7 @@
   }
 
   .listening-test__question-group--multiple-choice .listening-test__group-header h3 {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .listening-test__question-group--matching .listening-test__group-header h3 {

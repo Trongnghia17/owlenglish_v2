@@ -418,6 +418,14 @@ export default function OnlineExamLibrary() {
                     <div
                       key={skill.id}
                       className="online-exam-library__card"
+                      onClick={() => {
+                        handleTakeExam({
+                          examId: skill.exam_id,
+                          skillId: skill.skill?.id,
+                          sectionId: skill.id,
+                          skillType: skill.skill?.skill_type,
+                        });
+                      }}
                     >
                       <img
                         src={`${import.meta.env.VITE_API_BASE_URL}/storage/${skill.skill_image}`}

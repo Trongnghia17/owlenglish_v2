@@ -676,6 +676,7 @@
     font-weight: 600;
     line-height: 24px;
     margin: 0px 0px 8px 0px;
+    text-transform: capitalize;
 }
 .exam-level-badge{
     margin-bottom: 10px;
