@@ -127,7 +127,7 @@ class ExamController extends Controller
     public function getListeningContent(Request $request, $skillId, $sectionId = null)
     {
         // 1. Lấy thông tin Skill cơ bản
-        $skill = ExamSkill::select(['id', 'name', 'time_limit', 'skill_type'])->find($skillId);
+        $skill = ExamSkill::select(['id', 'name', 'time_limit', 'skill_type', 'audio_file'])->find($skillId);
 
         if (!$skill) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy kỹ năng.'], 404);

@@ -273,6 +273,7 @@ class SkillController extends Controller
             'sections.*.content' => 'nullable|string',
             'sections.*.feedback' => 'nullable|string',
             'sections.*.content_format' => 'nullable|in:text,audio,video',
+            'sections.*.audio_file' => 'nullable|file|mimes:mp3,wav,ogg,m4a|max:102400',
             'sections.*.groups' => 'nullable|array',
             'sections.*.groups.*.id' => 'nullable|integer',
             'sections.*.groups.*.content' => 'nullable|string',
@@ -350,7 +351,7 @@ class SkillController extends Controller
         $skill->update($validated);
 
         // Process sections
-        $this->processSections($skill, $sectionsData);
+        $this->processSections($skill, $sectionsData, $request);
 
         return redirect()->route('admin.skills.index')
             ->with('success', 'Skill đã được cập nhật thành công!');
@@ -359,13 +360,14 @@ class SkillController extends Controller
     /**
      * Process sections, question groups, and questions
      */
-    private function processSections(ExamSkill $skill, array $sectionsData)
+    private function processSections(ExamSkill $skill, array $sectionsData, Request $request)
     {
 
         $existingSectionIds = [];
 
         foreach ($sectionsData as $index => $sectionData) {
             $sectionId = $sectionData['id'] ?? null;
+            $section = $sectionId ? $skill->sections()->findOrFail($sectionId) : null;
 
             // Prepare section data
             $sectionInfo = [
@@ -377,15 +379,22 @@ class SkillController extends Controller
                 'metadata' => [],
                 'is_active' => true,
             ];
+
+            $sectionAudioFile = $request->file("sections.$index.audio_file");
+            if ($sectionAudioFile) {
+                if ($section && $section->audio_file && Storage::disk('public')->exists($section->audio_file)) {
+                    Storage::disk('public')->delete($section->audio_file);
+                }
+
+                $sectionInfo['audio_file'] = $sectionAudioFile->store('sections/audio', 'public');
+            }
+
             // dd(2);
             // Update or create section
-            if ($sectionId) {
-                $section = $skill->sections()->findOrFail($sectionId);
+            if ($section) {
                 $section->update($sectionInfo);
-                $existingSectionIds[] = $sectionId;
             } else {
                 $section = $skill->sections()->create($sectionInfo);
-                $existingSectionIds[] = $section->id;
             }
 
             $existingSectionIds[] = $section->id;
@@ -406,7 +415,14 @@ class SkillController extends Controller
         }
 
         // Delete sections that are not in the request
-        $skill->sections()->whereNotIn('id', $existingSectionIds)->delete();
+        $sectionsToDelete = $skill->sections()->whereNotIn('id', $existingSectionIds)->get();
+        foreach ($sectionsToDelete as $sectionToDelete) {
+            if ($sectionToDelete->audio_file && Storage::disk('public')->exists($sectionToDelete->audio_file)) {
+                Storage::disk('public')->delete($sectionToDelete->audio_file);
+            }
+
+            $sectionToDelete->delete();
+        }
     }
 
     /**

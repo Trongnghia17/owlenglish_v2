@@ -325,6 +325,13 @@
                             <div class="groups-list"></div>
                         </div>
                     `;
+                    const sectionAudioHTML = skillType === 'listening' ? `
+                            <div class="mb-3">
+                                <label class="form-label">Audio File riêng cho section</label>
+                                <input type="file" class="form-control" name="sections[${sectionIndex}][audio_file]" accept="audio/*">
+                                <small class="form-text text-muted">Nếu để trống, section này sẽ dùng audio chung của skill.</small>
+                            </div>
+                    ` : '';
 
                     container.insertAdjacentHTML('beforeend', `
                     <div class="section-item card mb-3" data-section-index="${sectionIndex}">
@@ -374,6 +381,7 @@
                                 <label class="form-label">Section Title</label>
                                 <input type="text" class="form-control" name="sections[${sectionIndex}][title]" placeholder="Enter section title">
                             </div>
+                            ${sectionAudioHTML}
                             <div class="mb-3">
                                 <label class="form-label">Section Content</label>
                                 <input type="hidden" id="section-content-new-${sectionIndex}" name="sections[${sectionIndex}][content]">

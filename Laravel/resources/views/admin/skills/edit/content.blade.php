@@ -371,6 +371,44 @@
                                                     placeholder="Enter section title">
                                             </div>
 
+                                            @if ($skill->isListening())
+                                                <!-- Section Audio File -->
+                                                <div class="mb-3">
+                                                    <label class="form-label">Audio File riêng cho section</label>
+                                                    <input type="file"
+                                                        class="form-control @error('sections.' . $sectionIndex . '.audio_file') is-invalid @enderror"
+                                                        name="sections[{{ $sectionIndex }}][audio_file]"
+                                                        accept="audio/*">
+                                                    <small class="form-text text-muted">
+                                                        Nếu để trống, section này sẽ dùng audio chung của skill.
+                                                    </small>
+                                                    @error('sections.' . $sectionIndex . '.audio_file')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+
+                                                    @if ($section->audio_file)
+                                                        @php
+                                                            $sectionAudioPath = preg_replace('#^/?storage/#', '', $section->audio_file);
+                                                            $sectionAudioUrl = url(
+                                                                '/api/public/media/' .
+                                                                    collect(explode('/', ltrim($sectionAudioPath, '/')))
+                                                                        ->map(fn($segment) => rawurlencode($segment))
+                                                                        ->implode('/'),
+                                                            );
+                                                        @endphp
+                                                        <div class="mt-2">
+                                                            <label class="form-label">Audio section hiện tại:</label>
+                                                            <div>
+                                                                <small class="text-muted">{{ basename($section->audio_file) }}</small>
+                                                                <audio controls class="w-100 mt-1">
+                                                                    <source src="{{ $sectionAudioUrl }}">
+                                                                </audio>
+                                                            </div>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+
                                             <!-- Section Content -->
                                             <div class="mb-3">
                                                 <label class="form-label">Section Content</label>
