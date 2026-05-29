@@ -387,19 +387,21 @@ export const createPartTitle = (partNumber, groups = [], fallbackStart = 1) => {
   return `Part ${partNumber} (${firstNumber}-${lastNumber})`;
 };
 
-export const getCurrentPartAudio = ({ skillData, sectionData, currentPartGroups }) =>
-  toStorageUrl(
-    currentPartGroups.find((group) => group.audioUrl)?.audioUrl ||
-    sectionData?.audio_url ||
+export const getCurrentPartAudio = ({ skillData, sectionData, currentPartGroups }) => {
+  const skillAudio = skillData?.audio_file || skillData?.audio_url || skillData?.media?.audio;
+  const sectionAudio = sectionData?.audio_url ||
     sectionData?.audio_file ||
     sectionData?.media?.audio ||
     sectionData?.exam_skill?.audio_file ||
     sectionData?.examSkill?.audio_file ||
-    sectionData?.skill?.audio_file ||
-    skillData?.audio_file ||
-    skillData?.audio_url ||
-    skillData?.media?.audio
-  );
+    sectionData?.skill?.audio_file;
+  const groupAudio = currentPartGroups.find((group) => group.audioUrl)?.audioUrl;
+  const audioSource = sectionData
+    ? groupAudio || sectionAudio || skillAudio
+    : skillAudio || groupAudio;
+
+  return toStorageUrl(audioSource);
+};
 
 export const getAnsweredCount = (answers = {}) =>
   Object.values(answers).filter(hasAnswerValue).length;
