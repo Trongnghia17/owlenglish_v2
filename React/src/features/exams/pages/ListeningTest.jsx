@@ -51,7 +51,7 @@ const stripHtmlToText = (value = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const getFlowChartTextAnswer = (answer, question, group) => {
+const getLetterOptionTextAnswer = (answer, question, group) => {
   const normalizedAnswer = String(answer ?? '').trim();
 
   if (!/^[A-Z]$/i.test(normalizedAnswer)) {
@@ -87,10 +87,10 @@ const formatSubmitAnswer = (answer, question, group) => {
 
   const normalizedAnswer = String(answer ?? '').trim();
 
-  if ((group?.type || '').toLowerCase() === 'flow_chart_completion') {
-    const flowChartAnswer = getFlowChartTextAnswer(normalizedAnswer, question, group);
+  if (['flow_chart_completion', 'matching'].includes((group?.type || '').toLowerCase())) {
+    const textAnswer = getLetterOptionTextAnswer(normalizedAnswer, question, group);
 
-    return flowChartAnswer || null;
+    return textAnswer || null;
   }
 
   return normalizedAnswer ? normalizedAnswer : null;
