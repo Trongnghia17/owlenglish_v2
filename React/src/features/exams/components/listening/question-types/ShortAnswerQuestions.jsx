@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import clsx from 'clsx';
 import { createQuestionBlocks } from './textQuestionUtils';
 
 function ShortAnswerQuestions({ group, answers, onAnswerChange }) {
@@ -10,20 +11,48 @@ function ShortAnswerQuestions({ group, answers, onAnswerChange }) {
           dangerouslySetInnerHTML={{ __html: block.content }}
         />
       </div>
+
       <div className="listening-test__short-answer-list">
-        {block.questions.map((question) => (
-          <label key={question.id} className="listening-test__short-answer-row">
-            <span className="listening-test__short-answer-number">{question.number}</span>
-            <input
-              type="text"
-              className="listening-test__short-answer-input"
-              aria-label={`Answer ${question.number}`}
-              value={answers[question.id] || ''}
-              onChange={(event) => onAnswerChange(question.id, event.target.value)}
-              maxLength={100}
-            />
-          </label>
-        ))}
+        {block.questions.map((question) => {
+          const value = answers[question.id] || '';
+
+          return (
+            <label
+              key={question.id}
+              className={clsx(
+                'listening-test__short-answer-row',
+                {
+                  'is-filled': value.trim(),
+                }
+              )}
+            >
+              <span className="listening-test__short-answer-number">
+                {question.number}
+              </span>
+
+              <input
+                type="text"
+                className="listening-test__short-answer-input"
+                aria-label={`Answer ${question.number}`}
+                value={value}
+                onChange={(event) =>
+                  onAnswerChange(question.id, event.target.value)
+                }
+                onFocus={(event) => {
+                  event.currentTarget
+                    .closest('.listening-test__short-answer-row')
+                    ?.classList.add('is-focus');
+                }}
+                onBlur={(event) => {
+                  event.currentTarget
+                    .closest('.listening-test__short-answer-row')
+                    ?.classList.remove('is-focus');
+                }}
+                maxLength={100}
+              />
+            </label>
+          );
+        })}
       </div>
     </div>
   ));

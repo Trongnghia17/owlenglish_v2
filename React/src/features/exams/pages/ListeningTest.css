@@ -710,7 +710,7 @@
 
 .listening-test__question-group--short-answer .listening-test__group-header h3 {
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: normal;
   padding: 0;
@@ -721,7 +721,7 @@
   background: transparent;
   border: 0;
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   padding: 0;
@@ -772,7 +772,7 @@
 
 .listening-test__question-group--summary-completion .listening-test__group-header h3 {
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   line-height: normal;
   padding: 0;
@@ -783,7 +783,7 @@
   background: transparent;
   border: 0;
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   padding: 0;
@@ -848,7 +848,7 @@
 .listening-test__questions-list--short-answer {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: start;
+  align-items: stretch;
   gap: 8px 24px;
   border: 0;
   background: transparent;
@@ -915,7 +915,7 @@
 }
 
 .listening-test__short-answer-row {
-  min-height: 34px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -927,6 +927,8 @@
   cursor: text;
   transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
+
+
 
 .listening-test__short-answer-row:focus-within {
   border-color: #D3E7FF;
@@ -954,20 +956,42 @@
   min-width: 0;
   height: 24px;
   border: 0;
-  border-bottom: 1px dotted #1F2937;
   border-radius: 0;
   background: transparent;
+  background-image: repeating-linear-gradient(
+    to right,
+    #1F2937 0 2px,
+    transparent 2px 4px
+  );
+  background-size: 50% 1px;
+  background-repeat: no-repeat;
+  background-position: left bottom;
   color: #1F2937;
   font-size: 14px;
   font-weight: 500;
   line-height: 22.75px;
-  letter-spacing: 0;
   padding: 0 0 2px;
 }
+
+.listening-test__short-answer-list .is-filled{
+  border: 1px solid #DBEAFE;  
+}
+
+.listening-test__short-answer-list .is-filled span{
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.listening-test__short-answer-list .is-filled .listening-test__short-answer-input{
+  color: #3B82F6;
+  background: none;
+}
+
 
 .listening-test__short-answer-input:focus {
   outline: none;
   border-bottom-color: #045CCE;
+  color: #045CCE;
 }
 
 .listening-test__matching-layout {

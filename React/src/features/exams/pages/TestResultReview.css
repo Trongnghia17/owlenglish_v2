@@ -681,6 +681,13 @@
 .listening-review__mc-option.is-correct {
     border-color: #D1FAE5;
 }
+.listening-review__answers .listening-review__mc-options .is-correct span{
+    color: #10B981 !important;
+}
+
+.listening-review__answers .listening-review__mc-options .is-incorrect span{
+    color: #F43F5E !important;
+}
 
 .listening-review__mc-option.is-incorrect {
     border-color: #FFE4E6;
@@ -714,7 +721,7 @@
 .listening-review__mc-option-text {
     min-width: 0;
     flex: 1;
-    color: #10B981 ;
+    color: #1F2937 ;
     font-size: 14px;
     font-weight: 500;
     line-height: 22.75px;
