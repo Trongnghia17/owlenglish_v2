@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
-import InlineAnswerContent from '../../../../features/exams/components/listening/InlineAnswerContent';
-import { buildInlineCompletionContent, stripHtml } from '../../../../features/exams/components/listening/question-types/textQuestionUtils';
-import { getReviewAnswerData, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import InlineAnswerContent from '../../../listening/InlineAnswerContent';
+import { buildInlineCompletionContent, stripHtml } from '../../../listening/question-types/textQuestionUtils';
+import { getReviewAnswerData } from '../readingReviewUtils';
 
-function SentenceCompletionReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
+function SentenceCompletionReview({ group, userAnswers, onQuestionFocus }) {
   return (
     <section className="reading-review__answer-group reading-review__answer-group--sentence">
       <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getMatchingOptions, stripHtml } from '../../../../utils/readingTest';
+import { stripHtml } from '../../../listening/question-types/textQuestionUtils';
 import { getReviewAnswerData, getReviewCorrectAnswer, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
 
 const normalizeLetter = (v) => String(v ?? '').trim().toUpperCase().slice(0, 1);
