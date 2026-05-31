@@ -1,4 +1,4 @@
-import { normalizeReadingSection, parseMetadata, stripParagraphWrapper } from '../../../../utils/readingTest';
+import { normalizeReadingSection, parseMetadata, stripParagraphWrapper } from '../../../utils/readingTest';
 
 export const getResultAnswerKey = (answer) => {
   const answerIndex = answer?.answer_index;

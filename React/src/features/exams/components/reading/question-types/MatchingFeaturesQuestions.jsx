@@ -1,5 +1,5 @@
 import { memo, useMemo, useState, useCallback } from 'react';
-import { getMatchingOptions, stripHtml } from '../../utils/readingTest';
+import { stripHtml } from '../../listening/question-types/textQuestionUtils';
 
 const MATCHING_DRAG_TYPE = 'application/x-reading-features-answer';
 const normalizeLetter = (value) => String(value ?? '').trim().toUpperCase().slice(0, 1);

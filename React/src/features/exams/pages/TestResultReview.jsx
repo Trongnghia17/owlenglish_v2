@@ -9,34 +9,14 @@ import {
 } from '../components/listening/review/listeningReviewUtils';
 import TestLayout from '../components/TestLayout';
 import { getReadingReviewRenderer } from '../components/reading/review/question-types';
+import {
+  buildFooterAnswers,
+  buildReadingReviewData,
+  isReadingReviewResult
+} from '../components/reading/review/readingReviewUtils';
 import './ReadingTest.css'; // Sử dụng cùng CSS với ReadingTest
 import './ListeningTest.css';
 import './TestResultReview.css'; // CSS riêng cho review mode
-
-const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
-
-const TEXT_REVIEW_QUESTION_TYPES = new Set([
-  'short_text',
-  'note_completion',
-  'form_completion',
-  'table_completion',
-  'flow_chart_completion',
-  'summary_completion',
-  'sentence_completion',
-  'short_answer_questions',
-  'plan_map_diagram_labelling'
-]);
-
-const CHOICE_REVIEW_QUESTION_TYPES = new Set([
-  'multiple_choice',
-  'matching'
-]);
-
-const isTextReviewQuestionType = (questionType) =>
-  TEXT_REVIEW_QUESTION_TYPES.has((questionType || '').toLowerCase());
-
-const isChoiceReviewQuestionType = (questionType) =>
-  CHOICE_REVIEW_QUESTION_TYPES.has((questionType || '').toLowerCase());
 
 // Component hiển thị group content với inline inputs ở chế độ review (readonly)
 const GroupContentWithInlineInputsReview = ({ content, questions = [], userAnswers = {} }) => {
@@ -189,13 +169,14 @@ export default function TestResultReview() {
             setSectionData(section);
             setIsListeningReview(shouldUseListeningReview);
             setIsReadingReview(shouldUseReadingReview);
-              if (shouldUseListeningReview) {
-                processListeningExamData(section, 'section');
-              } else if (shouldUseReadingReview) {
-                processReadingExamData(section, 'section');
-              } else {
-                processExamData(section, testResult, 'section');
-              }
+            if (shouldUseListeningReview) {
+              processListeningExamData(section, 'section');
+            } else if (shouldUseReadingReview) {
+              processReadingExamData(section, 'section');
+            } else {
+              processExamData(section, testResult, 'section');
+            }
+          }
         } else if (testResult.exam_skill_id) {
           const response = await getSkillById(testResult.exam_skill_id, { with_sections: true });
           if (response.data.success) {
@@ -208,11 +189,14 @@ export default function TestResultReview() {
             setIsReadingReview(shouldUseReadingReview);
             if (shouldUseListeningReview) {
               processListeningExamData(skill, 'skill');
- } else if (shouldUseReadingReview) {
-   processReadingExamData(skill, 'skill');
- } else {
-   processExamData(skill, testResult, 'skill');
- }
+            } else if (shouldUseReadingReview) {
+              processReadingExamData(skill, 'skill');
+            } else {
+              processExamData(skill, testResult, 'skill');
+            }
+          }
+        }
+      } catch (error) {
         console.error('Error fetching data:', error);
         alert('Không thể tải dữ liệu. Vui lòng thử lại.');
         navigate(-1);
@@ -618,8 +602,46 @@ const processReadingExamData = (data, type) => {
       />
     );
   };
-                {renderReviewQuestions(group)}
+
+  return (
+    <TestLayout
+      skillData={skillData}
+      sectionData={sectionData}
+      timeRemaining={timeRemaining}
+      setTimeRemaining={() => {}}
+      parts={parts}
+      currentPartTab={currentPartTab}
+      setCurrentPartTab={setCurrentPartTab}
+      questionGroups={questionGroups}
+      answers={buildFooterAnswers(userAnswers)}
+      onSubmit={null}
+      showQuestionNumbers={true}
+      fontSize={fontSize}
+      onFontSizeChange={setFontSize}
+    >
+      <div className="reading-test__content-wrapper">
+        <div className="reading-test__passage">
+          <div className="reading-test__passage-header">
+            <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
+            {currentPassage.subtitle && (
+              <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
+            )}
+          </div>
+          <PassageContent fontSize={fontSize} content={currentPassage.content} />
+        </div>
+
+        <div className={`reading-test__questions reading-test__questions--${fontSize}`}>
+          {currentPartGroups.map((group) => (
+            <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
+              <div className="reading-test__group-header">
+                {group.instructions && (
+                  <div
+                    className="reading-test__group-instructions"
+                    dangerouslySetInnerHTML={{ __html: group.instructions }}
+                  />
+                )}
               </div>
+              {renderReviewQuestions(group)}
             </div>
           ))}
         </div>
