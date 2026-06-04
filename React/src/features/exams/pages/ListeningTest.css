@@ -2352,7 +2352,7 @@
   border-radius: 5px;
   background: rgba(4, 92, 206, 0.07);
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   padding: 16px;
@@ -2579,7 +2579,7 @@
   border-radius: 5px;
   background: rgba(4, 92, 206, 0.07);
   color: #045CCE;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
   line-height: 1.25;
   padding: 16px;
@@ -2623,6 +2623,7 @@
 
 .listening-test__form-content p {
   margin: 0;
+  font-size: 14px;
 }
 
 .listening-test__form-content figure,
@@ -2709,6 +2710,7 @@
   border-bottom: 1px solid #E7E7E7 !important;
   padding: 13px 20px;
   vertical-align: top;
+  font-size: 14px;
 }
 
 .listening-test__form-content th:last-child,
@@ -2734,7 +2736,7 @@
 
 .listening-test__form-content td {
   color: #0A0A0A;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.75;
 }
@@ -2925,7 +2927,7 @@
   border-radius: 5px;
   background: rgba(4, 92, 206, 0.07);
   color: #045CCE;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 400;
   line-height: normal;
   padding: 16px;
@@ -2965,6 +2967,7 @@
 
 .listening-test__table-content p {
   margin: 0;
+  font-size: 14px;
 }
 
 .listening-test__table-content figure,
@@ -3230,7 +3233,7 @@
   border-radius: 5px;
   background: rgba(4, 92, 206, 0.07);
   color: #045CCE;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
   line-height: 1.25;
   padding: 16px;
@@ -3239,6 +3242,11 @@
 
 .listening-test__note-instructions p {
   margin: 0;
+  font-size: 14px;
+}
+
+.listening-test__note-content span {
+  font-size: 14px;
 }
 
 .listening-test__note-workspace {
