@@ -288,6 +288,237 @@
                 <div class="col-lg-9 col-12">
                     <!-- Quiz Info Card -->
 
+                    @php
+                        $skillImportPreview = session('skill_import_preview');
+                    @endphp
+
+                    <div id="excel-import" class="card mb-4">
+                        <div class="card-header bg-light">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Import Excel</h5>
+                                <a href="{{ route('admin.skills.import-template', $skill) }}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-download me-1"></i>Tải template
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-lg-8">
+                                    <label for="skillImportFile" class="form-label">File .xlsx</label>
+                                    <input type="file"
+                                        id="skillImportFile"
+                                        name="import_file"
+                                        form="skillImportPreviewForm"
+                                        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                        class="form-control @error('import_file') is-invalid @enderror">
+                                    @error('import_file')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-lg-4 d-flex gap-2">
+                                    <button type="submit" form="skillImportPreviewForm" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-eye me-1"></i>Preview
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 small text-muted">
+                                <div class="fw-semibold text-dark mb-1">Cách nhập theo dạng đề</div>
+                                <div>
+                                    Reading/Listening dùng các cột group/question/answer. Multiple choice nhập 1 dòng
+                                    cho mỗi option và đánh <code>is_correct</code> cho đáp án đúng. True/False/Not Given,
+                                    Yes/No/Not Given, completion, matching... vẫn dùng cùng cấu trúc nhưng số lượng
+                                    answer rows sẽ khác theo từng dạng. Writing/Speaking dùng
+                                    <code>direct_question_no</code>, <code>sample_answer</code>,
+                                    <code>question_feedback</code>, <code>hint</code>.
+                                </div>
+                            </div>
+
+                            @if ($skillImportPreview)
+                                <div class="mt-3">
+                                    @if (!empty($skillImportPreview['errors']))
+                                        <div class="alert alert-danger mb-0">
+                                            <div class="fw-semibold mb-2">Preview có lỗi</div>
+                                            <ul class="mb-0">
+                                                @foreach (array_slice($skillImportPreview['errors'], 0, 20) as $importError)
+                                                    <li>
+                                                        @if (!empty($importError['row']))
+                                                            Row {{ $importError['row'] }}:
+                                                        @endif
+                                                        {{ $importError['message'] }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            @if (count($skillImportPreview['errors']) > 20)
+                                                <div class="small mt-2">
+                                                    Còn {{ count($skillImportPreview['errors']) - 20 }} lỗi khác.
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div class="alert alert-warning mb-0">
+                                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                                                <div>
+                                                    <div class="fw-semibold mb-2">Preview sẵn sàng import</div>
+                                                    <div class="d-flex flex-wrap gap-2 small">
+                                                        <span class="badge text-bg-light">Rows:
+                                                            {{ $skillImportPreview['summary']['rows'] ?? 0 }}</span>
+                                                        <span class="badge text-bg-light">Sections:
+                                                            {{ $skillImportPreview['summary']['sections'] ?? 0 }}</span>
+                                                        <span class="badge text-bg-light">Groups:
+                                                            {{ $skillImportPreview['summary']['groups'] ?? 0 }}</span>
+                                                        <span class="badge text-bg-light">Questions:
+                                                            {{ $skillImportPreview['summary']['questions'] ?? 0 }}</span>
+                                                        <span class="badge text-bg-light">Direct:
+                                                            {{ $skillImportPreview['summary']['direct_questions'] ?? 0 }}</span>
+                                                        <span class="badge text-bg-light">Answers:
+                                                            {{ $skillImportPreview['summary']['answers'] ?? 0 }}</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <input type="hidden" name="preview_token"
+                                                        value="{{ $skillImportPreview['token'] }}"
+                                                        form="skillImportConfirmForm">
+                                                    <button type="submit" form="skillImportConfirmForm"
+                                                        class="btn btn-danger"
+                                                        onclick="return confirm('Import sẽ thay toàn bộ sections/questions hiện tại. Bạn chắc chắn muốn tiếp tục?')">
+                                                        <i class="bi bi-upload me-1"></i>Confirm import
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if (!empty($skillImportPreview['details']['sections']))
+                                            <div class="mt-3 border rounded overflow-hidden">
+                                                <div class="bg-light px-3 py-2 fw-semibold">
+                                                    Nội dung sẽ được import
+                                                </div>
+                                                <div class="p-3">
+                                                    @foreach ($skillImportPreview['details']['sections'] as $previewSection)
+                                                        <div class="border rounded mb-3">
+                                                            <div class="bg-light px-3 py-2">
+                                                                <div class="fw-semibold">
+                                                                    Section {{ $previewSection['section_no'] }}:
+                                                                    {{ $previewSection['title'] ?: 'Untitled' }}
+                                                                </div>
+                                                                @if (!empty($previewSection['content_html']))
+                                                                    <div class="small text-muted mt-2 border rounded bg-white p-2"
+                                                                        style="max-height: 180px; overflow: auto;">
+                                                                        {!! $previewSection['content_html'] !!}
+                                                                    </div>
+                                                                @endif
+                                                                @if (!empty($previewSection['feedback_html']))
+                                                                    <div class="small text-muted mt-1">
+                                                                        Feedback: {!! $previewSection['feedback_html'] !!}
+                                                                    </div>
+                                                                @endif
+                                                                @if (($previewSection['filter_count'] ?? 0) > 0)
+                                                                    <div class="small text-muted mt-1">
+                                                                        Filters: {{ $previewSection['filter_count'] }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="p-3">
+                                                                @foreach ($previewSection['groups'] ?? [] as $previewGroup)
+                                                                    <div class="mb-3">
+                                                                        <div class="fw-semibold">
+                                                                            Group {{ $previewGroup['group_no'] }}
+                                                                            <span class="badge text-bg-secondary">
+                                                                                {{ $previewGroup['question_type'] }}
+                                                                            </span>
+                                                                        </div>
+                                                                        @if (!empty($previewGroup['instructions_html']))
+                                                                            <div class="small text-muted mt-1">
+                                                                                {!! $previewGroup['instructions_html'] !!}
+                                                                            </div>
+                                                                        @endif
+                                                                        @if (!empty($previewGroup['content_html']))
+                                                                            <div class="small text-muted mt-1 border rounded bg-white p-2">
+                                                                                {!! $previewGroup['content_html'] !!}
+                                                                            </div>
+                                                                        @endif
+
+                                                                        @foreach ($previewGroup['questions'] ?? [] as $previewQuestion)
+                                                                            <div class="mt-2 ps-3 border-start">
+                                                                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                                                                    <span class="fw-semibold">
+                                                                                        Q{{ $previewQuestion['question_no'] }}
+                                                                                    </span>
+                                                                                    <span class="badge text-bg-light">
+                                                                                        {{ $previewQuestion['question_type'] }}
+                                                                                    </span>
+                                                                                    <span class="small text-muted">
+                                                                                        {{ $previewQuestion['point'] }} point
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div class="small mt-1">
+                                                                                    {!! $previewQuestion['content_html'] ?: e($previewQuestion['content_preview']) !!}
+                                                                                </div>
+                                                                                @if (!empty($previewQuestion['feedback_html']))
+                                                                                    <div class="small text-muted mt-1">
+                                                                                        Feedback:
+                                                                                        {!! $previewQuestion['feedback_html'] !!}
+                                                                                    </div>
+                                                                                @endif
+                                                                                @if (!empty($previewQuestion['answers']))
+                                                                                    <ol class="small mt-2 mb-0 ps-3">
+                                                                                        @foreach ($previewQuestion['answers'] as $previewAnswer)
+                                                                                            <li class="{{ $previewAnswer['is_correct'] ? 'fw-semibold text-success' : '' }}">
+                                                                                                {!! $previewAnswer['content_html'] ?: e($previewAnswer['content_preview']) !!}
+                                                                                                @if ($previewAnswer['is_correct'])
+                                                                                                    <span class="badge text-bg-success ms-1">correct</span>
+                                                                                                @endif
+                                                                                                @if (!empty($previewAnswer['feedback_html']))
+                                                                                                    <div class="text-muted">
+                                                                                                        {!! $previewAnswer['feedback_html'] !!}
+                                                                                                    </div>
+                                                                                                @endif
+                                                                                            </li>
+                                                                                        @endforeach
+                                                                                    </ol>
+                                                                                @endif
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @endforeach
+
+                                                                @foreach ($previewSection['direct_questions'] ?? [] as $previewQuestion)
+                                                                    <div class="mb-3 ps-3 border-start">
+                                                                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                                                                            <span class="fw-semibold">
+                                                                                Direct Q{{ $previewQuestion['direct_question_no'] }}
+                                                                            </span>
+                                                                            <span class="small text-muted">
+                                                                                {{ $previewQuestion['point'] }} point
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="small mt-1">
+                                                                            {!! $previewQuestion['content_html'] ?: e($previewQuestion['content_preview']) !!}
+                                                                        </div>
+                                                                        @if (!empty($previewQuestion['answer_html']))
+                                                                            <div class="small text-muted mt-1">
+                                                                                Sample: {!! $previewQuestion['answer_html'] !!}
+                                                                            </div>
+                                                                        @endif
+                                                                        @if (!empty($previewQuestion['feedback_html']))
+                                                                            <div class="small text-muted mt-1">
+                                                                                Feedback: {!! $previewQuestion['feedback_html'] !!}
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
 
                     <!-- Sections Builder Card -->
                     <div id="sections-builder" class="card">
@@ -1029,3 +1260,12 @@
                         </button>
                     </div>
     </div>
+
+    <form id="skillImportPreviewForm" action="{{ route('admin.skills.import.preview', $skill) }}" method="POST"
+        enctype="multipart/form-data">
+        @csrf
+    </form>
+
+    <form id="skillImportConfirmForm" action="{{ route('admin.skills.import.confirm', $skill) }}" method="POST">
+        @csrf
+    </form>

@@ -248,6 +248,23 @@
       <path value="$PROJECT_DIR$/Laravel/vendor/paragonie/random_compat" />
       <path value="$PROJECT_DIR$/Laravel/vendor/paragonie/constant_time_encoding" />
       <path value="$PROJECT_DIR$/Laravel/vendor/firebase/php-jwt" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/maxmind/web-service-common" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/stevebauman/location" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/psr-discovery/http-client-implementations" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/psr-discovery/discovery" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/psr-discovery/http-factory-implementations" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/geoip2/geoip2" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/jaybizzle/crawler-detect" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/mobiledetect/mobiledetectlib" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/jenssegers/agent" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/maxmind-db/reader" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/payos/payos" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/maatwebsite/excel" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/markbaker/complex" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/markbaker/matrix" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/ezyang/htmlpurifier" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/maennchen/zipstream-php" />
+      <path value="$PROJECT_DIR$/Laravel/vendor/phpoffice/phpspreadsheet" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
