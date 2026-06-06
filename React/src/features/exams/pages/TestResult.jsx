@@ -5,12 +5,31 @@ import logo from '@/assets/images/logo.png';
 import congratsImg from '@/assets/images/source_image-Photoroom.png'
 import './TestResult.css';
 
+const stripHtml = (value) => {
+  if (value === null || value === undefined) return '';
+
+  if (Array.isArray(value)) {
+    return value.map(stripHtml).filter(Boolean).join(', ');
+  }
+
+  const tmp = document.createElement('div');
+  tmp.innerHTML = String(value);
+  return tmp.textContent || tmp.innerText || '';
+};
+
+const hasAnswerValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.some(hasAnswerValue);
+  }
+
+  return stripHtml(value).trim() !== '';
+};
+
 export default function TestResult() {
   const { resultId } = useParams();
   const navigate = useNavigate();
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'correct', 'incorrect'
 
   useEffect(() => {
     const fetchResult = async () => {
@@ -96,8 +115,6 @@ export default function TestResult() {
 
   const correctAnswers = result.correct_answers || 0;
   const totalQuestions = result.total_questions || 0;
-  const incorrectAnswers = result.answered_questions - correctAnswers; // Sửa: chỉ tính câu trả lời sai, không tính câu bỏ qua
-  const unansweredCount = totalQuestions - result.answered_questions;
 
   // Group answers by part and section
   const answersByPart = {};
@@ -111,16 +128,6 @@ export default function TestResult() {
       answersByPart[part].push(answer);
     });
   }
-
-  const filteredAnswers = (answers) => {
-    if (activeTab === 'correct') {
-      return answers.filter(a => a.is_correct);
-    }
-    if (activeTab === 'incorrect') {
-      return answers.filter(a => !a.is_correct);
-    }
-    return answers;
-  };
 
   const formatTime = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -236,16 +243,7 @@ export default function TestResult() {
                 {answers.map((answer) => {
                   // Sử dụng question_number từ backend (đã được đánh số theo part)
                   const questionNumber = answer.question_number;
-                  const isUnanswered = !answer.user_answer || answer.user_answer.trim() === '';
-                  
-                  // Helper function to strip HTML tags and get text content
-                  const stripHtml = (html) => {
-                    if (!html) return '';
-                    const tmp = document.createElement('div');
-                    tmp.innerHTML = html;
-                    return tmp.textContent || tmp.innerText || '';
-                  };
-                  
+                  const isUnanswered = !hasAnswerValue(answer.user_answer);
                   const userAnswerText = stripHtml(answer.user_answer);
                   const correctAnswerText = stripHtml(answer.correct_answer);
                   

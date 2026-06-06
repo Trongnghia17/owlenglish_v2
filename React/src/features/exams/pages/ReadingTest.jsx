@@ -554,6 +554,12 @@ const ReadingTest = () => {
           }
         `}
       >
+        {isMultipleChoiceLayout && (
+          <h1 className="reading-test__multiple-choice-title">
+            Reading passage {currentPartTab}
+          </h1>
+        )}
+
         <ReadingPassagePanel
           currentPartTab={
             currentPartTab

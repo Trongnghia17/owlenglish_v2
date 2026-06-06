@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import {
-  containsInlinePlaceholders,
   isReadingDiagramLabelCompletionGroup,
   isReadingFlowChartCompletionGroup,
   isReadingMatchingFeaturesGroup,
@@ -128,7 +127,7 @@ function ReadingQuestionRenderer({ group, answers, onAnswerChange }) {
 
   if (isReadingChoiceAnswerQuestionType(questionType)) {
     return (
-      <MultipleChoiceQuestions group={group} answers={answers} onAnswerChange={onAnswerChange} showTips={false} />
+      <MultipleChoiceQuestions group={group} answers={answers} onAnswerChange={onAnswerChange} />
     );
   }
 

@@ -12,6 +12,7 @@ import { getReadingReviewRenderer } from '../components/reading/review/question-
 import {
   buildFooterAnswers,
   buildReadingReviewData,
+  getReadingReviewPartContentHtml,
   isReadingReviewResult
 } from '../components/reading/review/readingReviewUtils';
 import './ReadingTest.css'; // Sử dụng cùng CSS với ReadingTest
@@ -102,6 +103,38 @@ const PassageContent = memo(function PassageContent({ fontSize, content }) {
   );
 });
 
+const ReadingReviewPassageContent = memo(function ReadingReviewPassageContent({
+  fontSize,
+  content,
+  groups,
+  userAnswers,
+  activeQuestionId
+}) {
+  const contentRef = useRef(null);
+  const contentHtml = getReadingReviewPartContentHtml(groups, userAnswers) || content;
+
+  useEffect(() => {
+    const contentElement = contentRef.current;
+    if (!contentElement) return;
+
+    const anchors = contentElement.querySelectorAll('[data-question-id]');
+    anchors.forEach((anchor) => {
+      anchor.classList.toggle(
+        'is-active',
+        String(anchor.dataset.questionId) === String(activeQuestionId ?? '')
+      );
+    });
+  }, [activeQuestionId, contentHtml]);
+
+  return (
+    <div
+      ref={contentRef}
+      className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
+      dangerouslySetInnerHTML={{ __html: contentHtml }}
+    />
+  );
+});
+
 export default function TestResultReview() {
   const { resultId } = useParams();
   const location = useLocation();
@@ -119,6 +152,7 @@ export default function TestResultReview() {
   const [fontSize, setFontSize] = useState('normal');
   const [timeRemaining] = useState(0); // No timer in review mode
   const [expandedExplanations, setExpandedExplanations] = useState({});
+  const [activeQuestionId, setActiveQuestionId] = useState(null);
   const [userAnswers, setUserAnswers] = useState({}); // Store user's answers from result
   const [isListeningReview, setIsListeningReview] = useState(false);
   const [isReadingReview, setIsReadingReview] = useState(false);
@@ -128,6 +162,7 @@ export default function TestResultReview() {
       try {
         setLoading(true);
         setExpandedExplanations({});
+        setActiveQuestionId(null);
         setIsListeningReview(false);
         setIsReadingReview(false);
 
@@ -519,6 +554,8 @@ const processReadingExamData = (data, type) => {
   };
 
   const toggleExplanation = (questionId) => {
+    const nextExpanded = !expandedExplanations[questionId];
+    setActiveQuestionId(nextExpanded ? questionId : null);
     setExpandedExplanations(prev => ({
       ...prev,
       [questionId]: !prev[questionId]
@@ -533,10 +570,7 @@ const processReadingExamData = (data, type) => {
 
   const handleLocate = (locateText) => {
     if (!locateText) return;
-    
-    // TODO: Implement highlight logic in passage
     console.log('Locate:', locateText);
-    alert(`Locate: ${locateText}`);
   };
 
   if (loading) {
@@ -563,8 +597,11 @@ const processReadingExamData = (data, type) => {
     );
   }
 
-  const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
-  const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+  const currentPart = parts.find((part) => String(part.part) === String(currentPartTab));
+  const currentPartGroups = questionGroups.filter((group) => String(group.part) === String(currentPartTab));
+  const currentPassage = currentPart?.id
+    ? passages.find((passage) => String(passage.id) === String(currentPart.id))
+    : passages.find((passage) => String(passage.part) === String(currentPartTab));
 
   if (isListeningReview) {
     return (
@@ -586,6 +623,18 @@ const processReadingExamData = (data, type) => {
     );
   }
 
+  if (!currentPassage) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '18px', color: '#EF4444', marginBottom: '16px' }}>
+            Không tìm thấy passage cho section hiện tại
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render câu hỏi ở chế độ review (readonly with colors)
   const renderReviewQuestions = (group) => {
     const questionType = (group.type || '').toLowerCase();
@@ -595,9 +644,9 @@ const processReadingExamData = (data, type) => {
         group={group}
         userAnswers={userAnswers}
         expandedExplanations={expandedExplanations}
-        activeQuestionId={null}
+        activeQuestionId={activeQuestionId}
         onToggleExplanation={toggleExplanation}
-        onQuestionFocus={() => {}}
+        onQuestionFocus={(question) => setActiveQuestionId(question?.id ?? null)}
         onLocate={handleLocate}
       />
     );
@@ -619,31 +668,44 @@ const processReadingExamData = (data, type) => {
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      <div className="reading-test__content-wrapper">
-        <div className="reading-test__passage">
-          <div className="reading-test__passage-header">
-            <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
-            {currentPassage.subtitle && (
-              <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
-            )}
-          </div>
-          <PassageContent fontSize={fontSize} content={currentPassage.content} />
-        </div>
-
-        <div className={`reading-test__questions reading-test__questions--${fontSize}`}>
-          {currentPartGroups.map((group) => (
-            <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
-              <div className="reading-test__group-header">
-                {group.instructions && (
-                  <div
-                    className="reading-test__group-instructions"
-                    dangerouslySetInnerHTML={{ __html: group.instructions }}
-                  />
+      <div className={isReadingReview ? 'reading-review__content-shell' : 'reading-test__content-wrapper'}>
+        {isReadingReview && (
+          <h1 className="reading-review__passage-title">
+            {/reading\s+passage/i.test(currentPassage.title || '')
+              ? currentPassage.title
+              : `Reading passage ${currentPartTab}`}
+          </h1>
+        )}
+        <div className={isReadingReview ? 'reading-test__content-wrapper reading-review__content-wrapper' : 'reading-test__content-wrapper'}>
+          <div className={isReadingReview ? 'reading-test__passage reading-review__passage' : 'reading-test__passage'}>
+            {!isReadingReview && (
+              <div className="reading-test__passage-header">
+                <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
+                {currentPassage.subtitle && (
+                  <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
                 )}
               </div>
-              {renderReviewQuestions(group)}
-            </div>
-          ))}
+            )}
+            {isReadingReview ? (
+              <ReadingReviewPassageContent
+                fontSize={fontSize}
+                content={currentPassage.content}
+                groups={currentPartGroups}
+                userAnswers={userAnswers}
+                activeQuestionId={activeQuestionId}
+              />
+            ) : (
+              <PassageContent fontSize={fontSize} content={currentPassage.content} />
+            )}
+          </div>
+
+          <div className={`reading-test__questions reading-test__questions--${fontSize} ${isReadingReview ? 'reading-review__questions' : ''}`}>
+            {currentPartGroups.map((group) => (
+              <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
+                {renderReviewQuestions(group)}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </TestLayout>

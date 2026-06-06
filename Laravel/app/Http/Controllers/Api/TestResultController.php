@@ -108,7 +108,7 @@ class TestResultController extends Controller
                     
                     // Chỉ check đúng/sai nếu có trả lời
                     $isCorrect = false;
-                    if ($userAnswer !== null && trim($userAnswer) !== '') {
+                    if ($this->hasAnswerValue($userAnswer)) {
                         $isCorrect = $this->checkAnswer($question, $userAnswer, $answerIndex);
                         if ($isCorrect) {
                             $correctCount++;
@@ -317,7 +317,8 @@ class TestResultController extends Controller
      */
     private function checkAnswer(ExamQuestion $question, $userAnswer, ?int $answerIndex = null): bool
     {
-        $userAnswer = trim(strip_tags((string) $userAnswer));
+        $rawUserAnswer = $userAnswer;
+        $userAnswer = $this->answerToString($userAnswer);
         $fallbackCorrectAnswer = trim(strip_tags((string) ($question->answer_content ?? '')));
 
         // Get correct answer from metadata
@@ -332,7 +333,7 @@ class TestResultController extends Controller
         }
 
         if ($this->isMultipleChoiceQuestion($question)) {
-            return $this->checkMultipleChoiceAnswer($metadata['answers'], $userAnswer);
+            return $this->checkMultipleChoiceAnswer($metadata['answers'], $rawUserAnswer);
         }
 
         if ($this->isFlowChartCompletionQuestion($question)) {
@@ -445,7 +446,7 @@ class TestResultController extends Controller
             (($metadata['question_type'] ?? null) === 'multiple_choice');
     }
 
-    private function checkMultipleChoiceAnswer(array $answers, string $userAnswer): bool
+    private function checkMultipleChoiceAnswer(array $answers, $userAnswer): bool
     {
         $selectedLetters = $this->normalizeChoiceTokens($userAnswer);
         $correctLetters = $this->getMultipleChoiceCorrectLetters($answers);
@@ -496,11 +497,11 @@ class TestResultController extends Controller
         return array_values(array_unique($correctContents));
     }
 
-    private function normalizeChoiceTokens(string $answer): array
+    private function normalizeChoiceTokens($answer): array
     {
-        $tokens = preg_split('/[,;]+/', $answer);
+        $tokens = $this->answerToTokens($answer);
 
-        if ($tokens === false) {
+        if (empty($tokens)) {
             return [];
         }
 
@@ -512,11 +513,11 @@ class TestResultController extends Controller
         return array_values(array_unique(array_filter($normalized)));
     }
 
-    private function normalizeChoiceContentTokens(string $answer): array
+    private function normalizeChoiceContentTokens($answer): array
     {
-        $tokens = preg_split('/[,;]+/', $answer);
+        $tokens = $this->answerToTokens($answer);
 
-        if ($tokens === false) {
+        if (empty($tokens)) {
             return [];
         }
 
@@ -534,6 +535,47 @@ class TestResultController extends Controller
         sort($right);
 
         return $left === $right;
+    }
+
+    private function hasAnswerValue($answer): bool
+    {
+        if (is_array($answer)) {
+            foreach ($answer as $value) {
+                if ($this->hasAnswerValue($value)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return trim(strip_tags((string) $answer)) !== '';
+    }
+
+    private function answerToString($answer): string
+    {
+        return implode(', ', $this->answerToTokens($answer));
+    }
+
+    private function answerToTokens($answer): array
+    {
+        if (is_array($answer)) {
+            $tokens = [];
+
+            foreach ($answer as $value) {
+                $tokens = array_merge($tokens, $this->answerToTokens($value));
+            }
+
+            return $tokens;
+        }
+
+        $tokens = preg_split('/[,;]+/', (string) $answer);
+
+        if ($tokens === false) {
+            return [];
+        }
+
+        return $tokens;
     }
 
     private function isFlowChartCompletionQuestion(ExamQuestion $question): bool

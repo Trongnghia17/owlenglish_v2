@@ -1,7 +1,16 @@
-import { useMemo } from 'react';
-import { getReviewAnswerData, getReviewCorrectAnswer, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import { getReviewAnswerData, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import './TrueFalseNotGivenReview.css';
 
-function ReviewItem({ group, question, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate, options }) {
+const getOptionLabel = (option) => stripHtmlToText(option?.content || option?.label || option || '');
+
+const normalizeAnswer = (value) => stripHtmlToText(value || '').trim().toUpperCase();
+
+const matchesOption = (answer, option) => {
+  const normalizedAnswer = normalizeAnswer(answer);
+  return normalizedAnswer === normalizeAnswer(option.letter) || normalizedAnswer === normalizeAnswer(getOptionLabel(option));
+};
+
+function ReviewItem({ question, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate, options }) {
   const answerData = getReviewAnswerData(userAnswers, question);
   const userAnswer = stripHtmlToText(answerData.userAnswer || '');
   const correctAnswer = stripHtmlToText(answerData.correctAnswer || question?.correctAnswer || '');
@@ -9,69 +18,77 @@ function ReviewItem({ group, question, userAnswers, expandedExplanations, active
   const isUnanswered = !userAnswer;
 
   const isExpanded = Boolean(expandedExplanations[question.id]);
+  const isActive = String(activeQuestionId ?? '') === String(question.id);
   const explanation = getQuestionExplanation(question);
   const locateText = getQuestionLocateText(question);
-
-  const correctOpt = options.findIndex(o => o.toUpperCase() === correctAnswer.toUpperCase());
-  const userOpt = options.findIndex(o => o.toUpperCase() === userAnswer.toUpperCase());
+  const hasDetailActions = Boolean(explanation || locateText);
 
   return (
-    <div className={`reading-review__choice-question-block ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'} ${isExpanded ? 'is-expanded' : ''}`}>
-      <div className="reading-review__choice-question-head">
-        <span className="reading-review__answer-number">{question.number}.</span>
-        <span className={`reading-review__choice-badge ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
-          {isUnanswered ? 'Bỏ qua' : isCorrect ? 'Đúng' : 'Sai'}
-        </span>
+    <div className={`reading-review__tfng-question-block ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'} ${isExpanded ? 'is-expanded' : ''} ${isActive ? 'is-active' : ''}`}>
+      <div className="reading-review__tfng-question-head">
+        <div className="reading-review__tfng-number-row">
+          <span className="reading-review__tfng-number">{question.number}</span>
+        </div>
+        <div className="reading-review__tfng-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
       </div>
-      <div className="reading-review__choice-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-      <div className="reading-review__choice-options">
-        {options.map((opt) => {
-          const isSelected = opt.toUpperCase() === userAnswer.toUpperCase();
-          const isCorrectOpt = opt.toUpperCase() === correctAnswer.toUpperCase();
+      <div className="reading-review__tfng-options">
+        {options.map((option) => {
+          const isSelected = matchesOption(userAnswer, option);
+          const isCorrectOpt = matchesOption(correctAnswer, option);
           let stateClass = '';
           if (isCorrectOpt) stateClass = 'is-correct';
           else if (isSelected && !isCorrect) stateClass = 'is-incorrect';
+
           return (
-            <span key={opt} className={`reading-review__choice-option ${stateClass} ${isSelected ? 'is-selected' : ''}`}>
-              {opt}
-            </span>
+            <div key={option.letter} className={`reading-review__tfng-option ${stateClass} ${isSelected ? 'is-selected' : ''}`}>
+              <span className="reading-review__tfng-option-letter">{option.letter}</span>
+              <span className="reading-review__tfng-option-text">{getOptionLabel(option)}</span>
+            </div>
           );
         })}
       </div>
-      {!isCorrect && !isUnanswered && (
-        <div className="reading-review__choice-correct-answer">Đáp án đúng: <strong>{correctAnswer}</strong></div>
-      )}
-      {(explanation || locateText) && (
-        <div className="reading-review__choice-actions">
+
+      {hasDetailActions && (
+        <div className="reading-review__tfng-detail-panel">
+          <div className="reading-review__tfng-detail-head">
           {explanation && (
-            <button type="button" className="reading-review__choice-action-btn" onClick={() => onToggleExplanation(question.id)}>
-              {isExpanded ? 'Thu gọn' : 'Giải thích'}
+            <button type="button" className="reading-review__tfng-detail-button" onClick={() => { onQuestionFocus(question); onToggleExplanation(question.id); }}>
+              Chi tiết
             </button>
           )}
           {locateText && (
-            <button type="button" className="reading-review__choice-action-btn reading-review__choice-action-btn--locate" onClick={() => onLocate(locateText)}>
-              Locate
+            <button type="button" className="reading-review__tfng-locate-button" onClick={(event) => { event.stopPropagation(); onLocate(locateText); }}>
+              <span>Vị trí: {locateText}</span>
             </button>
           )}
+          </div>
+          {isExpanded && explanation && (
+            <div className="reading-review__tfng-detail" dangerouslySetInnerHTML={{ __html: explanation }} />
+          )}
         </div>
-      )}
-      {isExpanded && explanation && (
-        <div className="reading-review__choice-detail" dangerouslySetInnerHTML={{ __html: explanation }} />
       )}
     </div>
   );
 }
 
 export default function TrueFalseNotGivenReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
-  const options = group.optionsWithContent?.length
-    ? group.optionsWithContent.map(o => o.content || o.letter).filter(Boolean)
-    : ['True', 'False', 'Not Given'];
+  const sourceOptions = group.optionsWithContent?.length
+    ? group.optionsWithContent
+    : ['TRUE', 'FALSE', 'NOT GIVEN'];
+  const options = sourceOptions.map((option, index) => ({
+    letter: option?.letter || String.fromCharCode(65 + index),
+    content: option?.content || option
+  }));
+
   return (
     <section className="reading-review__answer-group reading-review__answer-group--tfng">
-      <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>
-      <div className="reading-review__choice-list">
+      <div className="reading-review__tfng-range">
+        <div>Questions {group.startNumber}-{group.endNumber}</div>
+        <div>Choose TRUE/FALSE/NOT GIVEN</div>
+      </div>
+      <div className="reading-review__tfng-list">
         {group.questions?.map((question) => (
-          <ReviewItem key={question.id} group={group} question={question} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} options={options} />
+          <ReviewItem key={question.id} question={question} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} options={options} />
         ))}
       </div>
     </section>

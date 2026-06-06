@@ -1,5 +1,15 @@
 import { normalizeReadingSection, parseMetadata, stripParagraphWrapper } from '../../../utils/readingTest';
 
+const escapeHtml = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const escapeAttribute = (value = '') => escapeHtml(value).replace(/`/g, '&#096;');
+
 export const getResultAnswerKey = (answer) => {
   const answerIndex = answer?.answer_index;
   return answerIndex === null || answerIndex === undefined
@@ -46,8 +56,13 @@ export const buildReadingReviewData = (data, type) => {
   return { groups, parts: allParts };
 };
 
-export const stripHtmlToText = (value = '') =>
-  String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+export const stripHtmlToText = (value = '') => {
+  if (Array.isArray(value)) {
+    return value.map(stripHtmlToText).filter(Boolean).join(', ');
+  }
+
+  return String(value).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+};
 
 export const isCorrectResultValue = (value) => value === '1' || value === 1 || value === true;
 
@@ -92,15 +107,41 @@ export const getReadingReviewContentHtml = (group, userAnswers) => {
       const answerText = getReviewCorrectAnswer(answerData, question) || stripHtmlToText(answerData.userAnswer || '');
       const isCorrect = isCorrectResultValue(answerData.isCorrect);
       const cls = isCorrect ? 'correct' : 'incorrect';
-      return `<span class="reading-review__inline-answer ${cls}">${answerText || '…'}</span>`;
+      return `<span class="reading-review__inline-answer ${cls}" data-question-id="${escapeAttribute(question.id)}">${escapeHtml(answerText || '…')}</span>`;
     });
   }
-  return normalizedContent;
+
+  const boldRegex = /<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>|<span\b(?=[^>]*style=["'][^"']*font-weight\s*:\s*(?:bold|[6-9]00))[^>]*>([\s\S]*?)<\/span>/gi;
+  let markerIndex = 0;
+
+  return normalizedContent.replace(boldRegex, (match, tagName, tagContent, spanContent) => {
+    const question = questions[markerIndex];
+    const markerText = stripHtmlToText(tagContent || spanContent || '');
+
+    if (!question || !markerText) return match;
+
+    markerIndex += 1;
+
+    return `<span class="reading-review__inline-answer" data-question-id="${escapeAttribute(question.id)}">${escapeHtml(markerText)}</span>`;
+  });
+};
+
+export const getReadingReviewPartContentHtml = (groups = [], userAnswers) => {
+  const reviewContent = groups.find((group) => group.reviewContent)?.reviewContent || '';
+  if (!reviewContent) return '';
+
+  return getReadingReviewContentHtml(
+    {
+      groupContent: reviewContent,
+      questions: groups.flatMap((group) => group.questions || [])
+    },
+    userAnswers
+  );
 };
 
 export const buildFooterAnswers = (userAnswers = {}) =>
   Object.fromEntries(
     Object.entries(userAnswers)
-      .filter(([, v]) => String(v?.userAnswer ?? '').trim() !== '')
+      .filter(([, v]) => stripHtmlToText(v?.userAnswer ?? '') !== '')
       .map(([k, v]) => [k, v.userAnswer])
   );

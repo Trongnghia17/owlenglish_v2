@@ -1,0 +1,299 @@
+/* Reading Multiple Choice page layout */
+.test-layout__content:has(.reading-test__content--multiple-choice) {
+  background: #F8F8F8;
+  padding-bottom: 120px;
+}
+
+.reading-test__content--multiple-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 24px;
+  row-gap: 16px;
+  align-items: start;
+  width: 100%;
+  max-width: none;
+  margin: 44px 0 0;
+  padding: 0 156px 32px;
+  background: #FFFFFF;
+  border-radius: 8px;
+}
+
+.reading-test__multiple-choice-title {
+  grid-column: 1 / -1;
+  width: 100%;
+  color: #454545;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: normal;
+  margin: 0;
+}
+
+.reading-test__content--multiple-choice .reading-test__passage-panel,
+.reading-test__content--multiple-choice .reading-test__right-column {
+  min-width: 0;
+  width: 100%;
+}
+
+.reading-test__content--multiple-choice .reading-test__passage-panel {
+  position: sticky;
+  top: 86px;
+  max-height: calc(100vh - 162px);
+  overflow: hidden;
+  background: #F8FAFC;
+  border: 0;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.reading-test__content--multiple-choice .reading-test__right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reading-test__content--multiple-choice .reading-test__passage-content {
+  max-height: calc(100vh - 194px);
+  overflow-y: auto;
+  padding-right: 12px;
+  color: #454545;
+  font-size: 18px;
+  line-height: 36px;
+  text-align: justify;
+}
+
+.reading-test__content--multiple-choice .reading-test__passage-content::-webkit-scrollbar {
+  width: 12px;
+}
+
+.reading-test__content--multiple-choice .reading-test__passage-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reading-test__content--multiple-choice .reading-test__passage-content::-webkit-scrollbar-thumb {
+  background: #BFDBFE;
+  border: 3px solid #F8FAFC;
+  border-radius: 100px;
+}
+
+.reading-test__question-group--multiple-choice .reading-test__group-header {
+  background: rgba(4, 92, 206, 0.07);
+  border-radius: 5px;
+  margin-bottom: 16px;
+  padding: 16px;
+}
+
+.reading-test__question-group--multiple-choice .reading-test__group-header h3 {
+  color: #0537A5;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.reading-test__question-group--multiple-choice .reading-test__group-instructions {
+  color: #0537A5;
+  font-size: 16px;
+  line-height: normal;
+  padding: 0;
+}
+
+.reading-test__question-group--multiple-choice .reading-test__group-instructions p {
+  margin: 0;
+}
+
+.reading-test__questions-list--multiple-choice {
+  gap: 16px;
+  margin-bottom: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Reading Multiple Choice question cards */
+.reading-test__mc-layout {
+  width: 100%;
+}
+
+.reading-test__mc-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.reading-test__mc-card {
+  width: 100%;
+  overflow: hidden;
+  padding: 2px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.reading-test__mc-card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 0;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(249, 250, 251, 0.6);
+}
+
+.reading-test__mc-number {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 14px;
+  background: #0A0A0A;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 20px;
+  margin-top: 0;
+}
+
+.reading-test__mc-question-text {
+  flex: 1;
+  width: 100%;
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 22.75px;
+}
+
+.reading-test__mc-question-text p {
+  margin: 0;
+}
+
+.reading-test__mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.reading-test__mc-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.reading-test__mc-option:hover,
+.reading-test__mc-option.selected {
+  border-color: #DBEAFE;
+  background: #FFFFFF;
+}
+
+.reading-test__mc-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.reading-test__mc-input:focus-visible + .reading-test__mc-option-body {
+  outline: 2px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.reading-test__mc-option-body {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
+}
+
+.reading-test__mc-letter {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: #F8FAFC;
+  color: #4B5563;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.reading-test__mc-option.selected .reading-test__mc-letter {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.reading-test__mc-option-text {
+  flex: 1;
+  min-width: 0;
+  color: #1F2937;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 22.75px;
+}
+
+.reading-test__mc-option.selected .reading-test__mc-option-text,
+.reading-test__mc-option.selected .reading-test__mc-option-text * {
+  color: #3B82F6;
+}
+
+.reading-test__mc-option-text p {
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .reading-test__content--multiple-choice {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+    margin: 24px auto 0;
+    padding: 0 24px 32px;
+  }
+
+  .reading-test__content--multiple-choice .reading-test__passage-panel {
+    position: static;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .reading-test__content--multiple-choice .reading-test__passage-content {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+}
+
+@media (max-width: 640px) {
+  .reading-test__mc-card {
+    padding: 2px;
+  }
+
+  .reading-test__mc-options {
+    padding: 12px;
+  }
+
+  .reading-test__mc-option {
+    min-height: 52px;
+    padding: 12px;
+  }
+}

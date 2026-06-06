@@ -282,13 +282,6 @@ function ReadingQuestionGroup({
       }
     `}
     >
-      {showPartTitle && (
-        <h2>
-          Reading Passage{' '}
-          {currentPartTab}
-        </h2>
-      )}
-
       {(isMultipleChoice ||
         isMatching ||
         isTrueFalse ||
