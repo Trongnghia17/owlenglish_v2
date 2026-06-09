@@ -50,6 +50,10 @@ class SkillExcelImportService
         'multiple_choice',
         'yes_no_not_given',
         'true_false_not_given',
+        'matching_information',
+        'matching_headings',
+        'matching_features',
+        'matching_sentence_endings',
         'short_text',
         'note_completion',
         'table_selection',
@@ -58,6 +62,7 @@ class SkillExcelImportService
         'form_completion',
         'table_completion',
         'flow_chart_completion',
+        'diagram_label_completion',
         'summary_completion',
         'sentence_completion',
         'short_answer_questions',
@@ -69,7 +74,11 @@ class SkillExcelImportService
     public function preview(ExamSkill $skill, UploadedFile $file): array
     {
         $sheets = Excel::toArray(new SkillImportRowsImport(), $file);
-        $rows = $sheets[0] ?? [];
+        $rows = [];
+
+        foreach ($sheets as $sheetRows) {
+            $rows = array_merge($rows, $sheetRows);
+        }
 
         return $this->buildPreview($skill, $rows);
     }
@@ -83,7 +92,7 @@ class SkillExcelImportService
             'sections' => [],
         ];
 
-        $filterMap = $this->sectionFilterMap($skill);
+        $filterMap = null;
         $rowCount = 0;
 
         foreach ($rows as $index => $row) {
@@ -107,7 +116,13 @@ class SkillExcelImportService
             $this->fillFirstValue($section, 'content', $this->editorHtml($row['section_content']));
             $this->fillFirstValue($section, 'feedback', $this->editorHtml($row['section_feedback']));
 
-            foreach ($this->parseList($row['section_filter_slugs']) as $filterSlug) {
+            $filterSlugs = $this->parseList($row['section_filter_slugs']);
+
+            if ($filterSlugs && $filterMap === null) {
+                $filterMap = $this->sectionFilterMap($skill);
+            }
+
+            foreach ($filterSlugs as $filterSlug) {
                 $normalizedSlug = $this->normalizeFilterSlug($filterSlug);
 
                 if (!isset($filterMap[$normalizedSlug])) {
@@ -273,10 +288,6 @@ class SkillExcelImportService
             return;
         }
 
-        if ($row['answer_content'] === '') {
-            $errors[] = $this->error($rowNumber, 'answer_content is required for reading/listening imports.');
-        }
-
         $groupType = $this->normalizeQuestionType($row['group_question_type'] ?: $row['question_type'] ?: 'multiple_choice');
         $questionType = $this->normalizeQuestionType($row['question_type'] ?: $groupType);
 
@@ -288,10 +299,27 @@ class SkillExcelImportService
             $errors[] = $this->error($rowNumber, "question_type '{$row['question_type']}' is not supported.");
         }
 
+        $fixedChoiceAnswer = null;
+
+        if ($row['answer_content'] === '') {
+            $errors[] = $this->error($rowNumber, 'answer_content is required for reading/listening imports.');
+        } elseif ($this->isFixedChoiceQuestionType($questionType)) {
+            $fixedChoiceAnswer = $this->normalizeFixedChoiceAnswer($questionType, $row['answer_content']);
+
+            if ($fixedChoiceAnswer === null) {
+                $errors[] = $this->error(
+                    $rowNumber,
+                    "answer_content must be one of: " . implode(', ', $this->fixedChoiceAnswers($questionType)) . '.'
+                );
+            }
+        }
+
         $group =& $this->group($section['groups'], $groupNo);
         $this->fillFirstValue($group, 'content', $this->editorHtml($row['group_content']));
         $this->fillFirstValue($group, 'instructions', $this->editorHtml($row['group_instructions']));
-        $this->fillFirstValue($group, 'question_type', $groupType);
+        if ($row['group_question_type'] !== '' || $row['question_type'] !== '' || empty($group['questions'])) {
+            $group['question_type'] = $groupType;
+        }
 
         if ($row['number_of_options'] !== '') {
             $numberOfOptions = $this->positiveInt($row['number_of_options']);
@@ -310,7 +338,9 @@ class SkillExcelImportService
 
         $this->fillFirstValue($question, 'content', $this->editorHtml($row['question_content']));
         $this->fillFirstValue($question, 'feedback', $this->editorHtml($row['question_feedback']));
-        $this->fillFirstValue($question, 'question_type', $questionType);
+        if ($row['question_type'] !== '' || empty($question['answers'])) {
+            $question['question_type'] = $questionType;
+        }
 
         if ($row['point'] !== '') {
             if (!is_numeric($row['point']) || (float) $row['point'] < 0) {
@@ -320,8 +350,16 @@ class SkillExcelImportService
             }
         }
 
-        $answerNo = $this->positiveInt($row['answer_no']) ?: count($question['answers']) + 1;
-        $isCorrect = $this->parseBoolean($row['is_correct']);
+        if ($this->isFixedChoiceQuestionType($questionType) && !empty($question['answers'])) {
+            $errors[] = $this->error($rowNumber, "{$questionType} should use exactly one answer row per question.");
+            return;
+        }
+
+        $answerNo = $this->answerNoForQuestionType($questionType, $row, $question);
+
+        $isCorrect = $this->isFixedChoiceQuestionType($questionType)
+            ? true
+            : $this->parseBoolean($row['is_correct']);
 
         if ($isCorrect === null) {
             $errors[] = $this->error($rowNumber, 'is_correct must be yes/no, true/false, or 1/0.');
@@ -330,7 +368,8 @@ class SkillExcelImportService
 
         $question['answers'][$answerNo] = [
             'answer_no' => $answerNo,
-            'content' => $this->editorHtml($row['answer_content']),
+            'letter' => $this->isMatchingChoiceQuestionType($questionType) ? $this->answerLabelForQuestionType($questionType, $answerNo) : null,
+            'content' => $fixedChoiceAnswer ?? $this->editorHtml($row['answer_content']),
             'feedback' => $this->editorHtml($row['answer_feedback']),
             'is_correct' => $isCorrect,
         ];
@@ -356,21 +395,34 @@ class SkillExcelImportService
             foreach ($this->sortAssocByNumericKey($groupData['questions'] ?? []) as $questionData) {
                 $answers = array_values($this->sortAssocByNumericKey($questionData['answers'] ?? []));
                 $firstCorrectAnswer = Arr::first($answers, fn(array $answer): bool => (bool) ($answer['is_correct'] ?? false));
+                $questionType = $questionData['question_type'] ?? $group->question_type;
+                $answerContent = $this->backwardCompatibleAnswerContent(
+                    $questionType,
+                    $firstCorrectAnswer ?? ($answers[0] ?? null)
+                );
 
                 $group->questions()->create([
                     'exam_section_id' => null,
                     'content' => $questionData['content'] ?? '',
-                    'answer_content' => $firstCorrectAnswer['content'] ?? ($answers[0]['content'] ?? null),
+                    'answer_content' => $answerContent,
                     'point' => $questionData['point'] ?? 1,
                     'feedback' => $questionData['feedback'] ?? null,
                     'metadata' => [
-                        'question_type' => $questionData['question_type'] ?? $group->question_type,
+                        'question_type' => $questionType,
                         'answer_label' => null,
-                        'answers' => array_map(fn(array $answer): array => [
-                            'content' => $answer['content'] ?? '',
-                            'feedback' => $answer['feedback'] ?? '',
-                            'is_correct' => (bool) ($answer['is_correct'] ?? false),
-                        ], $answers),
+                        'answers' => array_map(function (array $answer): array {
+                            $metadataAnswer = [
+                                'content' => $answer['content'] ?? '',
+                                'feedback' => $answer['feedback'] ?? '',
+                                'is_correct' => (bool) ($answer['is_correct'] ?? false),
+                            ];
+
+                            if (!empty($answer['letter'])) {
+                                $metadataAnswer['letter'] = $answer['letter'];
+                            }
+
+                            return $metadataAnswer;
+                        }, $answers),
                     ],
                     'is_active' => true,
                 ]);
@@ -550,6 +602,101 @@ class SkillExcelImportService
         return $int > 0 ? $int : null;
     }
 
+    private function answerNoForQuestionType(string $questionType, array $row, array $question): int
+    {
+        if ($this->isFixedChoiceQuestionType($questionType)) {
+            return 1;
+        }
+
+        $answerNo = $this->positiveInt($row['answer_no']);
+
+        if ($answerNo) {
+            return $answerNo;
+        }
+
+        if ($this->isMatchingChoiceQuestionType($questionType)) {
+            $letterNo = $this->answerNoFromLabel($questionType, $row['answer_content']);
+
+            if ($letterNo) {
+                return $letterNo;
+            }
+        }
+
+        return count($question['answers']) + 1;
+    }
+
+    private function answerNoFromLabel(string $questionType, mixed $value): ?int
+    {
+        $value = trim(strip_tags((string) $value));
+
+        if ($questionType === 'matching_headings') {
+            $roman = strtolower(strtok($value, " \t\n\r\0\x0B") ?: $value);
+            $romanMap = array_flip($this->romanNumerals());
+
+            return $romanMap[$roman] ?? null;
+        }
+
+        $value = strtoupper($value);
+
+        if (!preg_match('/^[A-Z]$/', $value)) {
+            return null;
+        }
+
+        return ord($value) - 64;
+    }
+
+    private function answerLabelForQuestionType(string $questionType, int $answerNo): string
+    {
+        if ($questionType === 'matching_headings') {
+            return $this->romanNumerals()[$answerNo] ?? (string) $answerNo;
+        }
+
+        return $this->answerLetter($answerNo);
+    }
+
+    private function answerLetter(int $answerNo): string
+    {
+        if ($answerNo < 1 || $answerNo > 26) {
+            return (string) $answerNo;
+        }
+
+        return chr(64 + $answerNo);
+    }
+
+    private function romanNumerals(): array
+    {
+        return [
+            1 => 'i',
+            2 => 'ii',
+            3 => 'iii',
+            4 => 'iv',
+            5 => 'v',
+            6 => 'vi',
+            7 => 'vii',
+            8 => 'viii',
+            9 => 'ix',
+            10 => 'x',
+            11 => 'xi',
+            12 => 'xii',
+            13 => 'xiii',
+            14 => 'xiv',
+            15 => 'xv',
+        ];
+    }
+
+    private function backwardCompatibleAnswerContent(?string $questionType, ?array $answer): ?string
+    {
+        if ($answer === null) {
+            return null;
+        }
+
+        if ($this->isMatchingChoiceQuestionType((string) $questionType)) {
+            return $answer['letter'] ?? $this->plainText($answer['content'] ?? null);
+        }
+
+        return $answer['content'] ?? null;
+    }
+
     private function parseBoolean(mixed $value): ?bool
     {
         if ($value === '' || $value === null) {
@@ -592,11 +739,63 @@ class SkillExcelImportService
         return in_array($questionType, self::QUESTION_TYPES, true);
     }
 
+    private function isFixedChoiceQuestionType(string $questionType): bool
+    {
+        return in_array($questionType, ['true_false_not_given', 'yes_no_not_given'], true);
+    }
+
+    private function isMatchingChoiceQuestionType(string $questionType): bool
+    {
+        return in_array($questionType, [
+            'matching_information',
+            'matching_headings',
+            'matching_features',
+            'matching_sentence_endings',
+        ], true);
+    }
+
+    private function fixedChoiceAnswers(string $questionType): array
+    {
+        return $questionType === 'yes_no_not_given'
+            ? ['Yes', 'No', 'Not Given']
+            : ['True', 'False', 'Not Given'];
+    }
+
+    private function normalizeFixedChoiceAnswer(string $questionType, mixed $value): ?string
+    {
+        $normalized = strtolower(trim((string) $value));
+        $normalized = str_replace(['_', '-'], ' ', $normalized);
+        $normalized = preg_replace('/\s+/', ' ', $normalized) ?: $normalized;
+
+        $answers = $this->fixedChoiceAnswers($questionType);
+
+        foreach ($answers as $answer) {
+            if ($normalized === strtolower($answer)) {
+                return $answer;
+            }
+        }
+
+        if ($normalized === 'notgiven') {
+            return 'Not Given';
+        }
+
+        return null;
+    }
+
     private function textPreview(mixed $value, int $limit): string
     {
-        $text = trim(preg_replace('/\s+/', ' ', strip_tags((string) $value)) ?: '');
+        $text = trim(preg_replace('/\s+/', ' ', $this->plainText($value) ?? '') ?: '');
 
         return Str::limit($text, $limit);
+    }
+
+    private function plainText(mixed $html): ?string
+    {
+        if ($html === null) {
+            return null;
+        }
+
+        return trim(html_entity_decode(strip_tags((string) $html)));
     }
 
     private function htmlPreview(mixed $value): string

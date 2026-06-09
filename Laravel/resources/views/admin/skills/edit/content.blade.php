@@ -327,9 +327,19 @@
                                 <div class="fw-semibold text-dark mb-1">Cách nhập theo dạng đề</div>
                                 <div>
                                     Reading/Listening dùng các cột group/question/answer. Multiple choice nhập 1 dòng
-                                    cho mỗi option và đánh <code>is_correct</code> cho đáp án đúng. True/False/Not Given,
-                                    Yes/No/Not Given, completion, matching... vẫn dùng cùng cấu trúc nhưng số lượng
-                                    answer rows sẽ khác theo từng dạng. Writing/Speaking dùng
+                                    cho mỗi option và đánh <code>is_correct</code> cho đáp án đúng.
+                                    True/False/Not Given và Yes/No/Not Given chỉ nhập 1 dòng cho mỗi câu,
+                                    <code>answer_content</code> là đáp án đúng. Matching Information nhập đủ option
+                                    A-I ở câu đầu của group bằng <code>answer_no</code>, đánh <code>is_correct</code>
+                                    cho paragraph đúng; các câu sau nhập paragraph đúng. Matching Headings dùng
+                                    <code>answer_no</code> 1-10 để map ra <code>i-x</code>; câu đầu nhập đủ list of
+                                    headings, các câu sau nhập heading đúng. Matching Features nhập list features ở
+                                    câu đầu; các câu sau có thể dùng lại cùng letter nếu đề có NB. Matching Sentence
+                                    Endings nhập đủ endings A-G ở câu đầu, các câu sau nhập ending đúng.
+                                    Sentence/Summary/Note/Table/Flow-chart/Diagram Label Completion có thể đặt <code>@{{9}}</code> trong
+                                    <code>group_content</code> và nhập đáp án chữ vào <code>answer_content</code>.
+                                    Short-answer Questions nhập mỗi câu một dòng và đặt đáp án chữ trong
+                                    <code>answer_content</code>. Completion/matching khác vẫn dùng answer rows theo từng vị trí cần chấm. Writing/Speaking dùng
                                     <code>direct_question_no</code>, <code>sample_answer</code>,
                                     <code>question_feedback</code>, <code>hint</code>.
                                 </div>

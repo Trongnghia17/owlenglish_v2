@@ -336,6 +336,10 @@ class TestResultController extends Controller
             return $this->checkMultipleChoiceAnswer($metadata['answers'], $rawUserAnswer);
         }
 
+        if ($this->isMatchingChoiceQuestion($question)) {
+            return $this->checkMatchingChoiceAnswer($metadata['answers'], $rawUserAnswer, $fallbackCorrectAnswer);
+        }
+
         if ($this->isFlowChartCompletionQuestion($question)) {
             $flowCorrectAnswers = $this->getFlowChartCorrectAnswers($metadata['answers']);
 
@@ -419,6 +423,16 @@ class TestResultController extends Controller
             }
         }
 
+        if ($this->isMatchingChoiceQuestion($question)) {
+            $correctLabels = $this->getMatchingChoiceCorrectLabels($metadata['answers']);
+
+            if (!empty($correctLabels)) {
+                return implode(', ', $correctLabels);
+            }
+
+            return $fallbackCorrectAnswer;
+        }
+
         if ($answerIndex !== null && isset($metadata['answers'][$answerIndex])) {
             $content = $metadata['answers'][$answerIndex]['content'] ?? '';
             return trim(strip_tags((string) $content));
@@ -444,6 +458,84 @@ class TestResultController extends Controller
 
         return ($question->questionGroup?->question_type === 'multiple_choice') ||
             (($metadata['question_type'] ?? null) === 'multiple_choice');
+    }
+
+    private function isMatchingChoiceQuestion(ExamQuestion $question): bool
+    {
+        $metadata = is_string($question->metadata)
+            ? json_decode($question->metadata, true)
+            : $question->metadata;
+
+        $questionType = $question->questionGroup?->question_type ?? ($metadata['question_type'] ?? null);
+
+        return in_array($questionType, [
+            'matching',
+            'matching_information',
+            'matching_headings',
+            'matching_features',
+            'matching_sentence_endings',
+        ], true);
+    }
+
+    private function checkMatchingChoiceAnswer(array $answers, $userAnswer, string $fallbackCorrectAnswer = ''): bool
+    {
+        $selectedLabels = $this->normalizeChoiceTokens($userAnswer);
+        $correctLabels = $this->normalizeChoiceTokens($this->getMatchingChoiceCorrectLabels($answers));
+
+        if (!empty($selectedLabels) && !empty($correctLabels) && $this->sameAnswerSet($selectedLabels, $correctLabels)) {
+            return true;
+        }
+
+        if ($fallbackCorrectAnswer !== '' && strcasecmp($fallbackCorrectAnswer, $this->answerToString($userAnswer)) === 0) {
+            return true;
+        }
+
+        $selectedContents = $this->normalizeChoiceContentTokens($userAnswer);
+        $correctContents = $this->getMatchingChoiceCorrectContents($answers);
+
+        return !empty($selectedContents) && !empty($correctContents) && $this->sameAnswerSet($selectedContents, $correctContents);
+    }
+
+    private function getMatchingChoiceCorrectLabels(array $answers): array
+    {
+        $labels = [];
+
+        foreach ($answers as $index => $answer) {
+            $isCorrect = ($answer['is_correct'] ?? 0) == 1 || ($answer['is_correct'] ?? false) === true;
+
+            if (!$isCorrect && count($answers) !== 1) {
+                continue;
+            }
+
+            $label = trim((string) ($answer['letter'] ?? $answer['label'] ?? chr(65 + $index)));
+
+            if ($label !== '') {
+                $labels[] = $label;
+            }
+        }
+
+        return array_values(array_unique($labels));
+    }
+
+    private function getMatchingChoiceCorrectContents(array $answers): array
+    {
+        $contents = [];
+
+        foreach ($answers as $answer) {
+            $isCorrect = ($answer['is_correct'] ?? 0) == 1 || ($answer['is_correct'] ?? false) === true;
+
+            if (!$isCorrect && count($answers) !== 1) {
+                continue;
+            }
+
+            $content = trim(strip_tags((string) ($answer['content'] ?? '')));
+
+            if ($content !== '') {
+                $contents[] = strtolower($content);
+            }
+        }
+
+        return array_values(array_unique($contents));
     }
 
     private function checkMultipleChoiceAnswer(array $answers, $userAnswer): bool
