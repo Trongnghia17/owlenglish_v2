@@ -37,7 +37,7 @@ const getRangeText = (group) => {
     firstNumber;
 
   return firstNumber && lastNumber
-    ? `Questions ${firstNumber} - ${lastNumber}`
+    ? `Questions ${firstNumber}-${lastNumber}`
     : 'Questions';
 };
 

@@ -610,6 +610,10 @@ const processReadingExamData = (data, type) => {
   const currentReviewType = (currentPartGroups[0]?.type || '').toLowerCase();
   const isTrueFalseNotGivenReview = currentReviewType === 'true_false_not_given';
   const isMatchingHeadingsReview = currentReviewType === 'matching_headings';
+  const isMatchingFeaturesReview = currentReviewType === 'matching_features';
+  const isMatchingSentenceEndingsReview = currentReviewType === 'matching_sentence_endings';
+  const isSummaryCompletionReview = currentReviewType === 'summary_completion';
+  const isSentenceCompletionReview = currentReviewType === 'sentence_completion';
   const currentPassage = currentPart?.id
     ? passages.find((passage) => String(passage.id) === String(currentPart.id))
     : passages.find((passage) => String(passage.part) === String(currentPartTab));
@@ -682,7 +686,12 @@ const processReadingExamData = (data, type) => {
       <div className={isReadingReview ? 'reading-review__content-shell' : 'reading-test__content-wrapper'}>
         {isReadingReview && (
           <h1 className="reading-review__passage-title">
-            {isTrueFalseNotGivenReview || isMatchingHeadingsReview
+            {isTrueFalseNotGivenReview ||
+              isMatchingHeadingsReview ||
+              isMatchingFeaturesReview ||
+              isMatchingSentenceEndingsReview ||
+              isSummaryCompletionReview ||
+              isSentenceCompletionReview
               ? 'Reading'
               : /reading\s+passage/i.test(currentPassage.title || '')
               ? currentPassage.title
@@ -691,7 +700,12 @@ const processReadingExamData = (data, type) => {
         )}
         <div className={[
           isReadingReview ? 'reading-test__content-wrapper reading-review__content-wrapper' : 'reading-test__content-wrapper',
-          isTrueFalseNotGivenReview ? 'reading-review__content-wrapper--tfng' : ''
+          isTrueFalseNotGivenReview ? 'reading-review__content-wrapper--tfng' : '',
+          isMatchingHeadingsReview ? 'reading-review__content-wrapper--matching-headings' : '',
+          isMatchingFeaturesReview ? 'reading-review__content-wrapper--matching-features' : '',
+          isMatchingSentenceEndingsReview ? 'reading-review__content-wrapper--matching-sentence-endings' : '',
+          isSummaryCompletionReview ? 'reading-review__content-wrapper--summary-completion' : '',
+          isSentenceCompletionReview ? 'reading-review__content-wrapper--sentence-completion' : ''
         ].filter(Boolean).join(' ')}>
           <div className={isReadingReview ? 'reading-test__passage reading-review__passage' : 'reading-test__passage'}>
             {!isReadingReview && (

@@ -1,10 +1,9 @@
 import { memo, useMemo, useState } from 'react';
 
 const MATCHING_DRAG_TYPE = 'application/x-reading-headings-answer';
-const normalizeLabel = (value) => String(value ?? '').trim().toLowerCase();
 const displayLabel = (value) => String(value ?? '').trim().toUpperCase();
 
-function MatchingHeadingsQuestions({ group, answers = {} }) {
+function MatchingHeadingsQuestions({ group }) {
   const [draggingLetter, setDraggingLetter] = useState('');
 
   const options = useMemo(
@@ -16,32 +15,23 @@ function MatchingHeadingsQuestions({ group, answers = {} }) {
     [group.optionsWithContent]
   );
 
-  const selectedLetters = useMemo(
-    () => new Set(group.questions.map((q) => normalizeLabel(answers[q.id])).filter(Boolean)),
-    [answers, group.questions]
-  );
-
   return (
     <section className="reading-test__mh-heading-list">
       <h4 className="reading-test__mh-heading-list-title">List of Heading</h4>
       <div className="reading-test__mh-options">
         {options.map((opt) => {
-          const isUsed = selectedLetters.has(normalizeLabel(opt.letter));
           return (
             <button
               key={`${opt.letter}-${opt.content}`}
               type="button"
               className={[
                 'reading-test__mh-option-card',
-                isUsed ? 'is-used' : '',
                 draggingLetter === opt.letter ? 'is-dragging' : '',
               ]
                 .filter(Boolean)
                 .join(' ')}
-              draggable={!isUsed}
-              aria-disabled={isUsed}
+              draggable
               onDragStart={(event) => {
-                if (isUsed) return;
                 setDraggingLetter(opt.letter);
                 event.dataTransfer.effectAllowed = 'move';
                 event.dataTransfer.setData(MATCHING_DRAG_TYPE, opt.letter);

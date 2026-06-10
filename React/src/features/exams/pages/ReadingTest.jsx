@@ -314,6 +314,16 @@ const ReadingTest = () => {
       isReadingMatchingHeadingsGroup
     );
 
+  const isMatchingFeaturesLayout =
+    currentPartGroups.some(
+      isReadingMatchingFeaturesGroup
+    );
+
+  const isMatchingSentenceEndingsLayout =
+    currentPartGroups.some(
+      isReadingMatchingSentenceEndingsGroup
+    );
+
   const isMultipleChoiceLayout =
     currentPartGroups.some(
       isReadingMultipleChoiceGroup
@@ -533,6 +543,16 @@ const ReadingTest = () => {
             : ''
           }
 
+          ${isMatchingFeaturesLayout
+            ? 'reading-test__content--matching-features'
+            : ''
+          }
+
+          ${isMatchingSentenceEndingsLayout
+            ? 'reading-test__content--matching-sentence-endings'
+            : ''
+          }
+
           ${isMultipleChoiceLayout
             ? 'reading-test__content--multiple-choice'
             : ''
@@ -586,7 +606,15 @@ const ReadingTest = () => {
       >
         {isTwoColumnLayout && (
           <h1 className="reading-test__two-column-title">
-            {isTFNGLayout || isYNNGLayout || isMatchingHeadingsLayout ? 'Reading' : `Reading passage ${currentPartTab}`}
+            {isTFNGLayout ||
+            isYNNGLayout ||
+            isMatchingHeadingsLayout ||
+            isMatchingFeaturesLayout ||
+            isMatchingSentenceEndingsLayout ||
+            isSummaryCompletionLayout ||
+            isSentenceCompletionLayout
+              ? 'Reading'
+              : `Reading passage ${currentPartTab}`}
           </h1>
         )}
 

@@ -1,65 +1,148 @@
 import { useMemo } from 'react';
 import { stripHtml } from '../../../listening/question-types/textQuestionUtils';
-import { getReviewAnswerData, getReviewCorrectAnswer, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import {
+  getQuestionExplanation,
+  getQuestionLocateText,
+  getReviewAnswerData,
+  getReviewCorrectAnswer,
+  isCorrectResultValue,
+  stripHtmlToText
+} from '../readingReviewUtils';
 
-const normalizeLetter = (v) => String(v ?? '').trim().toUpperCase().slice(0, 1);
+const normalizeLetter = (value) =>
+  String(value ?? '').trim().toUpperCase().slice(0, 1);
 
-function MatchingReviewItem({ group, question, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate, label }) {
+const normalizeText = (value) =>
+  stripHtmlToText(value).toLowerCase();
+
+const shouldShowRange = (instructions = '') =>
+  !/questions?\s+\d+/i.test(stripHtmlToText(instructions));
+
+function MatchingFeatureReviewItem({
+  group,
+  question,
+  userAnswers,
+  expandedExplanations,
+  activeQuestionId,
+  onToggleExplanation,
+  onQuestionFocus
+}) {
   const answerData = getReviewAnswerData(userAnswers, question);
   const userAnswer = stripHtmlToText(answerData.userAnswer || '');
   const correctAnswer = getReviewCorrectAnswer(answerData, question);
   const isCorrect = isCorrectResultValue(answerData.isCorrect);
   const isUnanswered = !userAnswer;
+  const isExpanded = Boolean(expandedExplanations[question.id]);
+  const isActive = String(activeQuestionId ?? '') === String(question.id);
 
   const options = useMemo(
-    () => (group.optionsWithContent || []).map((o, i) => ({ letter: o.letter || String.fromCharCode(65 + i), content: o.content || '' })),
+    () =>
+      (group.optionsWithContent || []).map((option, index) => ({
+        letter: normalizeLetter(option.letter) || String.fromCharCode(65 + index),
+        content: option.content || ''
+      })),
     [group.optionsWithContent]
   );
 
-  const userLetter = normalizeLetter(userAnswer);
-  const correctLetter = normalizeLetter(correctAnswer);
-  const matchedOption = options.find(o => o.letter === userLetter);
-  const correctOption = options.find(o => o.letter === correctLetter);
+  const findOption = (value) => {
+    const letter = normalizeLetter(value);
+    const text = normalizeText(value);
 
-  const isExpanded = Boolean(expandedExplanations[question.id]);
+    return (
+      options.find((option) => option.letter === letter) ||
+      options.find((option) => normalizeText(option.content) === text) ||
+      null
+    );
+  };
+
+  const userOption = findOption(userAnswer);
+  const correctOption = findOption(correctAnswer);
+  const userLetter = userOption?.letter || normalizeLetter(userAnswer);
+  const correctLetter = correctOption?.letter || normalizeLetter(correctAnswer);
+  const correctText = stripHtml(correctOption?.content || correctAnswer);
+  const stateClass = isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect';
   const explanation = getQuestionExplanation(question);
   const locateText = getQuestionLocateText(question);
+  const hasStructuredExplanation = /<(ul|ol|li)\b|vị trí|từ khoá|từ khóa|giải thích/i.test(explanation);
+
+  const handleToggle = () => {
+    onQuestionFocus(question);
+    onToggleExplanation(question.id);
+  };
 
   return (
-    <div className={`reading-review__matching-row ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'} ${isExpanded ? 'is-expanded' : ''}`}>
-      <div className="reading-review__matching-question-card">
-        <span className="reading-review__answer-number">{question.number}.</span>
-        <div className="reading-review__matching-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-        <div className={`reading-review__matching-answer-card ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
-          {userLetter ? (
-            <>
-              <span className="reading-review__matching-answer-letter">{userLetter}</span>
-              {matchedOption && <span className="reading-review__matching-answer-text">{stripHtml(matchedOption.content)}</span>}
-            </>
-          ) : (
-            <span className="reading-review__matching-placeholder">Chưa trả lời</span>
-          )}
+    <div className={`reading-review__mf-row ${stateClass} ${isExpanded ? 'is-expanded' : ''} ${isActive ? 'is-active' : ''}`}>
+      <div className="reading-review__mf-question-line">
+        <span className="reading-review__mf-question-number">{question.number}</span>
+        <div className="reading-review__mf-dropzone">
+          <div className={`reading-review__mf-answer-box ${stateClass}`}>
+            {userLetter || ''}
+          </div>
         </div>
       </div>
-      <div className="reading-review__matching-feedback">
-        <div className="reading-review__matching-feedback-line">
-          <span className={`reading-review__matching-status-badge ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
+
+      <div className="reading-review__mf-feedback">
+        <div className="reading-review__mf-feedback-head">
+          <span className={`reading-review__mf-status ${stateClass}`}>
             {isUnanswered ? 'Bỏ qua' : isCorrect ? 'Đúng' : 'Sai'}
           </span>
-          {!isCorrect && (
-            <span className="reading-review__matching-correct-answer">
-              Đáp án: <strong>{correctLetter}{correctOption ? ` — ${stripHtml(correctOption.content)}` : ''}</strong>
-            </span>
-          )}
-          <button type="button" className="reading-review__matching-detail-btn" onClick={(e) => { e.stopPropagation(); onQuestionFocus(question); onToggleExplanation(question.id); }} aria-expanded={isExpanded}>
-            {isExpanded ? 'Thu gọn' : 'Chi tiết'}
-          </button>
+          <span className="reading-review__mf-correct-answer">
+            Answer:{' '}
+            <strong>
+              {correctLetter}
+              {correctText ? `    ${correctText}` : ''}
+            </strong>
+          </span>
+          <div className="reading-review__mf-feedback-action">
+            <button
+              type="button"
+              className="reading-review__mf-detail-button"
+              onClick={handleToggle}
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? 'Thu gọn' : 'Chi tiết'}
+            </button>
+          </div>
         </div>
+
         {isExpanded && (
-          <div className="reading-review__matching-detail">
-            {explanation ? <div dangerouslySetInnerHTML={{ __html: explanation }} /> : <p>Chưa có giải thích.</p>}
+          <div className="reading-review__mf-detail">
             {locateText && (
-              <button type="button" className="reading-review__locate-button" onClick={(e) => { e.stopPropagation(); onLocate(locateText); }}>Locate</button>
+              <>
+                <ul className="reading-review__mf-detail-list">
+                  <li><strong>Vị trí:</strong></li>
+                </ul>
+                <ul className="reading-review__mf-detail-list reading-review__mf-detail-list--nested">
+                  <li>{locateText}</li>
+                </ul>
+              </>
+            )}
+
+            {explanation && hasStructuredExplanation ? (
+              <div
+                className="reading-review__mf-detail-text"
+                dangerouslySetInnerHTML={{ __html: explanation }}
+              />
+            ) : explanation ? (
+              <>
+                <ul className="reading-review__mf-detail-list">
+                  <li><strong>Giải thích đáp án:</strong></li>
+                </ul>
+                <ul className="reading-review__mf-detail-list reading-review__mf-detail-list--nested">
+                  <li>
+                    <div
+                      className="reading-review__mf-detail-text"
+                      dangerouslySetInnerHTML={{ __html: explanation }}
+                    />
+                  </li>
+                </ul>
+              </>
+            ) : (
+              !locateText && (
+                <ul className="reading-review__mf-detail-list">
+                  <li>Chưa có giải thích.</li>
+                </ul>
+              )
             )}
           </div>
         )}
@@ -68,14 +151,43 @@ function MatchingReviewItem({ group, question, userAnswers, expandedExplanations
   );
 }
 
-export default function MatchingFeaturesReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
+export default function MatchingFeaturesReview({
+  group,
+  userAnswers,
+  expandedExplanations,
+  activeQuestionId,
+  onToggleExplanation,
+  onQuestionFocus
+}) {
   return (
-    <section className="reading-review__answer-group reading-review__answer-group--matching">
-      <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>
-      <div className="reading-review__matching-card">
-        {group.questions?.map((q) => (
-          <MatchingReviewItem key={q.id} group={group} question={q} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} />
-        ))}
+    <section className="reading-review__mf-answer-group">
+      <div className="reading-review__mf-instructions">
+        {shouldShowRange(group.instructions) && (
+          <p>
+            <strong>Questions {group.startNumber}-{group.endNumber}</strong>
+          </p>
+        )}
+        {group.instructions && (
+          <div dangerouslySetInnerHTML={{ __html: group.instructions }} />
+        )}
+      </div>
+
+      <div className="reading-review__mf-card">
+        <div className="reading-review__mf-card-head">Your answer</div>
+        <div className="reading-review__mf-list">
+          {group.questions?.map((question) => (
+            <MatchingFeatureReviewItem
+              key={question.id}
+              group={group}
+              question={question}
+              userAnswers={userAnswers}
+              expandedExplanations={expandedExplanations}
+              activeQuestionId={activeQuestionId}
+              onToggleExplanation={onToggleExplanation}
+              onQuestionFocus={onQuestionFocus}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

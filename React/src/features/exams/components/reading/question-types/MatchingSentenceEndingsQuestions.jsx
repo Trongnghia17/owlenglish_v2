@@ -1,90 +1,94 @@
-import { memo, useMemo, useState, useCallback } from 'react';
-import { stripHtml } from '../../listening/question-types/textQuestionUtils';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-const MATCHING_DRAG_TYPE = 'application/x-reading-sentence-ending';
-const normalizeLetter = (value) => String(value ?? '').trim().toUpperCase().slice(0, 1);
+const normalizeLetter = (value) =>
+  String(value ?? '').trim().toUpperCase().slice(0, 1);
 
 function MatchingSentenceEndingsQuestions({ group, answers, onAnswerChange }) {
-  const [draggingLetter, setDraggingLetter] = useState('');
   const [activeLetter, setActiveLetter] = useState('');
-  const [dropTargetId, setDropTargetId] = useState(null);
+  const optionTitle =
+    !group.optionTitle ||
+    group.optionTitle === 'Options' ||
+    /sentence\s+endings?/i.test(group.optionTitle)
+      ? 'List of ending'
+      : group.optionTitle;
 
   const options = useMemo(
     () =>
-      (group.optionsWithContent || []).map((opt, idx) => ({
-        letter: opt.letter || String.fromCharCode(65 + idx),
-        content: opt.content || '',
+      (group.optionsWithContent || []).map((option, index) => ({
+        letter: normalizeLetter(option.letter) || String.fromCharCode(65 + index),
+        content: option.content || ''
       })),
     [group.optionsWithContent]
   );
 
+  const optionLetters = useMemo(
+    () => new Set(options.map((option) => option.letter)),
+    [options]
+  );
+
   const selectedLetters = useMemo(
-    () => new Set(group.questions.map((q) => normalizeLetter(answers[q.id])).filter(Boolean)),
+    () => new Set(group.questions.map((question) => normalizeLetter(answers[question.id])).filter(Boolean)),
     [answers, group.questions]
   );
 
   const assignAnswer = useCallback(
-    (questionId, letter) => {
-      const normalized = normalizeLetter(letter);
-      if (!normalized) return;
-      const prev = group.questions.find((q) => q.id !== questionId && normalizeLetter(answers[q.id]) === normalized);
-      if (prev) onAnswerChange(prev.id, '');
+    (questionId, value) => {
+      const normalized = normalizeLetter(value);
+
+      if (!normalized) {
+        onAnswerChange(questionId, '');
+        return;
+      }
+
+      if (optionLetters.size > 0 && !optionLetters.has(normalized)) return;
+
+      const previousQuestion = group.questions.find(
+        (question) =>
+          question.id !== questionId &&
+          normalizeLetter(answers[question.id]) === normalized
+      );
+
+      if (previousQuestion) {
+        onAnswerChange(previousQuestion.id, '');
+      }
+
       onAnswerChange(questionId, normalized);
       setActiveLetter('');
-      setDropTargetId(null);
     },
-    [group.questions, answers, onAnswerChange]
+    [answers, group.questions, onAnswerChange, optionLetters]
   );
 
-  const handleDragStart = (e, option) => {
-    setDraggingLetter(option.letter);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData(MATCHING_DRAG_TYPE, option.letter);
-    e.dataTransfer.setData('text/plain', option.letter);
-  };
-
-  const handleDrop = (e, questionId) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const letter = e.dataTransfer.getData(MATCHING_DRAG_TYPE) || e.dataTransfer.getData('text/plain');
-    assignAnswer(questionId, letter);
-  };
-
   return (
-    <div className="reading-test__matching-layout">
-      {/* Sentence endings panel */}
-      <aside className="reading-test__matching-card reading-test__matching-card--options">
-        <h4 className="reading-test__matching-card-title">{group.optionTitle || 'Sentence Endings'}</h4>
-        <div className="reading-test__matching-options-list">
-          {options.map((opt) => {
-            const isUsed = selectedLetters.has(opt.letter);
-            const isActive = activeLetter === opt.letter;
+    <div className="reading-test__matching-sentence-endings">
+      <aside className="reading-test__matching-sentence-endings-card reading-test__matching-sentence-endings-card--options">
+        <h4 className="reading-test__matching-sentence-endings-card-title">
+          {optionTitle}
+        </h4>
+        <div className="reading-test__matching-sentence-endings-options-grid">
+          {options.map((option) => {
+            const isActive = activeLetter === option.letter;
+            const isUsed = selectedLetters.has(option.letter);
+
             return (
               <button
-                key={opt.letter}
+                key={`${option.letter}-${option.content}`}
                 type="button"
                 className={[
-                  'reading-test__matching-option',
-                  isUsed ? 'is-used' : '',
+                  'reading-test__matching-sentence-endings-option',
                   isActive ? 'is-active' : '',
-                  draggingLetter === opt.letter ? 'is-dragging' : '',
+                  isUsed ? 'is-used' : ''
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                draggable={!isUsed}
                 aria-pressed={isActive}
-                aria-disabled={isUsed}
-                onClick={() => !isUsed && setActiveLetter(isActive ? '' : opt.letter)}
-                onDragStart={(e) => !isUsed && handleDragStart(e, opt)}
-                onDragEnd={() => {
-                  setDraggingLetter('');
-                  setDropTargetId(null);
-                }}
+                onClick={() => !isUsed && setActiveLetter(isActive ? '' : option.letter)}
               >
-                <span className="reading-test__matching-option-letter">{opt.letter}</span>
+                <span className="reading-test__matching-sentence-endings-badge">
+                  {option.letter}
+                </span>
                 <span
-                  className="reading-test__matching-option-text"
-                  dangerouslySetInnerHTML={{ __html: opt.content }}
+                  className="reading-test__matching-sentence-endings-option-text"
+                  dangerouslySetInnerHTML={{ __html: option.content }}
                 />
               </button>
             );
@@ -92,72 +96,47 @@ function MatchingSentenceEndingsQuestions({ group, answers, onAnswerChange }) {
         </div>
       </aside>
 
-      {/* Sentence starters column */}
-      <section className="reading-test__matching-card">
-        <h4 className="reading-test__matching-card-title">Sentences</h4>
-        <div className="reading-test__matching-question-list">
+      <section className="reading-test__matching-sentence-endings-card reading-test__matching-sentence-endings-card--questions">
+        <div className="reading-test__matching-sentence-endings-question-list">
           {group.questions.map((question) => {
             const answer = normalizeLetter(answers[question.id]);
-            const answerContent = options.find((o) => o.letter === answer)?.content || '';
-            const isDropTarget = dropTargetId === question.id;
+
             return (
               <div
                 key={question.id}
-                className={`reading-test__matching-question-row ${answer ? 'is-filled' : ''}`}
+                className="reading-test__matching-sentence-endings-question-row"
               >
-                <span className="reading-test__matching-question-number">{question.number}</span>
+                <span className="reading-test__matching-sentence-endings-question-number">
+                  {question.number}
+                </span>
                 <div
-                  className="reading-test__matching-question-text"
+                  className="reading-test__matching-sentence-endings-question-text"
                   dangerouslySetInnerHTML={{ __html: question.content || '' }}
                 />
-                <div
-                  className={`reading-test__matching-dropzone ${isDropTarget ? 'is-drop-target' : ''} ${activeLetter && !answer ? 'is-ready' : ''}`}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => activeLetter && assignAnswer(question.id, activeLetter)}
-                  onKeyDown={(e) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && activeLetter) {
-                      e.preventDefault();
+                <label
+                  className={[
+                    'reading-test__matching-sentence-endings-dropzone',
+                    answer ? 'is-filled' : '',
+                    activeLetter && !answer ? 'is-ready' : ''
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => {
+                    if (activeLetter && !answer) {
                       assignAnswer(question.id, activeLetter);
                     }
                   }}
-                  onDragEnter={(e) => {
-                    e.preventDefault();
-                    setDropTargetId(question.id);
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    e.dataTransfer.dropEffect = 'move';
-                    setDropTargetId(question.id);
-                  }}
-                  onDragLeave={(e) => {
-                    if (e.currentTarget.contains(e.relatedTarget)) return;
-                    setDropTargetId(null);
-                  }}
-                  onDrop={(e) => handleDrop(e, question.id)}
                 >
-                  {answer ? (
-                    <span className="reading-test__matching-answer-chip">
-                      <span className="reading-test__matching-answer-letter">{answer}</span>
-                      <span className="reading-test__matching-answer-text">
-                        {stripHtml(answerContent)}
-                      </span>
-                      <button
-                        type="button"
-                        className="reading-test__matching-answer-clear"
-                        aria-label={`Clear answer ${question.number}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAnswerChange(question.id, '');
-                        }}
-                      />
-                    </span>
-                  ) : (
-                    <span className="reading-test__matching-placeholder">
-                      Drop ending here
-                    </span>
-                  )}
-                </div>
+                  <input
+                    type="text"
+                    inputMode="text"
+                    maxLength={1}
+                    value={answer}
+                    placeholder="Type Answer"
+                    aria-label={`Question ${question.number} answer`}
+                    onChange={(event) => assignAnswer(question.id, event.target.value)}
+                  />
+                </label>
               </div>
             );
           })}

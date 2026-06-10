@@ -14,6 +14,14 @@ const stripHtmlToText = (value = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
+const escapeHtml = (value = '') =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
 const getQuestionSectionLabel = (question, index) => {
   const text = stripHtmlToText(question?.content || '');
   const explicitMatch = text.match(/\b(?:section|paragraph|para)\s+([A-Z])\b/i);
@@ -34,6 +42,39 @@ function PassageHtmlChunk({ html }) {
     />
   );
 }
+
+const getParagraphInnerHtml = (paragraphHtml = '') => {
+  const match = String(paragraphHtml).match(/^<p\b[^>]*>([\s\S]*?)<\/p>$/i);
+  return match ? match[1] : paragraphHtml;
+};
+
+const getLeadingTargetParagraph = (paragraphHtml, targetByLabel) => {
+  const innerHtml = getParagraphInnerHtml(paragraphHtml);
+  const plainText = stripHtmlToText(paragraphHtml);
+  const exactLabel = /^[A-Z]$/i.test(plainText) ? plainText.toUpperCase() : '';
+  const exactTarget = exactLabel ? targetByLabel.get(exactLabel) : null;
+
+  if (exactTarget) {
+    return { label: exactLabel, target: exactTarget, restHtml: '' };
+  }
+
+  const leadingLabelMatch = innerHtml.match(
+    /^\s*(?:<(?:strong|b|em|i|span)\b[^>]*>\s*)*([A-Z])\s*(?:<\/(?:strong|b|em|i|span)>\s*)*(?:<br\s*\/?>|\r?\n)/i
+  );
+
+  if (!leadingLabelMatch) return null;
+
+  const label = leadingLabelMatch[1].toUpperCase();
+  const target = targetByLabel.get(label);
+  if (!target) return null;
+
+  const restInnerHtml = innerHtml.slice(leadingLabelMatch[0].length).trim();
+  return {
+    label,
+    target,
+    restHtml: restInnerHtml ? `<p>${restInnerHtml}</p>` : '',
+  };
+};
 
 function MatchingHeadingsTarget({ question, answer, isDropTarget, onDropAnswer, onClearAnswer }) {
   const answerLabel = answer ? displayLabel(answer) : '.......';
@@ -114,25 +155,83 @@ function MatchingHeadingsPassageContent({ html, group, answers = {}, onAnswerCha
     const paragraphRegex = /<p\b[^>]*>[\s\S]*?<\/p>/gi;
     let lastIndex = 0;
     let match;
+    let hasParagraphMatches = false;
+    let hasTitleParagraph = false;
 
     while ((match = paragraphRegex.exec(sourceHtml)) !== null) {
+      hasParagraphMatches = true;
       const paragraphHtml = match[0];
       const plainText = stripHtmlToText(paragraphHtml);
-      const label = /^[A-Z]$/i.test(plainText) ? plainText.toUpperCase() : '';
-      const target = label ? targetByLabel.get(label) : null;
+      const leadingTarget = getLeadingTargetParagraph(paragraphHtml, targetByLabel);
 
       if (match.index > lastIndex) {
         parts.push({ type: 'html', html: sourceHtml.slice(lastIndex, match.index) });
       }
 
-      if (target) {
-        usedLabels.add(label);
-        parts.push({ type: 'target-heading', label, target });
+      if (leadingTarget) {
+        usedLabels.add(leadingTarget.label);
+        parts.push({
+          type: 'target-heading',
+          label: leadingTarget.label,
+          target: leadingTarget.target,
+        });
+        if (leadingTarget.restHtml) {
+          parts.push({ type: 'html', html: leadingTarget.restHtml });
+        }
+      } else if (!hasTitleParagraph && plainText) {
+        hasTitleParagraph = true;
+        parts.push({ type: 'html', html: `<h1>${escapeHtml(plainText)}</h1>` });
       } else {
         parts.push({ type: 'html', html: paragraphHtml });
       }
 
       lastIndex = paragraphRegex.lastIndex;
+    }
+
+    if (!hasParagraphMatches) {
+      const textParts = [];
+      const textUsedLabels = new Set();
+      const lines = String(sourceHtml).split(/\r?\n/);
+      let buffer = [];
+      let hasTitle = false;
+
+      const flushBuffer = () => {
+        const text = buffer.join(' ').replace(/\s+/g, ' ').trim();
+        buffer = [];
+        if (!text) return;
+
+        if (!hasTitle) {
+          hasTitle = true;
+          textParts.push({ type: 'html', html: `<h1>${escapeHtml(text)}</h1>` });
+          return;
+        }
+
+        textParts.push({ type: 'html', html: `<p>${escapeHtml(text)}</p>` });
+      };
+
+      lines.forEach((line) => {
+        const plainLine = stripHtmlToText(line);
+        const label = /^[A-Z]$/i.test(plainLine) ? plainLine.toUpperCase() : '';
+        const target = label ? targetByLabel.get(label) : null;
+
+        if (target) {
+          flushBuffer();
+          textUsedLabels.add(label);
+          textParts.push({ type: 'target-heading', label, target });
+          return;
+        }
+
+        if (!plainLine) {
+          flushBuffer();
+          return;
+        }
+
+        buffer.push(plainLine);
+      });
+
+      flushBuffer();
+
+      return { parts: textParts, usedLabels: textUsedLabels };
     }
 
     if (lastIndex < sourceHtml.length) {
@@ -169,27 +268,8 @@ function MatchingHeadingsPassageContent({ html, group, answers = {}, onAnswerCha
     if (onAnswerChange) onAnswerChange(questionId, '');
   };
 
-  const fallbackTargets = targets.filter((target) => !segments.usedLabels.has(target.label));
-
   return (
     <div className="reading-test__passage-content reading-test__passage-content--matching-headings">
-      {fallbackTargets.length > 0 && (
-        <div className="reading-test__mh-passage-targets-fallback">
-          {fallbackTargets.map(({ label, question }) => (
-            <div key={question.id} className="reading-test__mh-passage-heading-row">
-              <span className="reading-test__mh-passage-section-label">{label}</span>
-              <MatchingHeadingsTarget
-                question={question}
-                answer={answers[question.id]}
-                isDropTarget={dropTargetId === question.id}
-                onDropAnswer={assignAnswer}
-                onClearAnswer={clearAnswer}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
       {segments.parts.map((part, index) => {
         if (part.type === 'target-heading') {
           const { label, target } = part;
