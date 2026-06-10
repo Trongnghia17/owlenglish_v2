@@ -1,7 +1,17 @@
-import { useMemo } from 'react';
-import { getReviewAnswerData, getReviewCorrectAnswer, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import { getReviewAnswerData, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
 
-function ReviewItem({ group, question, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate, options }) {
+const YES_NO_NOT_GIVEN_OPTIONS = [
+  { letter: 'A', content: 'YES' },
+  { letter: 'B', content: 'NO' },
+  { letter: 'C', content: 'NOT GIVEN' }
+];
+
+const matchesOption = (answer, option) => {
+  const normalizedAnswer = stripHtmlToText(answer || '').trim().toUpperCase();
+  return normalizedAnswer === option.letter || normalizedAnswer === option.content;
+};
+
+function ReviewItem({ question, userAnswers, expandedExplanations, onToggleExplanation, onLocate, options }) {
   const answerData = getReviewAnswerData(userAnswers, question);
   const userAnswer = stripHtmlToText(answerData.userAnswer || '');
   const correctAnswer = stripHtmlToText(answerData.correctAnswer || question?.correctAnswer || '');
@@ -23,14 +33,14 @@ function ReviewItem({ group, question, userAnswers, expandedExplanations, active
       <div className="reading-review__choice-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
       <div className="reading-review__choice-options">
         {options.map((opt) => {
-          const isSelected = opt.toUpperCase() === userAnswer.toUpperCase();
-          const isCorrectOpt = opt.toUpperCase() === correctAnswer.toUpperCase();
+          const isSelected = matchesOption(userAnswer, opt);
+          const isCorrectOpt = matchesOption(correctAnswer, opt);
           let stateClass = '';
           if (isCorrectOpt) stateClass = 'is-correct';
           else if (isSelected && !isCorrect) stateClass = 'is-incorrect';
           return (
-            <span key={opt} className={`reading-review__choice-option ${stateClass} ${isSelected ? 'is-selected' : ''}`}>
-              {opt}
+            <span key={opt.letter} className={`reading-review__choice-option ${stateClass} ${isSelected ? 'is-selected' : ''}`}>
+              {opt.content}
             </span>
           );
         })}
@@ -59,16 +69,13 @@ function ReviewItem({ group, question, userAnswers, expandedExplanations, active
   );
 }
 
-export default function YesNoNotGivenReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
-  const options = group.optionsWithContent?.length
-    ? group.optionsWithContent.map(o => o.content || o.letter).filter(Boolean)
-    : ['Yes', 'No', 'Not Given'];
+export default function YesNoNotGivenReview({ group, userAnswers, expandedExplanations, onToggleExplanation, onLocate }) {
   return (
     <section className="reading-review__answer-group reading-review__answer-group--ynng">
       <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>
       <div className="reading-review__choice-list">
         {group.questions?.map((question) => (
-          <ReviewItem key={question.id} group={group} question={question} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} options={options} />
+          <ReviewItem key={question.id} question={question} userAnswers={userAnswers} expandedExplanations={expandedExplanations} onToggleExplanation={onToggleExplanation} onLocate={onLocate} options={YES_NO_NOT_GIVEN_OPTIONS} />
         ))}
       </div>
     </section>

@@ -68,7 +68,7 @@ function MatchingReviewItem({ group, question, userAnswers, expandedExplanations
   );
 }
 
-export default function MatchingInformationReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
+export default function MatchingFeaturesReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
   return (
     <section className="reading-review__answer-group reading-review__answer-group--matching">
       <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>

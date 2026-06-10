@@ -18,22 +18,15 @@ function MatchingFeaturesQuestions({ group, answers, onAnswerChange }) {
     [group.optionsWithContent]
   );
 
-  const selectedLetters = useMemo(
-    () => new Set(group.questions.map((q) => normalizeLetter(answers[q.id])).filter(Boolean)),
-    [answers, group.questions]
-  );
-
   const assignAnswer = useCallback(
     (questionId, letter) => {
       const normalized = normalizeLetter(letter);
       if (!normalized) return;
-      const prev = group.questions.find((q) => q.id !== questionId && normalizeLetter(answers[q.id]) === normalized);
-      if (prev) onAnswerChange(prev.id, '');
       onAnswerChange(questionId, normalized);
       setActiveLetter('');
       setDropTargetId(null);
     },
-    [group.questions, answers, onAnswerChange]
+    [onAnswerChange]
   );
 
   const handleDragStart = (e, option) => {
@@ -57,7 +50,6 @@ function MatchingFeaturesQuestions({ group, answers, onAnswerChange }) {
         <h4 className="reading-test__matching-card-title">{group.optionTitle || 'Features'}</h4>
         <div className="reading-test__matching-options-list">
           {options.map((opt) => {
-            const isUsed = selectedLetters.has(opt.letter);
             const isActive = activeLetter === opt.letter;
             return (
               <button
@@ -65,17 +57,15 @@ function MatchingFeaturesQuestions({ group, answers, onAnswerChange }) {
                 type="button"
                 className={[
                   'reading-test__matching-option',
-                  isUsed ? 'is-used' : '',
                   isActive ? 'is-active' : '',
                   draggingLetter === opt.letter ? 'is-dragging' : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
-                draggable={!isUsed}
+                draggable
                 aria-pressed={isActive}
-                aria-disabled={isUsed}
-                onClick={() => !isUsed && setActiveLetter(isActive ? '' : opt.letter)}
-                onDragStart={(e) => !isUsed && handleDragStart(e, opt)}
+                onClick={() => setActiveLetter(isActive ? '' : opt.letter)}
+                onDragStart={(e) => handleDragStart(e, opt)}
                 onDragEnd={() => {
                   setDraggingLetter('');
                   setDropTargetId(null);

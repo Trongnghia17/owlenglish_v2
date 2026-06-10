@@ -1,12 +1,21 @@
 import { memo } from 'react';
-import { getQuestionAnswerOptions } from '../../../utils/readingTest';
 
-function YesNoNotGivenQuestions({ group, answers, onAnswerChange, showTips = true }) {
+const YES_NO_NOT_GIVEN_OPTIONS = [
+  { letter: 'A', value: 'YES' },
+  { letter: 'B', value: 'NO' },
+  { letter: 'C', value: 'NOT GIVEN' }
+];
+
+const normalizeAnswer = (answer) =>
+  String(answer ?? '').trim().toUpperCase();
+
+function YesNoNotGivenQuestions({ group, answers, onAnswerChange, showTips = false }) {
   return (
     <div className={`reading-test__mc-layout ${showTips ? '' : 'reading-test__mc-layout--single'}`}>
       <div className="reading-test__mc-questions">
         {group.questions.map((question) => {
-          const questionOptions = getQuestionAnswerOptions(question, group.optionsWithContent || []);
+          const selectedAnswer = normalizeAnswer(answers[question.id]);
+
           return (
             <div key={question.id} className="reading-test__mc-card">
               <div className="reading-test__mc-card-header">
@@ -14,19 +23,26 @@ function YesNoNotGivenQuestions({ group, answers, onAnswerChange, showTips = tru
                 <div className="reading-test__mc-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
               </div>
               <div className="reading-test__mc-options">
-                {questionOptions.map((option) => (
-                  <label key={option.letter} className={`reading-test__mc-option ${answers[question.id] === option.letter ? 'selected' : ''}`}>
-                    <input
-                      type="radio"
-                      name={`question-${question.id}`}
-                      value={option.letter}
-                      checked={answers[question.id] === option.letter}
-                      onChange={() => onAnswerChange(question.id, option.letter)}
-                    />
-                    <span className="reading-test__mc-letter">{option.letter}</span>
-                    <span className="reading-test__mc-option-text" dangerouslySetInnerHTML={{ __html: option.content }} />
-                  </label>
-                ))}
+                {YES_NO_NOT_GIVEN_OPTIONS.map((option) => {
+                  const isSelected = selectedAnswer === option.value || selectedAnswer === option.letter;
+
+                  return (
+                    <label key={option.letter} className={`reading-test__mc-option ${isSelected ? 'selected' : ''}`}>
+                      <input
+                        className="reading-test__mc-input"
+                        type="radio"
+                        name={`question-${question.id}`}
+                        value={option.value}
+                        checked={isSelected}
+                        onChange={() => onAnswerChange(question.id, option.value)}
+                      />
+                      <span className="reading-test__mc-option-body">
+                        <span className="reading-test__mc-letter">{option.letter}</span>
+                        <span className="reading-test__mc-option-text">{option.value}</span>
+                      </span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           );

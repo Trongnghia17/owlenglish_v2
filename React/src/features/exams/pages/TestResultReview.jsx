@@ -339,6 +339,10 @@ const processReadingExamData = (data, type) => {
           switch (questionType) {
             case 'multiple_choice':
             case 'matching':
+            case 'matching_information':
+            case 'matching_headings':
+            case 'matching_features':
+            case 'matching_sentence_endings':
               if (group.questions && group.questions.length > 0) {
                 const firstQuestion = group.questions[0];
                 if (firstQuestion.metadata) {
@@ -347,12 +351,12 @@ const processReadingExamData = (data, type) => {
                     : firstQuestion.metadata;
                   
                   if (metadata.answers && Array.isArray(metadata.answers)) {
-                    options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
+                    options = metadata.answers.map((answer, index) => answer.letter || answer.label || String.fromCharCode(65 + index));
                     optionsWithContent = metadata.answers.map((answer, index) => {
                       let content = answer.content || '';
                       content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
                       return {
-                        letter: String.fromCharCode(65 + index),
+                        letter: answer.letter || answer.label || String.fromCharCode(65 + index),
                         content: content
                       };
                     });
@@ -470,6 +474,10 @@ const processReadingExamData = (data, type) => {
               switch (questionType) {
                 case 'multiple_choice':
                 case 'matching':
+                case 'matching_information':
+                case 'matching_headings':
+                case 'matching_features':
+                case 'matching_sentence_endings':
                   if (group.questions && group.questions.length > 0) {
                     const firstQuestion = group.questions[0];
                     if (firstQuestion.metadata) {
@@ -478,12 +486,12 @@ const processReadingExamData = (data, type) => {
                         : firstQuestion.metadata;
                       
                       if (metadata.answers && Array.isArray(metadata.answers)) {
-                        options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
+                        options = metadata.answers.map((answer, index) => answer.letter || answer.label || String.fromCharCode(65 + index));
                         optionsWithContent = metadata.answers.map((answer, index) => {
                           let content = answer.content || '';
                           content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
                           return {
-                            letter: String.fromCharCode(65 + index),
+                            letter: answer.letter || answer.label || String.fromCharCode(65 + index),
                             content: content
                           };
                         });
@@ -599,6 +607,9 @@ const processReadingExamData = (data, type) => {
 
   const currentPart = parts.find((part) => String(part.part) === String(currentPartTab));
   const currentPartGroups = questionGroups.filter((group) => String(group.part) === String(currentPartTab));
+  const currentReviewType = (currentPartGroups[0]?.type || '').toLowerCase();
+  const isTrueFalseNotGivenReview = currentReviewType === 'true_false_not_given';
+  const isMatchingHeadingsReview = currentReviewType === 'matching_headings';
   const currentPassage = currentPart?.id
     ? passages.find((passage) => String(passage.id) === String(currentPart.id))
     : passages.find((passage) => String(passage.part) === String(currentPartTab));
@@ -671,12 +682,17 @@ const processReadingExamData = (data, type) => {
       <div className={isReadingReview ? 'reading-review__content-shell' : 'reading-test__content-wrapper'}>
         {isReadingReview && (
           <h1 className="reading-review__passage-title">
-            {/reading\s+passage/i.test(currentPassage.title || '')
+            {isTrueFalseNotGivenReview || isMatchingHeadingsReview
+              ? 'Reading'
+              : /reading\s+passage/i.test(currentPassage.title || '')
               ? currentPassage.title
               : `Reading passage ${currentPartTab}`}
           </h1>
         )}
-        <div className={isReadingReview ? 'reading-test__content-wrapper reading-review__content-wrapper' : 'reading-test__content-wrapper'}>
+        <div className={[
+          isReadingReview ? 'reading-test__content-wrapper reading-review__content-wrapper' : 'reading-test__content-wrapper',
+          isTrueFalseNotGivenReview ? 'reading-review__content-wrapper--tfng' : ''
+        ].filter(Boolean).join(' ')}>
           <div className={isReadingReview ? 'reading-test__passage reading-review__passage' : 'reading-test__passage'}>
             {!isReadingReview && (
               <div className="reading-test__passage-header">

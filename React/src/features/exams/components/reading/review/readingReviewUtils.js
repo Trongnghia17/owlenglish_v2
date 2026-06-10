@@ -10,6 +10,8 @@ const escapeHtml = (value = '') =>
 
 const escapeAttribute = (value = '') => escapeHtml(value).replace(/`/g, '&#096;');
 
+const normalizeLabel = (value = '') => String(value ?? '').trim().toLowerCase();
+
 export const getResultAnswerKey = (answer) => {
   const answerIndex = answer?.answer_index;
   return answerIndex === null || answerIndex === undefined
@@ -90,6 +92,67 @@ export const getQuestionLocateText = (question) => {
   return answerSlot?.locate || answerSlot?.hint || metadata.locate || metadata.hint || question?.locateText || '';
 };
 
+const getQuestionSectionLabel = (question, index) => {
+  const text = stripHtmlToText(question?.content || '');
+  const explicitMatch = text.match(/\b(?:section|paragraph|para)\s+([A-Z])\b/i);
+  if (explicitMatch) return explicitMatch[1].toUpperCase();
+
+  const simpleMatch = text.match(/^([A-Z])(?:\b|[\s.:)-])/i);
+  return simpleMatch ? simpleMatch[1].toUpperCase() : String.fromCharCode(65 + index);
+};
+
+const getMatchingHeadingOption = (group, question, userAnswers) => {
+  const answerData = getReviewAnswerData(userAnswers, question);
+  const correctAnswer = getReviewCorrectAnswer(answerData, question);
+  const options = group?.optionsWithContent || [];
+  return (
+    options.find((option) => normalizeLabel(option.letter) === normalizeLabel(correctAnswer)) ||
+    options.find((option) => normalizeLabel(stripHtmlToText(option.content)) === normalizeLabel(correctAnswer)) ||
+    null
+  );
+};
+
+const getMatchingHeadingsReviewContentHtml = (content, groups, userAnswers) => {
+  const normalizedContent = stripParagraphWrapper(content || '');
+  const matchingGroups = groups.filter((group) => (group?.type || '').toLowerCase() === 'matching_headings');
+  if (!normalizedContent || matchingGroups.length === 0) return '';
+
+  const targetsByLabel = new Map();
+  matchingGroups.forEach((group) => {
+    (group.questions || []).forEach((question, index) => {
+      const headingOption = getMatchingHeadingOption(group, question, userAnswers);
+      const headingText = stripHtmlToText(headingOption?.content || '');
+      if (!headingText) return;
+
+      targetsByLabel.set(getQuestionSectionLabel(question, index), {
+        questionId: question.id,
+        headingText,
+      });
+    });
+  });
+
+  if (targetsByLabel.size === 0) return getReadingReviewContentHtml({ groupContent: normalizedContent, questions: [] }, userAnswers);
+
+  let replaced = false;
+  const paragraphRegex = /<p\b[^>]*>[\s\S]*?<\/p>/gi;
+  const enhanced = normalizedContent.replace(paragraphRegex, (paragraphHtml) => {
+    const plainText = stripHtmlToText(paragraphHtml);
+    const singleLetterMatch = plainText.match(/^([A-Z])$/i);
+    const headingLineMatch = plainText.match(/^([A-Z])\s*[-–]\s*(.+)$/i);
+    const label = (singleLetterMatch?.[1] || headingLineMatch?.[1] || '').toUpperCase();
+    const target = label ? targetsByLabel.get(label) : null;
+
+    if (!target) return paragraphHtml;
+
+    replaced = true;
+    const headingText = headingLineMatch?.[2] || target.headingText;
+    return `<p class="reading-review__mh-passage-heading" data-question-id="${escapeAttribute(target.questionId)}">${escapeHtml(label)}- ${escapeHtml(headingText)}</p>`;
+  });
+
+  if (!replaced) return getReadingReviewContentHtml({ groupContent: normalizedContent, questions: [] }, userAnswers);
+  return enhanced;
+};
+
 export const getReadingReviewContentHtml = (group, userAnswers) => {
   const content = group?.reviewContent || group?.groupContent || '';
   const questions = group?.questions || [];
@@ -129,6 +192,10 @@ export const getReadingReviewContentHtml = (group, userAnswers) => {
 export const getReadingReviewPartContentHtml = (groups = [], userAnswers) => {
   const reviewContent = groups.find((group) => group.reviewContent)?.reviewContent || '';
   if (!reviewContent) return '';
+
+  if (groups.some((group) => (group?.type || '').toLowerCase() === 'matching_headings')) {
+    return getMatchingHeadingsReviewContentHtml(reviewContent, groups, userAnswers);
+  }
 
   return getReadingReviewContentHtml(
     {

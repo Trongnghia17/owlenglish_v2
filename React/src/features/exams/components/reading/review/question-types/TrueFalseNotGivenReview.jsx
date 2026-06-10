@@ -1,6 +1,12 @@
 import { getReviewAnswerData, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
 import './TrueFalseNotGivenReview.css';
 
+const TRUE_FALSE_NOT_GIVEN_OPTIONS = [
+  { letter: 'A', content: 'TRUE' },
+  { letter: 'B', content: 'FALSE' },
+  { letter: 'C', content: 'NOT GIVEN' }
+];
+
 const getOptionLabel = (option) => stripHtmlToText(option?.content || option?.label || option || '');
 
 const normalizeAnswer = (value) => stripHtmlToText(value || '').trim().toUpperCase();
@@ -72,14 +78,6 @@ function ReviewItem({ question, userAnswers, expandedExplanations, activeQuestio
 }
 
 export default function TrueFalseNotGivenReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
-  const sourceOptions = group.optionsWithContent?.length
-    ? group.optionsWithContent
-    : ['TRUE', 'FALSE', 'NOT GIVEN'];
-  const options = sourceOptions.map((option, index) => ({
-    letter: option?.letter || String.fromCharCode(65 + index),
-    content: option?.content || option
-  }));
-
   return (
     <section className="reading-review__answer-group reading-review__answer-group--tfng">
       <div className="reading-review__tfng-range">
@@ -88,7 +86,7 @@ export default function TrueFalseNotGivenReview({ group, userAnswers, expandedEx
       </div>
       <div className="reading-review__tfng-list">
         {group.questions?.map((question) => (
-          <ReviewItem key={question.id} question={question} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} options={options} />
+          <ReviewItem key={question.id} question={question} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} options={TRUE_FALSE_NOT_GIVEN_OPTIONS} />
         ))}
       </div>
     </section>
