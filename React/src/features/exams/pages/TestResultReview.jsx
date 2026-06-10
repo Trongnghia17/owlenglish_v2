@@ -8,34 +8,16 @@ import {
   isListeningReviewResult
 } from '../components/listening/review/listeningReviewUtils';
 import TestLayout from '../components/TestLayout';
+import { getReadingReviewRenderer } from '../components/reading/review/question-types';
+import {
+  buildFooterAnswers,
+  buildReadingReviewData,
+  getReadingReviewPartContentHtml,
+  isReadingReviewResult
+} from '../components/reading/review/readingReviewUtils';
 import './ReadingTest.css'; // Sử dụng cùng CSS với ReadingTest
 import './ListeningTest.css';
 import './TestResultReview.css'; // CSS riêng cho review mode
-
-const containsInlinePlaceholders = (text) => /\{\{\s*[a-zA-Z0-9]+\s*\}\}/.test(text || '');
-
-const TEXT_REVIEW_QUESTION_TYPES = new Set([
-  'short_text',
-  'note_completion',
-  'form_completion',
-  'table_completion',
-  'flow_chart_completion',
-  'summary_completion',
-  'sentence_completion',
-  'short_answer_questions',
-  'plan_map_diagram_labelling'
-]);
-
-const CHOICE_REVIEW_QUESTION_TYPES = new Set([
-  'multiple_choice',
-  'matching'
-]);
-
-const isTextReviewQuestionType = (questionType) =>
-  TEXT_REVIEW_QUESTION_TYPES.has((questionType || '').toLowerCase());
-
-const isChoiceReviewQuestionType = (questionType) =>
-  CHOICE_REVIEW_QUESTION_TYPES.has((questionType || '').toLowerCase());
 
 // Component hiển thị group content với inline inputs ở chế độ review (readonly)
 const GroupContentWithInlineInputsReview = ({ content, questions = [], userAnswers = {} }) => {
@@ -121,6 +103,38 @@ const PassageContent = memo(function PassageContent({ fontSize, content }) {
   );
 });
 
+const ReadingReviewPassageContent = memo(function ReadingReviewPassageContent({
+  fontSize,
+  content,
+  groups,
+  userAnswers,
+  activeQuestionId
+}) {
+  const contentRef = useRef(null);
+  const contentHtml = getReadingReviewPartContentHtml(groups, userAnswers) || content;
+
+  useEffect(() => {
+    const contentElement = contentRef.current;
+    if (!contentElement) return;
+
+    const anchors = contentElement.querySelectorAll('[data-question-id]');
+    anchors.forEach((anchor) => {
+      anchor.classList.toggle(
+        'is-active',
+        String(anchor.dataset.questionId) === String(activeQuestionId ?? '')
+      );
+    });
+  }, [activeQuestionId, contentHtml]);
+
+  return (
+    <div
+      ref={contentRef}
+      className={`reading-test__passage-content reading-test__passage-content--${fontSize}`}
+      dangerouslySetInnerHTML={{ __html: contentHtml }}
+    />
+  );
+});
+
 export default function TestResultReview() {
   const { resultId } = useParams();
   const location = useLocation();
@@ -138,15 +152,19 @@ export default function TestResultReview() {
   const [fontSize, setFontSize] = useState('normal');
   const [timeRemaining] = useState(0); // No timer in review mode
   const [expandedExplanations, setExpandedExplanations] = useState({});
+  const [activeQuestionId, setActiveQuestionId] = useState(null);
   const [userAnswers, setUserAnswers] = useState({}); // Store user's answers from result
   const [isListeningReview, setIsListeningReview] = useState(false);
+  const [isReadingReview, setIsReadingReview] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setExpandedExplanations({});
+        setActiveQuestionId(null);
         setIsListeningReview(false);
+        setIsReadingReview(false);
 
         // Fetch test result if not in state
         let testResult = result;
@@ -181,11 +199,15 @@ export default function TestResultReview() {
           if (response.data.success) {
             const section = response.data.data;
             const shouldUseListeningReview = isListeningReviewResult(testResult, section);
+            const shouldUseReadingReview = isReadingReviewResult(testResult, section);
             setSkillData(null);
             setSectionData(section);
             setIsListeningReview(shouldUseListeningReview);
+            setIsReadingReview(shouldUseReadingReview);
             if (shouldUseListeningReview) {
               processListeningExamData(section, 'section');
+            } else if (shouldUseReadingReview) {
+              processReadingExamData(section, 'section');
             } else {
               processExamData(section, testResult, 'section');
             }
@@ -195,11 +217,15 @@ export default function TestResultReview() {
           if (response.data.success) {
             const skill = response.data.data;
             const shouldUseListeningReview = isListeningReviewResult(testResult, skill);
+            const shouldUseReadingReview = isReadingReviewResult(testResult, skill);
             setSkillData(skill);
             setSectionData(null);
             setIsListeningReview(shouldUseListeningReview);
+            setIsReadingReview(shouldUseReadingReview);
             if (shouldUseListeningReview) {
               processListeningExamData(skill, 'skill');
+            } else if (shouldUseReadingReview) {
+              processReadingExamData(skill, 'skill');
             } else {
               processExamData(skill, testResult, 'skill');
             }
@@ -226,6 +252,25 @@ export default function TestResultReview() {
     setParts(listeningReviewData.parts);
   };
 
+const processReadingExamData = (data, type) => {
+  const readingReviewData = buildReadingReviewData(data, type);
+  setCurrentPartTab(1);
+  if (type === 'section') {
+    setPassages([{ id: data.id, part: 1, title: data.title || 'Reading Passage', subtitle: '', content: data.content || '' }]);
+  } else {
+    setPassages(
+      (data.sections || []).map((section, idx) => ({
+        id: section.id,
+        part: idx + 1,
+        title: section.title || `Reading Passage ${idx + 1}`,
+        subtitle: '',
+        content: section.content || ''
+      }))
+    );
+  }
+  setQuestionGroups(readingReviewData.groups);
+  setParts(readingReviewData.parts);
+};
   const processExamData = (data, testResult, type) => {
     if (type === 'section') {
       // Process single section
@@ -294,6 +339,10 @@ export default function TestResultReview() {
           switch (questionType) {
             case 'multiple_choice':
             case 'matching':
+            case 'matching_information':
+            case 'matching_headings':
+            case 'matching_features':
+            case 'matching_sentence_endings':
               if (group.questions && group.questions.length > 0) {
                 const firstQuestion = group.questions[0];
                 if (firstQuestion.metadata) {
@@ -302,12 +351,12 @@ export default function TestResultReview() {
                     : firstQuestion.metadata;
                   
                   if (metadata.answers && Array.isArray(metadata.answers)) {
-                    options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
+                    options = metadata.answers.map((answer, index) => answer.letter || answer.label || String.fromCharCode(65 + index));
                     optionsWithContent = metadata.answers.map((answer, index) => {
                       let content = answer.content || '';
                       content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
                       return {
-                        letter: String.fromCharCode(65 + index),
+                        letter: answer.letter || answer.label || String.fromCharCode(65 + index),
                         content: content
                       };
                     });
@@ -425,6 +474,10 @@ export default function TestResultReview() {
               switch (questionType) {
                 case 'multiple_choice':
                 case 'matching':
+                case 'matching_information':
+                case 'matching_headings':
+                case 'matching_features':
+                case 'matching_sentence_endings':
                   if (group.questions && group.questions.length > 0) {
                     const firstQuestion = group.questions[0];
                     if (firstQuestion.metadata) {
@@ -433,12 +486,12 @@ export default function TestResultReview() {
                         : firstQuestion.metadata;
                       
                       if (metadata.answers && Array.isArray(metadata.answers)) {
-                        options = metadata.answers.map((_, index) => String.fromCharCode(65 + index));
+                        options = metadata.answers.map((answer, index) => answer.letter || answer.label || String.fromCharCode(65 + index));
                         optionsWithContent = metadata.answers.map((answer, index) => {
                           let content = answer.content || '';
                           content = content.replace(/^<p[^>]*>|<\/p>$/gi, '').trim();
                           return {
-                            letter: String.fromCharCode(65 + index),
+                            letter: answer.letter || answer.label || String.fromCharCode(65 + index),
                             content: content
                           };
                         });
@@ -509,6 +562,8 @@ export default function TestResultReview() {
   };
 
   const toggleExplanation = (questionId) => {
+    const nextExpanded = !expandedExplanations[questionId];
+    setActiveQuestionId(nextExpanded ? questionId : null);
     setExpandedExplanations(prev => ({
       ...prev,
       [questionId]: !prev[questionId]
@@ -523,10 +578,7 @@ export default function TestResultReview() {
 
   const handleLocate = (locateText) => {
     if (!locateText) return;
-    
-    // TODO: Implement highlight logic in passage
     console.log('Locate:', locateText);
-    alert(`Locate: ${locateText}`);
   };
 
   if (loading) {
@@ -541,7 +593,7 @@ export default function TestResultReview() {
     );
   }
 
-  if ((!isListeningReview && (!passages || passages.length === 0)) || questionGroups.length === 0) {
+  if ((!isListeningReview && !isReadingReview && (!passages || passages.length === 0)) || questionGroups.length === 0) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <div style={{ textAlign: 'center' }}>
@@ -553,8 +605,14 @@ export default function TestResultReview() {
     );
   }
 
-  const currentPassage = passages.find(p => p.part === currentPartTab) || passages[0];
-  const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
+  const currentPart = parts.find((part) => String(part.part) === String(currentPartTab));
+  const currentPartGroups = questionGroups.filter((group) => String(group.part) === String(currentPartTab));
+  const currentReviewType = (currentPartGroups[0]?.type || '').toLowerCase();
+  const isTrueFalseNotGivenReview = currentReviewType === 'true_false_not_given';
+  const isMatchingHeadingsReview = currentReviewType === 'matching_headings';
+  const currentPassage = currentPart?.id
+    ? passages.find((passage) => String(passage.id) === String(currentPart.id))
+    : passages.find((passage) => String(passage.part) === String(currentPartTab));
 
   if (isListeningReview) {
     return (
@@ -576,287 +634,33 @@ export default function TestResultReview() {
     );
   }
 
+  if (!currentPassage) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '18px', color: '#EF4444', marginBottom: '16px' }}>
+            Không tìm thấy passage cho section hiện tại
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render câu hỏi ở chế độ review (readonly with colors)
   const renderReviewQuestions = (group) => {
     const questionType = (group.type || '').toLowerCase();
-
-    // SHORT_TEXT
-    const hasPlaceholders = containsInlinePlaceholders(group.groupContent);
-    if (hasPlaceholders || isTextReviewQuestionType(questionType)) {
-      // Dạng 1: Inline placeholders trong group content
-      if (hasPlaceholders) {
-        return (
-          <div className="reading-test__question-group-with-inputs">
-            <GroupContentWithInlineInputsReview
-              content={group.groupContent}
-              questions={group.questions}
-              userAnswers={userAnswers}
-            />
-            {/* Show explanations for each question - ALWAYS visible */}
-            {group.questions.map((question) => (
-              <div key={question.id} style={{ marginTop: '12px' }}>
-                {/* Explanation - Always show if exists */}
-                {question.explanation && (
-                  <div className="review-explanation-section">
-                    <strong>Giải thích câu {question.number}:</strong>
-                    <div 
-                      className="review-explanation-text"
-                      dangerouslySetInnerHTML={{ __html: question.explanation }}
-                    />
-                  </div>
-                )}
-                
-                {/* Action Buttons - Only Locate */}
-                {question.locateText && (
-                  <div className="review-actions" style={{ marginTop: '8px' }}>
-                    <button 
-                      className="review-action-btn review-locate-btn"
-                      onClick={() => handleLocate(question.locateText)}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.35-4.35"></path>
-                      </svg>
-                      Locate
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      }
-      
-      // Dạng 2: Standalone inputs (mỗi câu hỏi có input riêng)
-      return group.questions.map((question) => {
-        const answerData = userAnswers[question.id] || {};
-        const isCorrect = answerData.isCorrect;
-        const userAnswer = answerData.userAnswer || '';
-        const correctAnswer = answerData.correctAnswer || question.correctAnswer;
-
-        return (
-          <div key={question.id} className="reading-test__question-item reading-test__question-item--review">
-            <div className="reading-test__question-row">
-              <div className="reading-test__question-number">{question.number}.</div>
-              <div
-                className="reading-test__question-text"
-                dangerouslySetInnerHTML={{ __html: question.content }}
-              />
-            </div>
-            
-            {/* User's text input answer */}
-            <div className="review-text-answer-wrapper">
-              <input
-                type="text"
-                className={`review-text-answer ${isCorrect ? 'correct' : 'incorrect'}`}
-                value={userAnswer || ''}
-                disabled
-                readOnly
-                placeholder={userAnswer ? '' : '(Chưa trả lời)'}
-              />
-              
-              {/* Show correct answer if wrong */}
-              {!isCorrect && (
-                <div className="review-correct-answer">
-                  Đáp án đúng: {correctAnswer}
-                </div>
-              )}
-            </div>
-
-            {/* Explanation Section - Always visible */}
-            {question.explanation && (
-              <div className="review-explanation-section">
-                <strong>Giải thích:</strong>
-                <div 
-                  className="review-explanation-text"
-                  dangerouslySetInnerHTML={{ __html: question.explanation }}
-                />
-              </div>
-            )}
-
-            {/* Action Buttons - Only Locate */}
-            {question.locateText && (
-              <div className="review-actions">
-                <button 
-                  className="review-action-btn review-locate-btn"
-                  onClick={() => handleLocate(question.locateText)}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                  </svg>
-                  Locate
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      });
-    }
-
-    // MULTIPLE_CHOICE
-    if (isChoiceReviewQuestionType(questionType)) {
-      return group.questions.map((question) => {
-        const answerData = userAnswers[question.id] || {};
-        const isCorrect = answerData.isCorrect;
-        const userAnswer = answerData.userAnswer;
-        const correctAnswer = answerData.correctAnswer || question.correctAnswer;
-
-        return (
-          <div key={question.id} className="reading-test__question-item reading-test__question-item--review">
-            <div className="reading-test__question-row">
-              <div className="reading-test__question-number">{question.number}.</div>
-              <span className={`review-answer-badge ${isCorrect ? 'correct' : 'incorrect'}`}>
-                {userAnswer || <em>(Chưa trả lời)</em>}
-              </span>
-              <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-            </div>
-            
-            {/* Answer Badge */}
-            {/* <div className="review-answer-badge-wrapper">
-              <span className={`review-answer-badge ${isCorrect ? 'correct' : 'incorrect'}`}>
-                {userAnswer || <em>(Chưa trả lời)</em>}
-              </span>
-            </div> */}
-
-            {/* Show correct answer if wrong */}
-            {!isCorrect && expandedExplanations[question.id] && (
-              <div className="review-correct-answer-section">
-                <strong>Đáp án:</strong>
-                <div className="review-correct-answer-text">{correctAnswer}</div>
-              </div>
-            )}
-
-            {/* Explanation Section */}
-            {expandedExplanations[question.id] && question.explanation && (
-              <div className="review-explanation-section">
-                <strong>Giải thích:</strong>
-                <div 
-                  className="review-explanation-text"
-                  dangerouslySetInnerHTML={{ __html: question.explanation }}
-                />
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div className="review-actions">
-              {question.locateText && (
-                <button 
-                  className="review-action-btn review-locate-btn"
-                  onClick={() => handleLocate(question.locateText)}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                  </svg>
-                  Locate
-                </button>
-              )}
-
-              {question.explanation && (
-                <button
-                  className="review-action-btn review-explain-btn"
-                  onClick={() => toggleExplanation(question.id)}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none">
-  <path d="M4.16667 6.66667H5C5.22101 6.66667 5.43297 6.57887 5.58926 6.42259C5.74554 6.26631 5.83333 6.05435 5.83333 5.83333C5.83333 5.61232 5.74554 5.40036 5.58926 5.24408C5.43297 5.0878 5.22101 5 5 5H4.16667C3.94565 5 3.73369 5.0878 3.57741 5.24408C3.42113 5.40036 3.33333 5.61232 3.33333 5.83333C3.33333 6.05435 3.42113 6.26631 3.57741 6.42259C3.73369 6.57887 3.94565 6.66667 4.16667 6.66667ZM7.5 11.6667H4.16667C3.94565 11.6667 3.73369 11.7545 3.57741 11.9107C3.42113 12.067 3.33333 12.279 3.33333 12.5C3.33333 12.721 3.42113 12.933 3.57741 13.0893C3.73369 13.2455 3.94565 13.3333 4.16667 13.3333H7.5C7.72101 13.3333 7.93297 13.2455 8.08926 13.0893C8.24554 12.933 8.33333 12.721 8.33333 12.5C8.33333 12.279 8.24554 12.067 8.08926 11.9107C7.93297 11.7545 7.72101 11.6667 7.5 11.6667ZM7.5 8.33333H4.16667C3.94565 8.33333 3.73369 8.42113 3.57741 8.57741C3.42113 8.73369 3.33333 8.94565 3.33333 9.16667C3.33333 9.38768 3.42113 9.59964 3.57741 9.75592C3.73369 9.9122 3.94565 10 4.16667 10H7.5C7.72101 10 7.93297 9.9122 8.08926 9.75592C8.24554 9.59964 8.33333 9.38768 8.33333 9.16667C8.33333 8.94565 8.24554 8.73369 8.08926 8.57741C7.93297 8.42113 7.72101 8.33333 7.5 8.33333ZM13.2667 6.15C13.3305 5.99824 13.3479 5.83098 13.3168 5.66932C13.2856 5.50766 13.2073 5.35885 13.0917 5.24167L8.09167 0.241667C8.02278 0.176847 7.94402 0.123401 7.85833 0.0833333C7.83346 0.0798001 7.80821 0.0798001 7.78333 0.0833333L7.55 0H2.5C1.83696 0 1.20107 0.263392 0.732233 0.732233C0.263392 1.20107 0 1.83696 0 2.5V14.1667C0 14.8297 0.263392 15.4656 0.732233 15.9344C1.20107 16.4033 1.83696 16.6667 2.5 16.6667H7.5C7.72101 16.6667 7.93297 16.5789 8.08926 16.4226C8.24554 16.2663 8.33333 16.0543 8.33333 15.8333C8.33333 15.6123 8.24554 15.4004 8.08926 15.2441C7.93297 15.0878 7.72101 15 7.5 15H2.5C2.27899 15 2.06702 14.9122 1.91074 14.7559C1.75446 14.5996 1.66667 14.3877 1.66667 14.1667V2.5C1.66667 2.27899 1.75446 2.06702 1.91074 1.91074C2.06702 1.75446 2.27899 1.66667 2.5 1.66667H6.66667V4.16667C6.66667 4.82971 6.93006 5.46559 7.3989 5.93443C7.86774 6.40327 8.50362 6.66667 9.16667 6.66667H12.5C12.6645 6.66585 12.8251 6.61634 12.9616 6.5244C13.098 6.43245 13.2041 6.30218 13.2667 6.15ZM9.16667 5C8.94565 5 8.73369 4.9122 8.57741 4.75592C8.42113 4.59964 8.33333 4.38768 8.33333 4.16667V2.84167L10.4917 5H9.16667ZM15 8.33333H10.8333C10.6123 8.33333 10.4004 8.42113 10.2441 8.57741C10.0878 8.73369 10 8.94565 10 9.16667V15.8333C10.0004 15.9841 10.0417 16.1319 10.1195 16.261C10.1972 16.3902 10.3086 16.4958 10.4417 16.5667C10.572 16.6336 10.7176 16.665 10.8639 16.6576C11.0102 16.6503 11.152 16.6046 11.275 16.525L12.9167 15.4417L14.5833 16.525C14.7078 16.597 14.8488 16.6356 14.9926 16.6369C15.1364 16.6383 15.2782 16.6024 15.404 16.5328C15.5298 16.4631 15.6355 16.3621 15.7107 16.2396C15.786 16.117 15.8282 15.9771 15.8333 15.8333V9.16667C15.8333 8.94565 15.7455 8.73369 15.5893 8.57741C15.433 8.42113 15.221 8.33333 15 8.33333ZM14.1667 14.2667L13.3833 13.7417C13.2455 13.6485 13.083 13.5987 12.9167 13.5987C12.7503 13.5987 12.5878 13.6485 12.45 13.7417L11.6667 14.2667V10H14.1667V14.2667Z" fill="#045CCE"/>
-</svg>
-                Giải thích
-              </button>
-              )}
-            </div>
-            {question.locateText && (
-              <div className="review-actions">
-                <button 
-                  className="review-action-btn review-locate-btn"
-                  onClick={() => handleLocate(question.locateText)}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                  </svg>
-                  Locate
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      });
-    }
-
-    // DEFAULT (YES/NO/NOT GIVEN, TRUE/FALSE/NOT GIVEN, etc.)
-    return group.questions.map((question) => {
-      const answerData = userAnswers[question.id] || {};
-      const isCorrect = answerData.isCorrect;
-      const userAnswer = answerData.userAnswer;
-      const correctAnswer = answerData.correctAnswer || question.correctAnswer;
-
-      return (
-        <div key={question.id} className="reading-test__question-item reading-test__question-item--review">
-          <div className="reading-test__question-row">
-            <div className="reading-test__question-number">{question.number}.</div>
-            <span className={`review-answer-badge ${isCorrect ? 'correct' : 'incorrect'}`}>
-              {userAnswer || <em>(Chưa trả lời)</em>}
-            </span>
-            <div className="reading-test__question-text" dangerouslySetInnerHTML={{ __html: question.content }} />
-          </div>
-          
-          {/* Answer Badge */}
-          {/* <div className="review-answer-badge-wrapper">
-            <span className={`review-answer-badge ${isCorrect ? 'correct' : 'incorrect'}`}>
-              {userAnswer || <em>(Chưa trả lời)</em>}
-            </span>
-          </div> */}
-
-          {/* Show correct answer if wrong */}
-          {!isCorrect && expandedExplanations[question.id] && (
-            <div className="review-correct-answer-section">
-              <strong>Đáp án:</strong>
-              <div className="review-correct-answer-text">{correctAnswer}</div>
-            </div>
-          )}
-
-          {/* Explanation Section */}
-          {expandedExplanations[question.id] && question.explanation && (
-            <div className="review-explanation-section">
-              <strong>Giải thích:</strong>
-              <div 
-                className="review-explanation-text"
-                dangerouslySetInnerHTML={{ __html: question.explanation }}
-              />
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="review-actions">
-            {question.locateText && (
-              <button 
-                className="review-action-btn review-locate-btn"
-                onClick={() => handleLocate(question.locateText)}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                Locate
-              </button>
-            )}
-
-            {question.explanation && (
-              <button
-                className="review-action-btn review-explain-btn"
-                onClick={() => toggleExplanation(question.id)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="17" viewBox="0 0 16 17" fill="none">
-  <path d="M4.16667 6.66667H5C5.22101 6.66667 5.43297 6.57887 5.58926 6.42259C5.74554 6.26631 5.83333 6.05435 5.83333 5.83333C5.83333 5.61232 5.74554 5.40036 5.58926 5.24408C5.43297 5.0878 5.22101 5 5 5H4.16667C3.94565 5 3.73369 5.0878 3.57741 5.24408C3.42113 5.40036 3.33333 5.61232 3.33333 5.83333C3.33333 6.05435 3.42113 6.26631 3.57741 6.42259C3.73369 6.57887 3.94565 6.66667 4.16667 6.66667ZM7.5 11.6667H4.16667C3.94565 11.6667 3.73369 11.7545 3.57741 11.9107C3.42113 12.067 3.33333 12.279 3.33333 12.5C3.33333 12.721 3.42113 12.933 3.57741 13.0893C3.73369 13.2455 3.94565 13.3333 4.16667 13.3333H7.5C7.72101 13.3333 7.93297 13.2455 8.08926 13.0893C8.24554 12.933 8.33333 12.721 8.33333 12.5C8.33333 12.279 8.24554 12.067 8.08926 11.9107C7.93297 11.7545 7.72101 11.6667 7.5 11.6667ZM7.5 8.33333H4.16667C3.94565 8.33333 3.73369 8.42113 3.57741 8.57741C3.42113 8.73369 3.33333 8.94565 3.33333 9.16667C3.33333 9.38768 3.42113 9.59964 3.57741 9.75592C3.73369 9.9122 3.94565 10 4.16667 10H7.5C7.72101 10 7.93297 9.9122 8.08926 9.75592C8.24554 9.59964 8.33333 9.38768 8.33333 9.16667C8.33333 8.94565 8.24554 8.73369 8.08926 8.57741C7.93297 8.42113 7.72101 8.33333 7.5 8.33333ZM13.2667 6.15C13.3305 5.99824 13.3479 5.83098 13.3168 5.66932C13.2856 5.50766 13.2073 5.35885 13.0917 5.24167L8.09167 0.241667C8.02278 0.176847 7.94402 0.123401 7.85833 0.0833333C7.83346 0.0798001 7.80821 0.0798001 7.78333 0.0833333L7.55 0H2.5C1.83696 0 1.20107 0.263392 0.732233 0.732233C0.263392 1.20107 0 1.83696 0 2.5V14.1667C0 14.8297 0.263392 15.4656 0.732233 15.9344C1.20107 16.4033 1.83696 16.6667 2.5 16.6667H7.5C7.72101 16.6667 7.93297 16.5789 8.08926 16.4226C8.24554 16.2663 8.33333 16.0543 8.33333 15.8333C8.33333 15.6123 8.24554 15.4004 8.08926 15.2441C7.93297 15.0878 7.72101 15 7.5 15H2.5C2.27899 15 2.06702 14.9122 1.91074 14.7559C1.75446 14.5996 1.66667 14.3877 1.66667 14.1667V2.5C1.66667 2.27899 1.75446 2.06702 1.91074 1.91074C2.06702 1.75446 2.27899 1.66667 2.5 1.66667H6.66667V4.16667C6.66667 4.82971 6.93006 5.46559 7.3989 5.93443C7.86774 6.40327 8.50362 6.66667 9.16667 6.66667H12.5C12.6645 6.66585 12.8251 6.61634 12.9616 6.5244C13.098 6.43245 13.2041 6.30218 13.2667 6.15ZM9.16667 5C8.94565 5 8.73369 4.9122 8.57741 4.75592C8.42113 4.59964 8.33333 4.38768 8.33333 4.16667V2.84167L10.4917 5H9.16667ZM15 8.33333H10.8333C10.6123 8.33333 10.4004 8.42113 10.2441 8.57741C10.0878 8.73369 10 8.94565 10 9.16667V15.8333C10.0004 15.9841 10.0417 16.1319 10.1195 16.261C10.1972 16.3902 10.3086 16.4958 10.4417 16.5667C10.572 16.6336 10.7176 16.665 10.8639 16.6576C11.0102 16.6503 11.152 16.6046 11.275 16.525L12.9167 15.4417L14.5833 16.525C14.7078 16.597 14.8488 16.6356 14.9926 16.6369C15.1364 16.6383 15.2782 16.6024 15.404 16.5328C15.5298 16.4631 15.6355 16.3621 15.7107 16.2396C15.786 16.117 15.8282 15.9771 15.8333 15.8333V9.16667C15.8333 8.94565 15.7455 8.73369 15.5893 8.57741C15.433 8.42113 15.221 8.33333 15 8.33333ZM14.1667 14.2667L13.3833 13.7417C13.2455 13.6485 13.083 13.5987 12.9167 13.5987C12.7503 13.5987 12.5878 13.6485 12.45 13.7417L11.6667 14.2667V10H14.1667V14.2667Z" fill="#045CCE"/>
-</svg>
-                Giải thích
-              </button>
-            )}
-          </div>
-        </div>
-      );
-    });
+    const ReviewComponent = getReadingReviewRenderer(questionType);
+    return (
+      <ReviewComponent
+        group={group}
+        userAnswers={userAnswers}
+        expandedExplanations={expandedExplanations}
+        activeQuestionId={activeQuestionId}
+        onToggleExplanation={toggleExplanation}
+        onQuestionFocus={(question) => setActiveQuestionId(question?.id ?? null)}
+        onLocate={handleLocate}
+      />
+    );
   };
 
   return (
@@ -869,57 +673,55 @@ export default function TestResultReview() {
       currentPartTab={currentPartTab}
       setCurrentPartTab={setCurrentPartTab}
       questionGroups={questionGroups}
-      answers={{}} // Empty answers in review mode
-      onSubmit={null} // No submit in review mode
+      answers={buildFooterAnswers(userAnswers)}
+      onSubmit={null}
       showQuestionNumbers={true}
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
-      {/* Main Content - Passage và Questions */}
-      <div className="reading-test__content-wrapper">
-        {/* Passage Panel */}
-        <div className="reading-test__passage">
-          <div className="reading-test__passage-header">
-            <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
-            {currentPassage.subtitle && (
-              <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
-            )}
-          </div>
-          <PassageContent
-            fontSize={fontSize}
-            content={currentPassage.content}
-          />
-        </div>
-
-        {/* Questions Panel */}
-        <div className={`reading-test__questions reading-test__questions--${fontSize}`}>
-          {currentPartGroups.map((group) => (
-            <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
-              {/* Group Header */}
-              <div className="reading-test__group-header">
-                <h3>Questions {group.startNumber} - {group.endNumber}</h3>
-                {group.instructions && (
-                  <div 
-                    className="reading-test__group-instructions"
-                    dangerouslySetInnerHTML={{ __html: group.instructions }}
-                  />
+      <div className={isReadingReview ? 'reading-review__content-shell' : 'reading-test__content-wrapper'}>
+        {isReadingReview && (
+          <h1 className="reading-review__passage-title">
+            {isTrueFalseNotGivenReview || isMatchingHeadingsReview
+              ? 'Reading'
+              : /reading\s+passage/i.test(currentPassage.title || '')
+              ? currentPassage.title
+              : `Reading passage ${currentPartTab}`}
+          </h1>
+        )}
+        <div className={[
+          isReadingReview ? 'reading-test__content-wrapper reading-review__content-wrapper' : 'reading-test__content-wrapper',
+          isTrueFalseNotGivenReview ? 'reading-review__content-wrapper--tfng' : ''
+        ].filter(Boolean).join(' ')}>
+          <div className={isReadingReview ? 'reading-test__passage reading-review__passage' : 'reading-test__passage'}>
+            {!isReadingReview && (
+              <div className="reading-test__passage-header">
+                <h2 className="reading-test__passage-title">{currentPassage.title}</h2>
+                {currentPassage.subtitle && (
+                  <p className="reading-test__passage-subtitle">{currentPassage.subtitle}</p>
                 )}
               </div>
+            )}
+            {isReadingReview ? (
+              <ReadingReviewPassageContent
+                fontSize={fontSize}
+                content={currentPassage.content}
+                groups={currentPartGroups}
+                userAnswers={userAnswers}
+                activeQuestionId={activeQuestionId}
+              />
+            ) : (
+              <PassageContent fontSize={fontSize} content={currentPassage.content} />
+            )}
+          </div>
 
-              {/* Group Content */}
-              {group.groupContent && !containsInlinePlaceholders(group.groupContent) && (
-                <div
-                  className="reading-test__group-content"
-                  dangerouslySetInnerHTML={{ __html: group.groupContent }}
-                />
-              )}
-
-              {/* Questions in Review Mode */}
-              <div className="reading-test__questions-list">
+          <div className={`reading-test__questions reading-test__questions--${fontSize} ${isReadingReview ? 'reading-review__questions' : ''}`}>
+            {currentPartGroups.map((group) => (
+              <div key={group.id} id={`question-group-${group.id}`} className="reading-test__question-group">
                 {renderReviewQuestions(group)}
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </TestLayout>

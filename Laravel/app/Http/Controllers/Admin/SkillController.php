@@ -17,11 +17,19 @@ class SkillController extends Controller
 {
     private const DEFAULT_QUESTION_TYPE_OPTIONS = [
         'multiple_choice' => 'Multiple Choice',
-        'yes_no_not_given' => 'Yes/No/Not Given',
         'true_false_not_given' => 'True/False/Not Given',
-        'short_text' => 'Short Text',
+        'yes_no_not_given' => 'Yes/No/Not Given',
+        'matching_information' => 'Matching Information',
+        'matching_headings' => 'Matching Headings',
+        'matching_features' => 'Matching Features',
+        'matching_sentence_endings' => 'Matching Sentence Endings',
+        'sentence_completion' => 'Sentence Completion',
+        'summary_completion' => 'Summary Completion',
         'note_completion' => 'Note Completion',
-        'table_selection' => 'Table Selection',
+        'table_completion' => 'Table Completion',
+        'flow_chart_completion' => 'Flow-chart Completion',
+        'diagram_label_completion' => 'Diagram Label Completion',
+        'short_answer_questions' => 'Short-answer Questions',
     ];
 
     private const LISTENING_QUESTION_TYPE_OPTIONS = [

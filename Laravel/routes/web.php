@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ImageUploadController;
 use App\Http\Controllers\Admin\PaymentPackageController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SkillController;
+use App\Http\Controllers\Admin\SkillImportController;
 
 
 /*
@@ -82,6 +83,9 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
     Route::patch('exams/{exam}/toggle-active', [AdminExamController::class, 'toggleActive'])->name('exams.toggle-active');
 
     // Skills Management Routes (Independent)
+    Route::get('skills/{skill}/import-template', [SkillImportController::class, 'template'])->name('skills.import-template');
+    Route::post('skills/{skill}/import/preview', [SkillImportController::class, 'preview'])->name('skills.import.preview');
+    Route::post('skills/{skill}/import/confirm', [SkillImportController::class, 'confirm'])->name('skills.import.confirm');
     Route::resource('skills', SkillController::class);
     Route::patch('skills/{skill}/toggle-active', [SkillController::class, 'toggleActive'])->name('skills.toggle-active');
     Route::get('api/tests-by-exam', [SkillController::class, 'getTestsByExam'])->name('api.tests-by-exam');

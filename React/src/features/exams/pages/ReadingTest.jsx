@@ -309,6 +309,11 @@ const ReadingTest = () => {
       isReadingMatchingSentenceEndingsGroup
     );
 
+  const isMatchingHeadingsLayout =
+    currentPartGroups.some(
+      isReadingMatchingHeadingsGroup
+    );
+
   const isMultipleChoiceLayout =
     currentPartGroups.some(
       isReadingMultipleChoiceGroup
@@ -523,6 +528,11 @@ const ReadingTest = () => {
             : ''
           }
 
+          ${isMatchingHeadingsLayout
+            ? 'reading-test__content--matching-headings'
+            : ''
+          }
+
           ${isMultipleChoiceLayout
             ? 'reading-test__content--multiple-choice'
             : ''
@@ -548,18 +558,48 @@ const ReadingTest = () => {
             : ''
           }
 
+          ${isNoteCompletionLayout
+            ? 'reading-test__content--note-completion'
+            : ''
+          }
+
+          ${isTableCompletionLayout
+            ? 'reading-test__content--table-completion'
+            : ''
+          }
+
+          ${isFlowChartLayout
+            ? 'reading-test__content--flow-chart'
+            : ''
+          }
+
+          ${isDiagramLabelLayout
+            ? 'reading-test__content--diagram'
+            : ''
+          }
+
           ${isShortAnswerLayout
             ? 'reading-test__content--short-answer'
             : ''
           }
         `}
       >
+        {isTwoColumnLayout && (
+          <h1 className="reading-test__two-column-title">
+            {isTFNGLayout || isYNNGLayout || isMatchingHeadingsLayout ? 'Reading' : `Reading passage ${currentPartTab}`}
+          </h1>
+        )}
+
         <ReadingPassagePanel
           currentPartTab={
             currentPartTab
           }
           passage={currentPassage}
           groups={currentPartGroups}
+          answers={answers}
+          onAnswerChange={
+            handleAnswerSelect
+          }
         />
 
         <div className="reading-test__right-column">

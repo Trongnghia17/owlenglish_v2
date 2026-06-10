@@ -156,8 +156,6 @@ const getShortAnswerInstructions = (
 
 function ReadingQuestionGroup({
   group,
-  currentPartTab,
-  showPartTitle = true,
   showGroupContent = true,
   answers,
   onAnswerChange
@@ -241,6 +239,11 @@ function ReadingQuestionGroup({
           : ''
       }
       ${
+        isTrueFalse || isYesNo
+          ? 'reading-test__question-group--choice'
+          : ''
+      }
+      ${
         isMatching
           ? 'reading-test__question-group--matching'
           : ''
@@ -282,13 +285,6 @@ function ReadingQuestionGroup({
       }
     `}
     >
-      {showPartTitle && (
-        <h2>
-          Reading Passage{' '}
-          {currentPartTab}
-        </h2>
-      )}
-
       {(isMultipleChoice ||
         isMatching ||
         isTrueFalse ||
