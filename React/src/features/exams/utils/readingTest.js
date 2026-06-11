@@ -42,6 +42,10 @@ const TWO_COLUMN_QUESTION_TYPES = new Set([
 ]);
 
 const MULTI_SLOT_TEXT_QUESTION_TYPES = new Set([
+  'note_completion',
+  'table_completion',
+  'flow_chart_completion',
+  'diagram_label_completion',
   'summary_completion',
   'sentence_completion',
   'short_answer_questions'

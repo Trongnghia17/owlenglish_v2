@@ -380,6 +380,7 @@ function ReadingQuestionGroup({
 
       {showGroupContent &&
         group.groupContent &&
+        !isShortAnswer &&
         !containsInlinePlaceholders(
           group.groupContent
         ) && (

@@ -382,6 +382,7 @@ const processReadingExamData = (data, type) => {
             case 'form_completion':
             case 'table_completion':
             case 'flow_chart_completion':
+            case 'diagram_label_completion':
             case 'summary_completion':
             case 'sentence_completion':
             case 'short_answer_questions':
@@ -517,6 +518,7 @@ const processReadingExamData = (data, type) => {
                 case 'form_completion':
                 case 'table_completion':
                 case 'flow_chart_completion':
+                case 'diagram_label_completion':
                 case 'summary_completion':
                 case 'sentence_completion':
                 case 'short_answer_questions':
@@ -614,6 +616,11 @@ const processReadingExamData = (data, type) => {
   const isMatchingSentenceEndingsReview = currentReviewType === 'matching_sentence_endings';
   const isSummaryCompletionReview = currentReviewType === 'summary_completion';
   const isSentenceCompletionReview = currentReviewType === 'sentence_completion';
+  const isNoteCompletionReview = currentReviewType === 'note_completion';
+  const isTableCompletionReview = currentReviewType === 'table_completion';
+  const isFlowChartCompletionReview = currentReviewType === 'flow_chart_completion';
+  const isDiagramLabelCompletionReview = currentReviewType === 'diagram_label_completion';
+  const isShortAnswerReview = currentReviewType === 'short_answer_questions';
   const currentPassage = currentPart?.id
     ? passages.find((passage) => String(passage.id) === String(currentPart.id))
     : passages.find((passage) => String(passage.part) === String(currentPartTab));
@@ -691,7 +698,12 @@ const processReadingExamData = (data, type) => {
               isMatchingFeaturesReview ||
               isMatchingSentenceEndingsReview ||
               isSummaryCompletionReview ||
-              isSentenceCompletionReview
+              isSentenceCompletionReview ||
+              isNoteCompletionReview ||
+              isTableCompletionReview ||
+              isFlowChartCompletionReview ||
+              isDiagramLabelCompletionReview ||
+              isShortAnswerReview
               ? 'Reading'
               : /reading\s+passage/i.test(currentPassage.title || '')
               ? currentPassage.title
@@ -705,7 +717,12 @@ const processReadingExamData = (data, type) => {
           isMatchingFeaturesReview ? 'reading-review__content-wrapper--matching-features' : '',
           isMatchingSentenceEndingsReview ? 'reading-review__content-wrapper--matching-sentence-endings' : '',
           isSummaryCompletionReview ? 'reading-review__content-wrapper--summary-completion' : '',
-          isSentenceCompletionReview ? 'reading-review__content-wrapper--sentence-completion' : ''
+          isSentenceCompletionReview ? 'reading-review__content-wrapper--sentence-completion' : '',
+          isNoteCompletionReview ? 'reading-review__content-wrapper--note-completion' : '',
+          isTableCompletionReview ? 'reading-review__content-wrapper--table-completion' : '',
+          isFlowChartCompletionReview ? 'reading-review__content-wrapper--flow-chart' : '',
+          isDiagramLabelCompletionReview ? 'reading-review__content-wrapper--diagram' : '',
+          isShortAnswerReview ? 'reading-review__content-wrapper--short-answer' : ''
         ].filter(Boolean).join(' ')}>
           <div className={isReadingReview ? 'reading-test__passage reading-review__passage' : 'reading-test__passage'}>
             {!isReadingReview && (

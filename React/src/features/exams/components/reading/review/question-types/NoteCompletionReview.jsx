@@ -1,55 +1,156 @@
-import { useMemo } from 'react';
-import { getReviewAnswerData, getReviewCorrectAnswer, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import {
+  getQuestionExplanation,
+  getQuestionLocateText,
+  getReviewAnswerData,
+  getReviewCorrectAnswer,
+  isCorrectResultValue,
+  stripHtmlToText
+} from '../readingReviewUtils';
 
-function ReviewItem({ question, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
+function NoteCompletionReviewItem({
+  question,
+  userAnswers,
+  expandedExplanations = {},
+  activeQuestionId,
+  onToggleExplanation,
+  onQuestionFocus
+}) {
   const answerData = getReviewAnswerData(userAnswers, question);
   const userAnswer = stripHtmlToText(answerData.userAnswer || '');
   const correctAnswer = getReviewCorrectAnswer(answerData, question);
   const isCorrect = isCorrectResultValue(answerData.isCorrect);
   const isUnanswered = !userAnswer;
-
   const isExpanded = Boolean(expandedExplanations[question.id]);
+  const isActive = String(activeQuestionId ?? '') === String(question.id);
+  const stateClass = isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect';
   const explanation = getQuestionExplanation(question);
   const locateText = getQuestionLocateText(question);
+  const hasStructuredExplanation = /<(ul|ol|li)\b|vị trí|từ khoá|từ khóa|giải thích|keywords/i.test(explanation);
+
+  const handleToggle = () => {
+    onQuestionFocus?.(question);
+    onToggleExplanation?.(question.id);
+  };
 
   return (
-    <div className={`reading-review__text-row ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
-      <span className="reading-review__answer-number">{question.number}.</span>
-      <div className="reading-review__text-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-      <div className={`reading-review__text-answer-field ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
-        {userAnswer || <em>(Chưa trả lời)</em>}
-      </div>
-      {!isCorrect && !isUnanswered && (
-        <div className="reading-review__text-correct-answer">Đáp án đúng: <strong>{correctAnswer}</strong></div>
-      )}
-      {(explanation || locateText) && (
-        <div className="reading-review__text-actions">
-          {explanation && (
-            <button type="button" className="reading-review__text-action-btn" onClick={() => onToggleExplanation(question.id)}>
-              {isExpanded ? 'Thu gọn' : 'Giải thích'}
-            </button>
-          )}
-          {locateText && (
-            <button type="button" className="reading-review__text-action-btn" onClick={() => onLocate(locateText)}>Locate</button>
-          )}
+    <div className={`reading-review__note-row ${stateClass} ${isExpanded ? 'is-expanded' : ''} ${isActive ? 'is-active' : ''}`}>
+      <div className="reading-review__note-question-line">
+        <span className="reading-review__note-question-number">
+          {question.number}
+        </span>
+
+        <div className="reading-review__note-dropzone">
+          <div className={`reading-review__note-answer-box ${stateClass}`}>
+            {userAnswer || 'Chưa trả lời'}
+          </div>
         </div>
-      )}
-      {isExpanded && explanation && (
-        <div className="reading-review__text-detail" dangerouslySetInnerHTML={{ __html: explanation }} />
-      )}
+      </div>
+
+      <div className="reading-review__note-feedback">
+        <div className="reading-review__note-feedback-head">
+          <span className={`reading-review__note-status ${stateClass}`}>
+            {isUnanswered ? 'Bỏ qua' : isCorrect ? 'Đúng' : 'Sai'}
+          </span>
+
+          <span className="reading-review__note-correct-answer">
+            Answer: <strong>{correctAnswer || '...'}</strong>
+          </span>
+
+          <div className="reading-review__note-feedback-action">
+            <button
+              type="button"
+              className="reading-review__note-detail-button"
+              onClick={handleToggle}
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? 'Thu gọn' : 'Chi tiết'}
+            </button>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="reading-review__note-detail">
+            {locateText && (
+              <>
+                <ul className="reading-review__note-detail-list">
+                  <li><strong>Vị trí:</strong></li>
+                </ul>
+                <ul className="reading-review__note-detail-list reading-review__note-detail-list--nested">
+                  <li>{locateText}</li>
+                </ul>
+              </>
+            )}
+
+            {explanation && hasStructuredExplanation ? (
+              <div
+                className="reading-review__note-detail-text"
+                dangerouslySetInnerHTML={{ __html: explanation }}
+              />
+            ) : explanation ? (
+              <>
+                <ul className="reading-review__note-detail-list">
+                  <li><strong>Giải thích đáp án:</strong></li>
+                </ul>
+                <ul className="reading-review__note-detail-list reading-review__note-detail-list--nested">
+                  <li>
+                    <div
+                      className="reading-review__note-detail-text"
+                      dangerouslySetInnerHTML={{ __html: explanation }}
+                    />
+                  </li>
+                </ul>
+              </>
+            ) : (
+              !locateText && (
+                <ul className="reading-review__note-detail-list">
+                  <li>Chưa có giải thích.</li>
+                </ul>
+              )
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-export default function NoteCompletionReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
+function NoteCompletionReview({
+  group,
+  userAnswers,
+  expandedExplanations,
+  activeQuestionId,
+  onToggleExplanation,
+  onQuestionFocus
+}) {
   return (
-    <section className="reading-review__answer-group reading-review__answer-group--note">
-      <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>
-      <div className="reading-review__text-list">
-        {group.questions?.map((q) => (
-          <ReviewItem key={q.id} question={q} userAnswers={userAnswers} expandedExplanations={expandedExplanations} activeQuestionId={activeQuestionId} onToggleExplanation={onToggleExplanation} onQuestionFocus={onQuestionFocus} onLocate={onLocate} />
-        ))}
+    <section className="reading-review__note-answer-group">
+      <div className="reading-review__note-instructions">
+        <p>
+          <strong>Questions {group.startNumber}-{group.endNumber}</strong>
+        </p>
+      </div>
+
+      <div className="reading-review__note-card">
+        <div className="reading-review__note-card-head">
+          Your answer
+        </div>
+
+        <div className="reading-review__note-list">
+          {group.questions?.map((question) => (
+            <NoteCompletionReviewItem
+              key={question.id}
+              question={question}
+              userAnswers={userAnswers}
+              expandedExplanations={expandedExplanations}
+              activeQuestionId={activeQuestionId}
+              onToggleExplanation={onToggleExplanation}
+              onQuestionFocus={onQuestionFocus}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
 }
+
+export default NoteCompletionReview;

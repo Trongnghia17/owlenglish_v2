@@ -612,7 +612,12 @@ const ReadingTest = () => {
             isMatchingFeaturesLayout ||
             isMatchingSentenceEndingsLayout ||
             isSummaryCompletionLayout ||
-            isSentenceCompletionLayout
+            isSentenceCompletionLayout ||
+            isNoteCompletionLayout ||
+            isTableCompletionLayout ||
+            isFlowChartLayout ||
+            isDiagramLabelLayout ||
+            isShortAnswerLayout
               ? 'Reading'
               : `Reading passage ${currentPartTab}`}
           </h1>

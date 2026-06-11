@@ -1,10 +1,7 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import NoteCompletionQuestions from './question-types/NoteCompletionQuestions';
 
-const PLACEHOLDER_PATTERN =
-  /\{\{\s*([a-zA-Z0-9_-]+)\s*\}\}/g;
-
-const getRangeText = (group) => {
+const getQuestionRange = (group) => {
   const firstNumber =
     group.startNumber ||
     group.questions?.[0]?.number ||
@@ -20,76 +17,32 @@ const getRangeText = (group) => {
     lastQuestion?.number ||
     firstNumber;
 
-  return firstNumber && lastNumber
-    ? `Questions ${firstNumber} - ${lastNumber}`
-    : 'Questions';
+  if (!firstNumber) return '';
+
+  return firstNumber === lastNumber
+    ? String(firstNumber)
+    : `${firstNumber}-${lastNumber}`;
 };
 
-const createPlaceholderHtml = (question) => `
-  <span class="reading-test__note-placeholder">
-    <span class="reading-test__note-placeholder-number">${question.number}</span>
-    <span class="reading-test__note-placeholder-line">.......</span>
-  </span>
-`;
+const createDefaultInstructions = (group) => {
+  const questionRange = getQuestionRange(group);
+  const questionLabel = questionRange
+    ? `Question ${questionRange}`
+    : 'Question';
 
-const createFallbackNoteHtml = (
-  questions = []
-) =>
-  questions
-    .map(
-      (question) => `
-        <div class="reading-test__note-line">
-          ${question.content || ''}
-          ${createPlaceholderHtml(question)}
-        </div>
-      `
-    )
-    .join('');
-
-const createNoteHtml = (
-  content,
-  questions = []
-) => {
-  if (!content) {
-    return createFallbackNoteHtml(questions);
-  }
-
-  let questionIndex = 0;
-
-  return content.replace(
-    PLACEHOLDER_PATTERN,
-    (match) => {
-      const question =
-        questions[questionIndex];
-      questionIndex += 1;
-
-      return question
-        ? createPlaceholderHtml(question)
-        : match;
-    }
-  );
+  return `
+    <strong>${questionLabel}</strong><br />
+    Complete the notes below.<br />
+    Choose <strong>ONE WORD ONLY</strong> from the passage for each answer.<br />
+    Write your answers in boxes ${questionRange || ''} on your answer sheet.
+  `;
 };
-
-const createDefaultInstructions = (group) => `
-  <strong>${getRangeText(group)}</strong><br />
-  Complete the notes below.<br />
-  Write <strong>ONE WORD ONLY</strong> for each answer.
-`;
 
 function ReadingNoteCompletionGroup({
   group,
   answers,
   onAnswerChange
 }) {
-  const noteHtml = useMemo(
-    () =>
-      createNoteHtml(
-        group.groupContent,
-        group.questions
-      ),
-    [group.groupContent, group.questions]
-  );
-
   const instructionsHtml =
     group.instructions ||
     createDefaultInstructions(group);
@@ -106,22 +59,11 @@ function ReadingNoteCompletionGroup({
         }}
       />
 
-      <div className="reading-test__note-workspace">
-        <div className="reading-test__note-card">
-          <div
-            className="reading-test__note-content"
-            dangerouslySetInnerHTML={{
-              __html: noteHtml
-            }}
-          />
-        </div>
-
-        <NoteCompletionQuestions
-          group={group}
-          answers={answers}
-          onAnswerChange={onAnswerChange}
-        />
-      </div>
+      <NoteCompletionQuestions
+        group={group}
+        answers={answers}
+        onAnswerChange={onAnswerChange}
+      />
     </section>
   );
 }

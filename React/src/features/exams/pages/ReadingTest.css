@@ -2116,7 +2116,7 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
    READING — Matching Features
    ============================================================ */
 .reading-test__content--matching-features {
-  grid-template-columns: minmax(0, 1fr) 552px;
+  
 }
 
 .reading-test__matching-features {
@@ -2298,7 +2298,7 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
    READING — Matching Sentence Endings
    ============================================================ */
 .reading-test__content--matching-sentence-endings {
-  grid-template-columns: minmax(0, 1fr) 552px;
+  
 }
 
 .reading-test__matching-sentence-endings {
@@ -2485,7 +2485,7 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
    READING — Summary Completion
    ============================================================ */
 .reading-test__content--summary-completion {
-  grid-template-columns: minmax(0, 1fr) 552px;
+  
 }
 
 .reading-test__summary-completion {
@@ -2621,7 +2621,7 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
    READING — Sentence Completion
    ============================================================ */
 .reading-test__content--sentence-completion {
-  grid-template-columns: minmax(0, 1fr) 552px;
+  
 }
 
 .reading-test__sentence-completion {
@@ -3902,3 +3902,949 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
 .reading-test__form-answer-clear::after,
 .reading-test__table-answer-clear::after,
 .reading-test__map-answer-clear::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* ============================================================
+   READING — Notes Completion
+   ============================================================ */
+.reading-test__content--note-completion {
+  
+}
+
+.reading-test__note-completion {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.reading-test__note-instructions {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: 5px;
+  background: rgba(4, 92, 206, 0.07);
+  color: #0537A5;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.reading-test__note-instructions p {
+  margin: 0;
+}
+
+.reading-test__note-completion-card {
+  overflow: hidden;
+  width: 100%;
+  padding: 2px;
+  border: 2px solid rgba(0, 0, 0, 0.10);
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.reading-test__note-completion-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(249, 250, 251, 0.60);
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.reading-test__note-completion-content {
+  padding: 16px 20px;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 34px;
+  letter-spacing: 0;
+}
+
+.reading-test__note-completion-content ul {
+  margin: 0;
+  padding-left: 21px;
+  list-style: disc;
+}
+
+.reading-test__note-completion-content li {
+  margin: 0;
+  padding-left: 0;
+  line-height: 34px;
+}
+
+.reading-test__note-completion-content p {
+  margin: 0;
+  line-height: 34px;
+}
+
+.reading-test__note-completion-content p:has(strong),
+.reading-test__note-completion-heading {
+  color: #000000;
+  font-weight: 700;
+}
+
+.reading-test__note-completion-dash {
+  padding-left: 0;
+}
+
+.reading-test__note-completion-blank {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  margin: 0 4px;
+  padding: 3px 9px 3px 3px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 9999px;
+  background: #FFFFFF;
+  color: #1F2937;
+  line-height: 22.75px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.reading-test__note-completion-blank.is-filled,
+.reading-test__note-completion-blank:focus-within {
+  border-color: #DBEAFE;
+}
+
+.reading-test__note-completion-blank-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #F8FAFC;
+  color: #4B5563;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.reading-test__note-completion-blank.is-filled .reading-test__note-completion-blank-number,
+.reading-test__note-completion-blank:focus-within .reading-test__note-completion-blank-number {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.reading-test__note-completion-input {
+  min-width: 0;
+  max-width: 170px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #3B82F6;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__note-completion-input::placeholder {
+  color: #1F2937;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.reading-test__note-completion-blank.is-filled .reading-test__note-completion-input,
+.reading-test__note-completion-blank:focus-within .reading-test__note-completion-input {
+  color: #3B82F6;
+}
+
+@media (max-width: 900px) {
+  .reading-test__content--note-completion {
+    grid-template-columns: 1fr;
+  }
+
+  .reading-test__note-completion-content {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+/* ============================================================
+   READING — Table Completion
+   ============================================================ */
+.reading-test__content--table-completion {
+  
+}
+
+.reading-test__table-completion {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.reading-test__table-instructions {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: 5px;
+  background: rgba(4, 92, 206, 0.07);
+  color: #0537A5;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.reading-test__table-instructions p {
+  margin: 0;
+}
+
+.reading-test__table-completion-card {
+  overflow: hidden;
+  width: 100%;
+  padding: 2px;
+  border: 4px solid #E5E5E5;
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.reading-test__table-completion-content {
+  overflow: hidden;
+  width: 100%;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: 0;
+}
+
+.reading-test__table-completion-content figure,
+.reading-test__table-completion-content figure.table {
+  float: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.reading-test__table-completion-content table {
+  width: 100% !important;
+  min-width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.reading-test__table-completion-content th,
+.reading-test__table-completion-content td {
+  border: 2px solid #E5E5E5 !important;
+  padding: 4px 20px !important;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.reading-test__table-completion-content th {
+  padding: 16px 20px 12px !important;
+  border-color: rgba(0, 0, 0, 0.10) !important;
+  background: rgba(249, 250, 251, 0.60) !important;
+  color: #0A0A0A;
+  font-weight: 700;
+  line-height: 22.75px;
+  text-align: center;
+}
+
+.reading-test__table-completion-content td:first-child {
+  color: #000000;
+  font-weight: 400;
+}
+
+.reading-test__table-completion-content p,
+.reading-test__table-completion-content ul,
+.reading-test__table-completion-content ol {
+  margin-top: 0;
+}
+
+.reading-test__table-completion-content p {
+  margin-bottom: 0;
+}
+
+.reading-test__table-completion-content ul,
+.reading-test__table-completion-content ol {
+  margin-bottom: 0;
+  padding-left: 21px;
+}
+
+.reading-test__table-completion-content li {
+  margin: 0;
+  line-height: 30px;
+}
+
+.reading-test__table-completion-blank {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  margin: 0 4px;
+  padding: 3px 9px 3px 3px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 9999px;
+  background: #FFFFFF;
+  color: #1F2937;
+  line-height: 22.75px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.reading-test__table-completion-blank.is-filled,
+.reading-test__table-completion-blank:focus-within {
+  border-color: #DBEAFE;
+}
+
+.reading-test__table-completion-blank-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #F8FAFC;
+  color: #4B5563;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.reading-test__table-completion-blank.is-filled .reading-test__table-completion-blank-number,
+.reading-test__table-completion-blank:focus-within .reading-test__table-completion-blank-number {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.reading-test__table-completion-input {
+  min-width: 0;
+  max-width: 140px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #3B82F6;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__table-completion-input::placeholder {
+  color: #1F2937;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.reading-test__table-completion-blank.is-filled .reading-test__table-completion-input,
+.reading-test__table-completion-blank:focus-within .reading-test__table-completion-input {
+  color: #3B82F6;
+}
+
+@media (max-width: 900px) {
+  .reading-test__content--table-completion {
+    grid-template-columns: 1fr;
+  }
+
+  .reading-test__table-completion-card {
+    overflow-x: auto;
+  }
+
+  .reading-test__table-completion-content table {
+    min-width: 520px;
+  }
+}
+
+/* ============================================================
+   READING — Flow Chart Completion
+   ============================================================ */
+.reading-test__content--flow-chart {
+  
+}
+
+.reading-test__flow-chart-completion {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.reading-test__flow-chart-instructions {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: 5px;
+  background: rgba(4, 92, 206, 0.07);
+  color: #0537A5;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.reading-test__flow-chart-instructions p {
+  margin: 0;
+}
+
+.reading-test__flow-chart-card {
+  overflow: hidden;
+  width: 100%;
+  padding: 2px;
+  border: 4px solid #E5E5E5;
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.reading-test__flow-chart-content {
+  overflow: hidden;
+  width: 100%;
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__flow-chart-title-block {
+  width: 100%;
+  margin: 0;
+  padding: 16px 20px 12px;
+  border: 2px solid #E5E5E5;
+  border-bottom: 2px solid #E5E5E5;
+  background: rgba(249, 250, 251, 0.60);
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  text-align: center;
+}
+
+.reading-test__flow-chart-step {
+  display: block;
+  width: 100%;
+  min-height: 51px;
+  margin: 0;
+  padding: 16px 20px 12px;
+  border-right: 2px solid #E5E5E5;
+  border-bottom: 2px solid #E5E5E5;
+  border-left: 2px solid #E5E5E5;
+  background: #FFFFFF;
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.reading-test__flow-chart-step p,
+.reading-test__flow-chart-step ul,
+.reading-test__flow-chart-step ol {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-height: 0;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+}
+
+.reading-test__flow-chart-step ul,
+.reading-test__flow-chart-step ol {
+  padding-left: 21px;
+}
+
+.reading-test__flow-chart-step li {
+  margin: 0;
+  line-height: 22.75px;
+}
+
+.reading-test__flow-chart-arrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  margin: -2px 0;
+  padding: 5px 0;
+  border: 0;
+  background: #FFFFFF;
+}
+
+.reading-test__flow-chart-arrow-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 52px;
+  background: #F1F5F9;
+  color: #1F2937;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.reading-test__flow-chart-blank {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  margin: 0 4px;
+  padding: 3px 9px 3px 3px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 9999px;
+  background: #FFFFFF;
+  color: #1F2937;
+  line-height: 22.75px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.reading-test__flow-chart-blank.is-filled,
+.reading-test__flow-chart-blank:focus-within {
+  border-color: #DBEAFE;
+}
+
+.reading-test__flow-chart-blank-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #F8FAFC;
+  color: #4B5563;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+.reading-test__flow-chart-blank.is-filled .reading-test__flow-chart-blank-number,
+.reading-test__flow-chart-blank:focus-within .reading-test__flow-chart-blank-number {
+  background: #EFF6FF;
+  color: #3B82F6;
+}
+
+.reading-test__flow-chart-input {
+  min-width: 0;
+  max-width: 190px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #3B82F6;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__flow-chart-input::placeholder {
+  color: #1F2937;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.reading-test__flow-chart-blank.is-filled .reading-test__flow-chart-input,
+.reading-test__flow-chart-blank:focus-within .reading-test__flow-chart-input {
+  color: #3B82F6;
+}
+
+@media (max-width: 900px) {
+  .reading-test__content--flow-chart {
+    grid-template-columns: 1fr;
+  }
+
+  .reading-test__flow-chart-card {
+    overflow-x: auto;
+  }
+
+  .reading-test__flow-chart-content {
+    min-width: 520px;
+  }
+}
+
+/* ============================================================
+   READING — Diagram Label Completion
+   ============================================================ */
+.reading-test__content--diagram {
+  
+}
+
+.reading-test__diagram-completion {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.reading-test__diagram-instructions {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 16px;
+  border-radius: 5px;
+  background: rgba(4, 92, 206, 0.07);
+  color: #0537A5;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.reading-test__diagram-instructions p {
+  margin: 0;
+}
+
+.reading-test__diagram-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  /* width: 540px; */
+  max-width: 100%;
+}
+
+.reading-test__diagram-figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 220px;
+  overflow: hidden;
+  border-radius: 0;
+  background: #FFFFFF;
+}
+
+.reading-test__diagram-figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.reading-test__diagram-figure-html {
+  width: 100%;
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+}
+
+.reading-test__diagram-answer-card {
+  overflow: hidden;
+  width: 100%;
+  padding: 2px;
+  border: 2px solid rgba(0, 0, 0, 0.10);
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.reading-test__diagram-answer-title {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(249, 250, 251, 0.60);
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__diagram-answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+}
+
+.reading-test__diagram-answer-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 20px 15px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.reading-test__diagram-answer-row:last-child {
+  border-bottom: 0;
+}
+
+.reading-test__diagram-answer-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: #1F2937;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.reading-test__diagram-answer-row.is-filled .reading-test__diagram-answer-number {
+  background: #1F2937;
+  color: #FFFFFF;
+}
+
+.reading-test__diagram-answer-dropzone {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  overflow: hidden;
+  border: 2px dashed #E2E8F0;
+  border-radius: 14px;
+  background: #FAFAFA;
+}
+
+.reading-test__diagram-answer-row.is-filled .reading-test__diagram-answer-dropzone,
+.reading-test__diagram-answer-dropzone:focus-within {
+  border-color: #DBEAFE;
+  border-style: solid;
+}
+
+.reading-test__diagram-answer-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 16px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #3B82F6;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: 0;
+}
+
+.reading-test__diagram-answer-input::placeholder {
+  color: #4B5563;
+  font-weight: 400;
+  opacity: 1;
+}
+
+.reading-test__diagram-answer-clear {
+  position: relative;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin-right: 6px;
+  border: 0;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  cursor: pointer;
+}
+
+.reading-test__diagram-answer-clear::before,
+.reading-test__diagram-answer-clear::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: #1F2937;
+  content: '';
+}
+
+.reading-test__diagram-answer-clear::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.reading-test__diagram-answer-clear::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+@media (max-width: 900px) {
+  .reading-test__content--diagram {
+    grid-template-columns: 1fr;
+  }
+
+  .reading-test__diagram-layout {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .reading-test__diagram-answer-row {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+}
+
+/* ============================================================
+   READING — Short-answer Questions
+   ============================================================ */
+.reading-test__content--short-answer {
+  
+}
+
+.reading-test__content--short-answer .reading-test__question-group {
+  width: 100%;
+}
+
+.reading-test__content--short-answer .reading-test__group-header {
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 5px;
+  background: rgba(4, 92, 206, 0.07);
+}
+
+.reading-test__content--short-answer .reading-test__group-header h3,
+.reading-test__content--short-answer .reading-test__group-instructions {
+  color: #0537A5;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.reading-test__content--short-answer .reading-test__group-instructions {
+  padding: 0;
+}
+
+.reading-test__content--short-answer .reading-test__group-instructions strong {
+  color: #0537A5;
+  font-weight: 700;
+}
+
+.reading-test__content--short-answer .reading-test__group-instructions p {
+  margin: 0;
+}
+
+.reading-test__short-answer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.reading-test__short-answer-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 212px;
+  overflow: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 2px;
+  border: 2px solid rgba(0, 0, 0, 0.10);
+  border-radius: 16px;
+  background: #FFFFFF;
+}
+
+.reading-test__short-answer-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(249, 250, 251, 0.60);
+}
+
+.reading-test__short-answer-card-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 14px;
+  background: #0A0A0A;
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+
+.reading-test__short-answer-question-text {
+  width: 100%;
+  color: #0A0A0A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__short-answer-question-text p {
+  margin: 0;
+}
+
+.reading-test__short-answer-field-wrap {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16px 20px;
+}
+
+.reading-test__short-answer-pill {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  overflow: hidden;
+  padding: 9px 13px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 9999px;
+  background: #FFFFFF;
+}
+
+.reading-test__short-answer-card.is-filled .reading-test__short-answer-pill,
+.reading-test__short-answer-pill:focus-within {
+  padding-left: 17px;
+  border-color: #DBEAFE;
+}
+
+.reading-test__short-answer-input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #3B82F6;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22.75px;
+  letter-spacing: 0;
+}
+
+.reading-test__short-answer-input::placeholder {
+  color: #1F2937;
+  font-weight: 500;
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .reading-test__content--short-answer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .reading-test__short-answer-card-header,
+  .reading-test__short-answer-field-wrap {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}

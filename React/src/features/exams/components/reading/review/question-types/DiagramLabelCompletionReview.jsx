@@ -1,46 +1,168 @@
-import { useMemo } from 'react';
-import { getReviewAnswerData, getReviewCorrectAnswer, isCorrectResultValue, stripHtmlToText, getQuestionExplanation, getQuestionLocateText } from '../readingReviewUtils';
+import {
+  getQuestionExplanation,
+  getQuestionLocateText,
+  getReviewAnswerData,
+  getReviewCorrectAnswer,
+  isCorrectResultValue,
+  stripHtmlToText
+} from '../readingReviewUtils';
 
-const normalizeLetter = (v) => String(v ?? '').trim().toUpperCase().slice(0, 1);
-
-function ReviewItem({ question, userAnswers, expandedExplanations, onToggleExplanation, onLocate }) {
+function DiagramLabelCompletionReviewItem({
+  question,
+  userAnswers,
+  expandedExplanations = {},
+  activeQuestionId,
+  onToggleExplanation,
+  onQuestionFocus
+}) {
   const answerData = getReviewAnswerData(userAnswers, question);
   const userAnswer = stripHtmlToText(answerData.userAnswer || '');
   const correctAnswer = getReviewCorrectAnswer(answerData, question);
   const isCorrect = isCorrectResultValue(answerData.isCorrect);
   const isUnanswered = !userAnswer;
   const isExpanded = Boolean(expandedExplanations[question.id]);
+  const isActive = String(activeQuestionId ?? '') === String(question.id);
+  const stateClass = isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect';
+  const questionText = stripHtmlToText(question.content || '');
   const explanation = getQuestionExplanation(question);
-  const locateText = getQuestionLocateText(question);
+  const keywordText = getQuestionLocateText(question);
+  const hasStructuredExplanation = /<(ul|ol|li)\b|keyword|từ khoá|từ khóa|giải thích/i.test(explanation);
+
+  const handleToggle = () => {
+    onQuestionFocus?.(isExpanded ? null : question);
+    onToggleExplanation?.(question.id);
+  };
 
   return (
-    <div className={`reading-review__text-row ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
-      <span className="reading-review__answer-number">{question.number}.</span>
-      <div className="reading-review__text-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
-      <div className={`reading-review__text-answer-field ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
-        {userAnswer ? <strong>{normalizeLetter(userAnswer)}</strong> : <em>(Chưa trả lời)</em>}
-      </div>
-      {!isCorrect && !isUnanswered && <div className="reading-review__text-correct-answer">Đáp án đúng: <strong>{correctAnswer}</strong></div>}
-      {(explanation || locateText) && (
-        <div className="reading-review__text-actions">
-          {explanation && <button type="button" className="reading-review__text-action-btn" onClick={() => onToggleExplanation(question.id)}>{isExpanded ? 'Thu gọn' : 'Giải thích'}</button>}
-          {locateText && <button type="button" className="reading-review__text-action-btn" onClick={() => onLocate(locateText)}>Locate</button>}
+    <div className={`reading-review__diagram-row ${stateClass} ${isExpanded ? 'is-expanded' : ''} ${isActive ? 'is-active' : ''}`}>
+      <div className="reading-review__diagram-question-line">
+        <span className="reading-review__diagram-question-number">
+          {question.number}
+        </span>
+
+        <div className="reading-review__diagram-dropzone">
+          <div className={`reading-review__diagram-answer-box ${stateClass}`}>
+            {userAnswer || 'Chưa trả lời'}
+          </div>
         </div>
-      )}
-      {isExpanded && explanation && <div className="reading-review__text-detail" dangerouslySetInnerHTML={{ __html: explanation }} />}
+      </div>
+
+      <div className="reading-review__diagram-feedback">
+        <div className="reading-review__diagram-feedback-head">
+          <span className={`reading-review__diagram-status ${stateClass}`}>
+            {isUnanswered ? 'Bỏ qua' : isCorrect ? 'Đúng' : 'Sai'}
+          </span>
+
+          <span className="reading-review__diagram-correct-answer">
+            Answer: <strong>{correctAnswer || '...'}</strong>
+          </span>
+
+          <div className="reading-review__diagram-feedback-action">
+            <button
+              type="button"
+              className="reading-review__diagram-detail-button"
+              onClick={handleToggle}
+              aria-expanded={isExpanded}
+            >
+              {isExpanded ? 'Thu gọn' : 'Chi tiết'}
+            </button>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="reading-review__diagram-detail">
+            {questionText && (
+              <>
+                <ul className="reading-review__diagram-detail-list">
+                  <li><strong>Question:</strong></li>
+                </ul>
+                <ul className="reading-review__diagram-detail-list reading-review__diagram-detail-list--nested">
+                  <li>{questionText}</li>
+                </ul>
+              </>
+            )}
+
+            {keywordText && (
+              <>
+                <ul className="reading-review__diagram-detail-list">
+                  <li><strong>Keyword:</strong></li>
+                </ul>
+                <ul className="reading-review__diagram-detail-list reading-review__diagram-detail-list--nested">
+                  <li>{keywordText}</li>
+                </ul>
+              </>
+            )}
+
+            {explanation && hasStructuredExplanation ? (
+              <div
+                className="reading-review__diagram-detail-text"
+                dangerouslySetInnerHTML={{ __html: explanation }}
+              />
+            ) : explanation ? (
+              <>
+                <ul className="reading-review__diagram-detail-list">
+                  <li><strong>Giải thích:</strong></li>
+                </ul>
+                <ul className="reading-review__diagram-detail-list reading-review__diagram-detail-list--nested">
+                  <li>
+                    <div
+                      className="reading-review__diagram-detail-text"
+                      dangerouslySetInnerHTML={{ __html: explanation }}
+                    />
+                  </li>
+                </ul>
+              </>
+            ) : (
+              !keywordText && (
+                <ul className="reading-review__diagram-detail-list">
+                  <li>Chưa có giải thích.</li>
+                </ul>
+              )
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-export default function DiagramLabelCompletionReview({ group, userAnswers, expandedExplanations, activeQuestionId, onToggleExplanation, onQuestionFocus, onLocate }) {
+function DiagramLabelCompletionReview({
+  group,
+  userAnswers,
+  expandedExplanations,
+  activeQuestionId,
+  onToggleExplanation,
+  onQuestionFocus
+}) {
   return (
-    <section className="reading-review__answer-group reading-review__answer-group--diagram">
-      <div className="reading-review__answer-range">Questions {group.startNumber} – {group.endNumber}</div>
-      <div className="reading-review__text-list">
-        {group.questions?.map((q) => (
-          <ReviewItem key={q.id} question={q} userAnswers={userAnswers} expandedExplanations={expandedExplanations} onToggleExplanation={onToggleExplanation} onLocate={onLocate} />
-        ))}
+    <section className="reading-review__diagram-answer-group">
+      <div className="reading-review__diagram-instructions">
+        <p>
+          <strong>Questions {group.startNumber}-{group.endNumber}</strong>
+        </p>
+      </div>
+
+      <div className="reading-review__diagram-card">
+        <div className="reading-review__diagram-card-head">
+          Your answer
+        </div>
+
+        <div className="reading-review__diagram-list">
+          {group.questions?.map((question) => (
+            <DiagramLabelCompletionReviewItem
+              key={question.id}
+              question={question}
+              userAnswers={userAnswers}
+              expandedExplanations={expandedExplanations}
+              activeQuestionId={activeQuestionId}
+              onToggleExplanation={onToggleExplanation}
+              onQuestionFocus={onQuestionFocus}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
 }
+
+export default DiagramLabelCompletionReview;
