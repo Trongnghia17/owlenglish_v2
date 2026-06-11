@@ -5,6 +5,10 @@ namespace Tests\Unit;
 use App\Exports\SkillImportTemplateExport;
 use App\Models\ExamSkill;
 use App\Services\SkillExcelImportService;
+use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PHPUnit\Framework\TestCase;
 
 class SkillImportTemplateExportTest extends TestCase
@@ -37,7 +41,10 @@ class SkillImportTemplateExportTest extends TestCase
         $this->assertSame('Short-answer Questions', $sheets[13]->title());
         $this->assertCount(119, $rows);
         $this->assertSame('Reading Passage 3 - To catch a king', $rows[0][1]);
-        $this->assertStringContainsString('To catch a king', $rows[0][2]);
+        $this->assertInstanceOf(RichText::class, $rows[0][2]);
+        $this->assertStringContainsString('To catch a king', $rows[0][2]->getPlainText());
+        $this->assertRichTextHasBoldRun($rows[0][2]);
+        $this->assertReadingTemplateSectionsHaveBoldEvidence($sheets);
         $this->assertSame('What is the reviewer\'s main purpose in the first paragraph?', $rows[0][11]);
         $this->assertSame('yes', $rows[1][17]);
         $this->assertSame('it fails to address whether Charles II\'s experiences had a lasting influence on him.', $rows[19][15]);
@@ -221,6 +228,57 @@ class SkillImportTemplateExportTest extends TestCase
         $this->assertStringContainsString('<strong>Correct answer</strong>', $question['answers'][1]['content_html']);
         $this->assertStringNotContainsString('script', $question['answers'][1]['content_html']);
         $this->assertTrue($question['answers'][1]['is_correct']);
+    }
+
+    public function test_preview_reads_bold_section_content_from_excel(): void
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        foreach (SkillExcelImportService::HEADINGS as $index => $heading) {
+            $sheet->setCellValueByColumnAndRow($index + 1, 1, $heading);
+        }
+
+        $richText = new RichText();
+        $richText->createText('Intro ');
+        $bold = $richText->createTextRun('bold evidence');
+        $bold->getFont()?->setBold(true);
+        $richText->createText(' outro.');
+
+        $sheet->setCellValue('A2', 1);
+        $sheet->setCellValue('B2', 'Section 1');
+        $sheet->setCellValue('C2', $richText);
+        $sheet->setCellValue('F2', 1);
+        $sheet->setCellValue('I2', 'multiple_choice');
+        $sheet->setCellValue('K2', 1);
+        $sheet->setCellValue('L2', 'Question content');
+        $sheet->setCellValue('M2', 'multiple_choice');
+        $sheet->setCellValue('O2', 1);
+        $sheet->setCellValue('P2', 'Answer content');
+        $sheet->setCellValue('R2', 'yes');
+
+        $path = sys_get_temp_dir() . '/skill-import-rich-text-' . uniqid('', true) . '.xlsx';
+
+        try {
+            (new Xlsx($spreadsheet))->save($path);
+
+            $preview = (new SkillExcelImportService())->preview(
+                new ExamSkill(['skill_type' => 'reading']),
+                new UploadedFile($path, 'import.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', null, true)
+            );
+
+            $this->assertSame([], $preview['errors']);
+            $this->assertStringContainsString(
+                '<strong>bold evidence</strong>',
+                $preview['payload']['sections'][0]['content']
+            );
+        } finally {
+            $spreadsheet->disconnectWorksheets();
+
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
     }
 
     public function test_import_preview_keeps_true_false_not_given_question_type(): void
@@ -717,5 +775,38 @@ class SkillImportTemplateExportTest extends TestCase
     private function importRow(array $values): array
     {
         return array_merge(array_fill_keys(SkillExcelImportService::HEADINGS, ''), $values);
+    }
+
+    private function assertReadingTemplateSectionsHaveBoldEvidence(array $sheets): void
+    {
+        foreach ($sheets as $sheet) {
+            $sectionContent = null;
+
+            foreach ($sheet->array() as $row) {
+                if (($row[2] ?? '') !== '') {
+                    $sectionContent = $row[2];
+                    break;
+                }
+            }
+
+            $this->assertInstanceOf(
+                RichText::class,
+                $sectionContent,
+                "Sheet {$sheet->title()} should export section_content as rich text."
+            );
+            $this->assertRichTextHasBoldRun($sectionContent, "Sheet {$sheet->title()} should contain bold evidence.");
+        }
+    }
+
+    private function assertRichTextHasBoldRun(RichText $richText, string $message = ''): void
+    {
+        foreach ($richText->getRichTextElements() as $element) {
+            if ($element->getFont()?->getBold()) {
+                $this->assertTrue(true);
+                return;
+            }
+        }
+
+        $this->fail($message ?: 'Expected rich text to contain a bold run.');
     }
 }

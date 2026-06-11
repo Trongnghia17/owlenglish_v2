@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Imports\SkillImportRowsImport;
 use App\Models\ExamFilter;
 use App\Models\ExamQuestion;
 use App\Models\ExamQuestionGroup;
@@ -15,7 +14,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use HTMLPurifier;
 use HTMLPurifier_Config;
-use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SkillExcelImportService
 {
@@ -73,14 +75,7 @@ class SkillExcelImportService
 
     public function preview(ExamSkill $skill, UploadedFile $file): array
     {
-        $sheets = Excel::toArray(new SkillImportRowsImport(), $file);
-        $rows = [];
-
-        foreach ($sheets as $sheetRows) {
-            $rows = array_merge($rows, $sheetRows);
-        }
-
-        return $this->buildPreview($skill, $rows);
+        return $this->buildPreview($skill, $this->readRowsFromExcel($file));
     }
 
     public function buildPreview(ExamSkill $skill, array $rows): array
@@ -501,11 +496,141 @@ class SkillExcelImportService
 
         foreach (self::HEADINGS as $heading) {
             $value = $row[$heading] ?? '';
-            $normalized[$heading] = is_string($value) ? trim($value) : $value;
-            $normalized[$heading] = $normalized[$heading] === null ? '' : $normalized[$heading];
+            $normalized[$heading] = $this->normalizeCellValue($value);
         }
 
         return $normalized;
+    }
+
+    private function readRowsFromExcel(UploadedFile $file): array
+    {
+        $path = $file->getRealPath() ?: $file->getPathname();
+        $reader = IOFactory::createReaderForFile($path);
+
+        if (method_exists($reader, 'setReadDataOnly')) {
+            $reader->setReadDataOnly(false);
+        }
+
+        $spreadsheet = $reader->load($path);
+
+        try {
+            $rows = [];
+
+            foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
+                $rows = array_merge($rows, $this->readRowsFromWorksheet($worksheet));
+            }
+
+            return $rows;
+        } finally {
+            $spreadsheet->disconnectWorksheets();
+        }
+    }
+
+    private function readRowsFromWorksheet(Worksheet $worksheet): array
+    {
+        $columnCount = max(
+            count(self::HEADINGS),
+            Coordinate::columnIndexFromString($worksheet->getHighestDataColumn())
+        );
+        $headings = [];
+
+        for ($column = 1; $column <= $columnCount; $column++) {
+            $heading = $this->normalizeHeading($worksheet->getCellByColumnAndRow($column, 1)->getValue());
+
+            if ($heading !== '') {
+                $headings[$column] = $heading;
+            }
+        }
+
+        if (!$headings) {
+            return [];
+        }
+
+        $rows = [];
+
+        for ($rowNumber = 2; $rowNumber <= $worksheet->getHighestDataRow(); $rowNumber++) {
+            $row = [];
+
+            foreach ($headings as $column => $heading) {
+                $row[$heading] = $worksheet->getCellByColumnAndRow($column, $rowNumber)->getValue();
+            }
+
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    private function normalizeHeading(mixed $value): string
+    {
+        if ($value instanceof RichText) {
+            $value = $value->getPlainText();
+        }
+
+        return Str::slug(trim((string) $value), '_');
+    }
+
+    private function normalizeCellValue(mixed $value): mixed
+    {
+        if ($value instanceof RichText) {
+            return $this->richTextToHtml($value);
+        }
+
+        if ($value === null) {
+            return '';
+        }
+
+        return is_string($value) ? trim($value) : $value;
+    }
+
+    private function richTextToHtml(RichText $richText): string
+    {
+        $html = '';
+
+        foreach ($richText->getRichTextElements() as $element) {
+            $text = htmlspecialchars($element->getText(), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+
+            if ($text === '') {
+                continue;
+            }
+
+            $font = $element->getFont();
+
+            if ($font?->getItalic()) {
+                $text = '<em>' . $text . '</em>';
+            }
+
+            if ($font?->getUnderline() && $font->getUnderline() !== 'none') {
+                $text = '<u>' . $text . '</u>';
+            }
+
+            if ($font?->getStrikethrough()) {
+                $text = '<s>' . $text . '</s>';
+            }
+
+            if ($font?->getBold()) {
+                $text = '<strong>' . $text . '</strong>';
+            }
+
+            $html .= $text;
+        }
+
+        return $this->htmlParagraphs($html);
+    }
+
+    private function htmlParagraphs(string $html): string
+    {
+        $paragraphs = preg_split("/\n{2,}/", str_replace(["\r\n", "\r"], "\n", trim($html))) ?: [];
+        $paragraphs = array_map(function (string $paragraph): string {
+            $lines = array_filter(
+                explode("\n", trim($paragraph)),
+                fn(string $line): bool => trim($line) !== ''
+            );
+
+            return '<p>' . implode('<br>', $lines) . '</p>';
+        }, $paragraphs);
+
+        return implode('', array_filter($paragraphs, fn(string $paragraph): bool => $paragraph !== '<p></p>'));
     }
 
     private function isBlankRow(array $row): bool

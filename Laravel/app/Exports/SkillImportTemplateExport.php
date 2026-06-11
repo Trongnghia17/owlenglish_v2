@@ -5,9 +5,81 @@ namespace App\Exports;
 use App\Models\ExamSkill;
 use App\Services\SkillExcelImportService;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 
 class SkillImportTemplateExport implements WithMultipleSheets
 {
+    private const SECTION_CONTENT_BOLD_PHRASES = [
+        'the circumstances leading to Charles II\'s escape',
+        'examples of the fugitives\' behaviour',
+        'He chose to celebrate what was essentially a defeat.',
+        'He takes an unbiased approach',
+        'Would Charles II have been a different king had these six weeks never happened?',
+        'experiences no such consequences',
+        'gene known as APoB',
+        'about six months of fasting',
+        'no evidence of significant loss of bone density',
+        'problem-solving abilities',
+        'expectations for intellectual performances that differ',
+        'miss the point of what others are saying',
+        'hospital fever',
+        'glass, steel and air-conditioned skyscrapers',
+        '24 air changes an hour',
+        'relentlessly and aggressively',
+        'does not require generated electricity',
+        'water scarcity',
+        'social mission',
+        'return of thylacines to Tasmania',
+        'forest disturbance',
+        'biodiversity is being lost',
+        'they tend to be linear',
+        'such as overfeeding',
+        'undistracted by temptations and undeterred by challenges',
+        'transporting wool from Australia to Britain',
+        'excellent navigator',
+        'Badly damaged in a gale',
+        'training ship',
+        'suffered from fire',
+        'human error as a contributory factor',
+        'initiatives for car-sharing become much more viable',
+        'reduce vehicle ownership by 43 percent',
+        'average annual mileage double',
+        'capacity for creativity',
+        'follow rules and take turns',
+        'now live in cities',
+        'risk to do with traffic',
+        'victims of crime',
+        'greater competition in academic learning',
+        'evidence to base policies on',
+        'update the details they gave on a regular basis',
+        'effect of each business on the environment',
+        'rugby captain Tana Umaga',
+        'locations chosen for blockbuster films',
+        'according to the season',
+        'links to accommodation',
+        'submit a blog',
+        'initial application online',
+        'attend a Walk-In Day',
+        'pass a swimming test',
+        'Verbal references are then requested',
+        'recruitment pool',
+        'attend a full interview',
+        'emergency procedures',
+        'Two hydraulic steel gates',
+        'A hydraulic clamp is removed',
+        'rotate the central axle',
+        'remain level',
+        'passes straight onto the aqueduct',
+        'under this wall via a tunnel',
+        'pair of locks',
+        'history of childhood',
+        'miniature adults',
+        'industrialisation created a new demand for child labour',
+        'Factory Act of 1833',
+        'play and education',
+        'classroom',
+    ];
+
     public function __construct(private readonly ExamSkill $skill)
     {
     }
@@ -1686,9 +1758,83 @@ TEXT;
 
     private function row(array $values): array
     {
+        if (isset($values['section_content']) && is_string($values['section_content'])) {
+            $values['section_content'] = $this->sectionContentForTemplate($values['section_content']);
+        }
+
         return array_map(
             fn(string $heading): mixed => $values[$heading] ?? '',
             SkillExcelImportService::HEADINGS
         );
+    }
+
+    private function sectionContentForTemplate(string $content): string|RichText
+    {
+        $content = trim($content);
+
+        if ($content === '') {
+            return '';
+        }
+
+        return $this->richTextWithBoldPhrases($content, self::SECTION_CONTENT_BOLD_PHRASES);
+    }
+
+    private function richTextWithBoldPhrases(string $text, array $phrases): string|RichText
+    {
+        $matches = [];
+
+        foreach (array_unique(array_filter($phrases)) as $phrase) {
+            $offset = 0;
+
+            while (($position = stripos($text, $phrase, $offset)) !== false) {
+                $matches[] = [
+                    'start' => $position,
+                    'length' => strlen($phrase),
+                ];
+
+                $offset = $position + strlen($phrase);
+            }
+        }
+
+        if (!$matches) {
+            return $text;
+        }
+
+        usort($matches, function (array $left, array $right): int {
+            return $left['start'] <=> $right['start']
+                ?: $right['length'] <=> $left['length'];
+        });
+
+        $filteredMatches = [];
+        $lastEnd = -1;
+
+        foreach ($matches as $match) {
+            if ($match['start'] < $lastEnd) {
+                continue;
+            }
+
+            $filteredMatches[] = $match;
+            $lastEnd = $match['start'] + $match['length'];
+        }
+
+        $richText = new RichText();
+        $cursor = 0;
+
+        foreach ($filteredMatches as $match) {
+            if ($match['start'] > $cursor) {
+                $richText->createText(substr($text, $cursor, $match['start'] - $cursor));
+            }
+
+            $run = $richText->createTextRun(substr($text, $match['start'], $match['length']));
+            $run->getFont()?->setBold(true);
+
+            $cursor = $match['start'] + $match['length'];
+        }
+
+        if ($cursor < strlen($text)) {
+            $richText->createText(substr($text, $cursor));
+        }
+
+        return $richText;
     }
 }
