@@ -8,6 +8,7 @@ import fontIcon from '@/assets/images/aa.svg'
 import fullscreenIcon from '@/assets/images/zoom.svg'
 import doneImg from '@/assets/images/cudaxong.png'
 import notDoneImg from '@/assets/images/cuchuaxong.png'
+import congratulationImg from '@/assets/images/cuchucmung.png';
 import './TestLayout.css';
 import { getNotes, createNote, updateNote, deleteNote } from '../api/notes.api';
 
@@ -572,7 +573,7 @@ export default function TestLayout({
           <div className="test-layout__modal-content test-layout__submit-modal" onClick={(e) => e.stopPropagation()}>
             <div className="test-layout__submit-modal-icon">
               <img
-                src="/src/assets/images/cuchucmung.png"
+                src={congratulationImg}
                 alt="Owl"
                 className="test-layout__submit-modal-owl"
               />

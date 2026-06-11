@@ -122,18 +122,18 @@
 
 .reading-review__tfng-option.is-selected:not(.is-correct),
 .reading-review__tfng-option.is-incorrect {
-  border-color: #dbeafe;
+  border-color: #FFE4E6;
 }
 
 .reading-review__tfng-option.is-selected:not(.is-correct) .reading-review__tfng-option-letter,
 .reading-review__tfng-option.is-incorrect .reading-review__tfng-option-letter {
-  background: #eff6ff;
-  color: #3b82f6;
+  background: #FFF1F2;
+  color: #F43F5E;
 }
 
 .reading-review__tfng-option.is-selected:not(.is-correct) .reading-review__tfng-option-text,
 .reading-review__tfng-option.is-incorrect .reading-review__tfng-option-text {
-  color: #3b82f6;
+  color: #F43F5E;
 }
 
 .reading-review__tfng-option.is-correct {
