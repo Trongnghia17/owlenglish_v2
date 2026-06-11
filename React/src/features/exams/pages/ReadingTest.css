@@ -3149,11 +3149,20 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   line-height: normal;
 }
 
+.reading-test__content--two-column .reading-test__question-group .reading-test__group-header strong {
+  color: #0537A5;
+  font-weight: 600;
+}
+
 .reading-test__content--two-column .reading-test__question-group .reading-test__group-instructions {
   color: #0537A5;
   font-size: 16px;
   line-height: normal;
   padding: 0;
+}
+
+.reading-test__content--two-column .reading-test__question-group .reading-test__group-instructions strong {
+  color: #0537A5;
 }
 
 .reading-test__content--two-column .reading-test__question-group .reading-test__group-instructions p {

@@ -25,34 +25,46 @@ function ReviewItem({ question, userAnswers, expandedExplanations, onToggleExpla
   return (
     <div className={`reading-review__choice-question-block ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'} ${isExpanded ? 'is-expanded' : ''}`}>
       <div className="reading-review__choice-question-head">
-        <span className="reading-review__answer-number">{question.number}.</span>
-        <span className={`reading-review__choice-badge ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
+        <span className="reading-review__answer-number">{question.number}</span>
+        {/* <span className={`reading-review__choice-badge ${isUnanswered ? 'is-unanswered' : isCorrect ? 'is-correct' : 'is-incorrect'}`}>
           {isUnanswered ? 'Bỏ qua' : isCorrect ? 'Đúng' : 'Sai'}
-        </span>
+        </span> */}
       </div>
       <div className="reading-review__choice-question-text" dangerouslySetInnerHTML={{ __html: question.content || '' }} />
       <div className="reading-review__choice-options">
-        {options.map((opt) => {
-          const isSelected = matchesOption(userAnswer, opt);
-          const isCorrectOpt = matchesOption(correctAnswer, opt);
-          let stateClass = '';
-          if (isCorrectOpt) stateClass = 'is-correct';
-          else if (isSelected && !isCorrect) stateClass = 'is-incorrect';
-          return (
-            <span key={opt.letter} className={`reading-review__choice-option ${stateClass} ${isSelected ? 'is-selected' : ''}`}>
-              {opt.content}
-            </span>
-          );
-        })}
+  {options.map((opt) => {
+    const isSelected = matchesOption(userAnswer, opt);
+    const isCorrectOpt = matchesOption(correctAnswer, opt);
+
+    let stateClass = '';
+
+    if (isCorrectOpt) stateClass = 'is-correct';
+    else if (isSelected && !isCorrect) stateClass = 'is-incorrect';
+
+    return (
+      <div
+        key={opt.letter}
+        className={`reading-review__choice-option ${stateClass} ${
+          isSelected ? 'is-selected' : ''
+        }`}
+      >
+        <span className="reading-review__choice-option-letter">
+          {opt.letter}
+        </span>
+
+        <span className="reading-review__choice-option-text">
+          {opt.content}
+        </span>
       </div>
-      {!isCorrect && !isUnanswered && (
-        <div className="reading-review__choice-correct-answer">Đáp án đúng: <strong>{correctAnswer}</strong></div>
-      )}
+    );
+  })}
+</div>
+      
       {(explanation || locateText) && (
         <div className="reading-review__choice-actions">
           {explanation && (
             <button type="button" className="reading-review__choice-action-btn" onClick={() => onToggleExplanation(question.id)}>
-              {isExpanded ? 'Thu gọn' : 'Giải thích'}
+              {isExpanded ? 'Thu gọn' : 'Chi tiết'}
             </button>
           )}
           {locateText && (
