@@ -112,7 +112,7 @@ function SentenceCompletionQuestions({ group, answers, onAnswerChange }) {
                           <input
                             type="text"
                             value={answer}
-                            placeholder="..................."
+                            placeholder=""
                             aria-label={`Question ${question.number} answer`}
                             autoComplete="off"
                             onChange={(event) => onAnswerChange(question.id, event.target.value)}

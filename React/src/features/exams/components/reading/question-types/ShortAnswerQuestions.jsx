@@ -42,7 +42,7 @@ function ShortAnswerQuestions({ group, answers, onAnswerChange }) {
                   type="text"
                   className="reading-test__short-answer-input"
                   aria-label={`Answer ${question.number}`}
-                  placeholder={EMPTY_PLACEHOLDER}
+                  placeholder=""
                   value={value}
                   onChange={(event) =>
                     onAnswerChange(question.id, event.target.value)

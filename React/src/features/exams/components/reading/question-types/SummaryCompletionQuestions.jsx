@@ -139,9 +139,9 @@ function SummaryCompletionQuestions({ group, answers, onAnswerChange }) {
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'reading-test__summary-completion-input';
-      input.placeholder = '............';
+      input.placeholder = '';
       input.autocomplete = 'off';
-      input.size = 12;
+      input.size = 8;
       input.value = latestAnswersRef.current?.[meta.question.id] || '';
       input.setAttribute('aria-label', `Question ${meta.question.number || ''} answer`.trim());
 

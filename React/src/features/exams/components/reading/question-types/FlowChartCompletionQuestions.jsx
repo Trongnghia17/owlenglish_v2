@@ -134,7 +134,7 @@ function FlowChartCompletionQuestions({ group, answers, onAnswerChange }) {
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'reading-test__flow-chart-input';
-      input.placeholder = '.......';
+      input.placeholder = '';
       input.autocomplete = 'off';
       input.maxLength = 100;
       input.size = 7;
