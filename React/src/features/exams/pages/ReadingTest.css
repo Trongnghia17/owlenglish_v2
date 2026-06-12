@@ -1895,8 +1895,8 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
 }
 
 .reading-test__matching-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
   align-items: start;
 }
@@ -1909,6 +1909,7 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
 .reading-test__matching-card--options {
   background: #F9FAFB;
   border-color: #E5E7EB;
+  width: 100%;
 }
 .reading-test__matching-card-title {
   font-size: 14px;
@@ -1919,9 +1920,9 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   border-bottom: 1px solid #E5E7EB;
 }
 .reading-test__matching-options-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
 }
 .reading-test__matching-option {
   display: flex;
@@ -1929,22 +1930,14 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   gap: 10px;
   width: 100%;
   padding: 10px 12px;
-  border: 1.5px solid #E5E7EB;
-  border-radius: 6px;
-  background: #fff;
+  border: none;
   cursor: grab;
   text-align: left;
   transition: all 0.15s;
+  background: none;
+  border-bottom: 1px solid #E2E8F0;
 }
-.reading-test__matching-option:hover:not(.is-used) {
-  border-color: #045CCE;
-  background: #EFF6FF;
-}
-.reading-test__matching-option.is-active {
-  border-color: #045CCE;
-  background: #EFF6FF;
-  box-shadow: 0 0 0 3px rgba(4, 92, 206, 0.1);
-}
+
 .reading-test__matching-option.is-dragging {
   opacity: 0.5;
 }
@@ -1954,17 +1947,22 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   background: #F3F4F6;
 }
 .reading-test__matching-option-letter {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #F3F4F6;
-  border-radius: 4px;
-  font-weight: 700;
-  font-size: 12px;
-  color: #374151;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 14px;
+    background: #0A0A0A;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 20px;
+    margin-top: 0;
 }
 .reading-test__matching-option.is-used .reading-test__matching-option-letter,
 .reading-test__matching-option.is-used .reading-test__matching-option-text {
