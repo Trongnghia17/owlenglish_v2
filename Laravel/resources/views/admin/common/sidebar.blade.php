@@ -83,14 +83,14 @@
 
                 <!-- Quản lý Skills -->
                 <li class="nav-item">
-                    <a class="nav-link has-arrow {{ request()->routeIs('admin.skills.*') ? '' : 'collapsed' }}"
+                    <a class="nav-link has-arrow {{ request()->routeIs('admin.skills.*', 'admin.writing-submissions.*') ? '' : 'collapsed' }}"
                         href="#!" data-bs-toggle="collapse" data-bs-target="#navSkills"
-                        aria-expanded="{{ request()->routeIs('admin.skills.*') ? 'true' : 'false' }}"
+                        aria-expanded="{{ request()->routeIs('admin.skills.*', 'admin.writing-submissions.*') ? 'true' : 'false' }}"
                         aria-controls="navSkills">
                         <i data-feather="book-open" class="nav-icon me-2 icon-xxs"></i>
                         Quản lý đề thi
                     </a>
-                    <div id="navSkills" class="collapse {{ request()->routeIs('admin.skills.*') ? 'show' : '' }}"
+                    <div id="navSkills" class="collapse {{ request()->routeIs('admin.skills.*', 'admin.writing-submissions.*') ? 'show' : '' }}"
                         data-bs-parent="#sideNavbar">
                         <ul class="nav flex-column">
                             <li class="nav-item">
@@ -103,6 +103,12 @@
                                 <a class="nav-link {{ request()->routeIs('admin.skills.create') ? 'active' : '' }}"
                                     href="{{ route('admin.skills.create') }}">
                                     Thêm đề thi mới
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('admin.writing-submissions.*') ? 'active' : '' }}"
+                                    href="{{ route('admin.writing-submissions.index') }}">
+                                    Chấm Writing
                                 </a>
                             </li>
                         </ul>

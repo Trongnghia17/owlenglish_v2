@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\PaymentPackageController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SkillController;
 use App\Http\Controllers\Admin\SkillImportController;
+use App\Http\Controllers\Admin\WritingSubmissionController;
 
 
 /*
@@ -89,6 +90,11 @@ Route::middleware(['auth', 'role:1,2,3,4,5'])->prefix('admin')->name('admin.')->
     Route::resource('skills', SkillController::class);
     Route::patch('skills/{skill}/toggle-active', [SkillController::class, 'toggleActive'])->name('skills.toggle-active');
     Route::get('api/tests-by-exam', [SkillController::class, 'getTestsByExam'])->name('api.tests-by-exam');
+
+    // Writing grading
+    Route::get('writing-submissions', [WritingSubmissionController::class, 'index'])->name('writing-submissions.index');
+    Route::get('writing-submissions/{writingSubmission}/edit', [WritingSubmissionController::class, 'edit'])->name('writing-submissions.edit');
+    Route::put('writing-submissions/{writingSubmission}', [WritingSubmissionController::class, 'update'])->name('writing-submissions.update');
 
     // Exam Test Management Routes
     Route::prefix('exams/{exam}')->name('exams.')->group(function () {
