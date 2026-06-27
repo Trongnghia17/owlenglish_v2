@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getTestResult } from '../api/exams.api';
+import WritingFeedbackResult from '../components/writing/WritingFeedbackResult';
+import { hasWritingFeedback } from '../utils/writingFeedback';
 import logo from '@/assets/images/logo.png';
 import congratsImg from '@/assets/images/source_image-Photoroom.png'
 import './TestResult.css';
@@ -67,7 +69,12 @@ export default function TestResult() {
 
   // Kiểm tra nếu là Speaking hoặc Writing
   const skillType = result.skill?.skill_type?.toLowerCase() || '';
-  const isSpeakingOrWriting = skillType === 'speaking' || skillType === 'writing';
+  const isWriting = skillType === 'writing';
+  const isSpeakingOrWriting = skillType === 'speaking' || isWriting;
+
+  if (isWriting && hasWritingFeedback(result)) {
+    return <WritingFeedbackResult result={result} />;
+  }
 
   // Nếu là Speaking hoặc Writing, hiển thị UI đặc biệt
   if (isSpeakingOrWriting) {
