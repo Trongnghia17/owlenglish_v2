@@ -9,6 +9,29 @@
                 const currentTestId = {{ $skill->exam_test_id }};
                 const skillType = '{{ $skill->skill_type }}'; // Get current skill type
                 const questionTypeOptions = @json($questionTypeOptions);
+                @php
+                    $scriptSkillSlug = Str::slug($skill->skill_type);
+                    $scriptSkillFilter = $skillFilters[$scriptSkillSlug] ?? null;
+                    $scriptQuestionTypeFilterGroups = $scriptSkillFilter
+                        ? $scriptSkillFilter->children
+                            ->filter(fn($group) => Str::startsWith(Str::slug($group->name), 'theo-dang'))
+                            ->map(
+                                fn($group) => [
+                                    'name' => $group->name,
+                                    'children' => $group->children
+                                        ->map(
+                                            fn($value) => [
+                                                'id' => $value->id,
+                                                'name' => $value->name,
+                                            ],
+                                        )
+                                        ->values(),
+                                ],
+                            )
+                            ->values()
+                        : collect();
+                @endphp
+                const sectionQuestionTypeFilterGroups = @json($scriptQuestionTypeFilterGroups);
                 const escapeHtml = (value) => String(value)
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
@@ -19,6 +42,31 @@
                     .map(([value, label]) => `<option value="${escapeHtml(value)}" ${value === selectedValue ? 'selected' : ''}>${escapeHtml(label)}</option>`)
                     .join('');
                 const questionTypeOptionsHtml = buildQuestionTypeOptionsHtml();
+                const buildSectionQuestionTypeSelectHtml = () => {
+                    if (!['speaking', 'writing'].includes(skillType) || !sectionQuestionTypeFilterGroups.length) {
+                        return '';
+                    }
+
+                    const optionsHtml = sectionQuestionTypeFilterGroups.map(group => {
+                        const childOptions = (group.children || [])
+                            .map(child => `<option value="${escapeHtml(child.id)}">${escapeHtml(child.name)}</option>`)
+                            .join('');
+
+                        return sectionQuestionTypeFilterGroups.length > 1
+                            ? `<optgroup label="${escapeHtml(group.name)}">${childOptions}</optgroup>`
+                            : childOptions;
+                    }).join('');
+
+                    return `
+                        <div class="mb-3">
+                            <label class="form-label">Question Type</label>
+                            <select class="form-select section-question-type-select">
+                                <option value="">Select question type</option>
+                                ${optionsHtml}
+                            </select>
+                        </div>
+                    `;
+                };
 
                 // Event delegation for all button clicks
                 document.addEventListener('click', function (e) {
@@ -76,6 +124,10 @@
                         if (tableSelectionOptions) {
                             tableSelectionOptions.style.display = e.target.value === 'table_selection' ? 'block' : 'none';
                         }
+                    }
+
+                    if (e.target.matches('.section-question-type-select')) {
+                        syncSectionQuestionTypeSelect(e.target);
                     }
                 });
 
@@ -301,7 +353,7 @@
                 // Add section
                 function addSection() {
                     const container = document.getElementById('sectionsContainer');
-                    const isSpeakingOrWriting = (skillType === 'speaking111' || skillType === 'writing222');
+                    const isSpeakingOrWriting = ['speaking', 'writing'].includes(skillType);
                     // Determine which questions container to show
                     const questionsContainerHTML = isSpeakingOrWriting ? `
                     
@@ -348,11 +400,10 @@
                         </div>
                         <div class="card-body section-content collapse show" id="section-new-${sectionIndex}">
 
-                                    <div class="exam-filter-sidebar d-none" data-skill="{{ $skill->skill_type ?? '' }}">
-                            @foreach($skillFilters as $skillSlug => $filterItem)
-                        <div class="filter-skill {{ $skillSlug }} {{ $skillSlug != ($skill->skill_type ?? '') ? 'd-none' : '' }}"
-                            data-skill="{{ $skill->skill_type  }}">
-                                @foreach($filterItem->children as $group)
+                            <div class="exam-filter-sidebar d-none" data-skill="{{ $scriptSkillSlug }}">
+                                @if ($scriptSkillFilter)
+                                <div class="filter-skill {{ $scriptSkillSlug }}" data-skill="{{ $scriptSkillSlug }}">
+                                @foreach($scriptSkillFilter->children as $group)
                                 <div class="filter-group mb-3"
                                  data-group-type="{{ Str::slug($group->name) }}"> <strong class="d-block mb-2">{{ $group->name }}</strong>
                                     @foreach($group->children as $value)
@@ -360,7 +411,7 @@
                                             <input
                                             class="form-check-input exam-filter-input"
                                             type="checkbox"
-                                            data-skill="{{ $skillSlug }}"
+                                            data-skill="{{ $scriptSkillSlug }}"
                                             data-group="new_${sectionIndex}{{ $group->id }}"
                                             value="{{ $value->id }}"
                                             name="sections[${sectionIndex}][exam_filters][]"
@@ -373,9 +424,10 @@
                                 </div>
                              @endforeach
 
-                             </div>
-                                @endforeach
                             </div>
+                                @endif
+                            </div>
+                            ${buildSectionQuestionTypeSelectHtml()}
 
                             <div class="mb-3">
                                 <label class="form-label">Section Title</label>
@@ -970,15 +1022,31 @@ function normalize(str) {
         ?.toLowerCase();
 }
 
+function getSectionQuestionTypeFilterInputs(section) {
+    return section.querySelectorAll(`
+        .filter-group[data-group-type^="theo-dang"] .exam-filter-input
+    `);
+}
+
+function syncSectionQuestionTypeSelect(select) {
+    const section = select.closest('.section-item');
+    if (!section) return;
+
+    const selectedValue = String(select.value || '');
+    const typeCheckboxes = getSectionQuestionTypeFilterInputs(section);
+
+    typeCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectedValue !== '' && String(checkbox.value) === selectedValue;
+    });
+}
+
 function syncQuestionTypeWithFilters(section) {
 
     const sidebar = section.querySelector('.exam-filter-sidebar');
     if (!sidebar) return;
 
     // chỉ checkbox theo-dang
-    const typeCheckboxes = sidebar.querySelectorAll(`
-        .filter-group[data-group-type="theo-dang"] .exam-filter-input
-    `);
+    const typeCheckboxes = getSectionQuestionTypeFilterInputs(sidebar);
 
     const selects = section.querySelectorAll('.group-question-type-select');
 

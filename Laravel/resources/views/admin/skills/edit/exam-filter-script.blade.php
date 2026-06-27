@@ -5,14 +5,19 @@ document.addEventListener('change', function (e) {
     const input = e.target;
     const skill = input.dataset.skill;
     const groupId = input.dataset.group;
+    const section = input.closest('.section-item') || document;
 
-    const allInputs = document.querySelectorAll(
+    const allInputs = section.querySelectorAll(
         `.exam-filter-input[data-skill="${skill}"]`
     );
 
     if (skill === 'writing' || skill === 'speaking') {
-        // ❌ chỉ được chọn 1
-        allInputs.forEach(i => {
+        const groupType = input.closest('.filter-group')?.dataset.groupType || '';
+        const scopedInputs = groupType.startsWith('theo-dang')
+            ? section.querySelectorAll('.filter-group[data-group-type^="theo-dang"] .exam-filter-input')
+            : section.querySelectorAll(`.exam-filter-input[data-skill="${skill}"][data-group="${groupId}"]`);
+
+        scopedInputs.forEach(i => {
             if (i !== input) i.checked = false;
         });
         return;

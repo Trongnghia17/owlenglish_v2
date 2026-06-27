@@ -192,6 +192,8 @@ export default function TestLayout({
   // Get all questions in current part
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
   const allQuestionsInPart = currentPartGroups.flatMap(g => g.questions);
+  const currentPartMeta = parts.find(part => part.part === currentPartTab);
+  const headerLabel = currentPartMeta?.headerLabel || `Làm bài passage ${currentPartTab || 1}`;
 
   // Note handlers
   const handleEditNote = (note) => {
@@ -347,7 +349,7 @@ export default function TestLayout({
           <img src={logo} alt="OWL IELTS" className="test-layout__logo" />
           <div className="test-layout__header-text">
             <div className="test-layout__header-label">
-              Làm bài passage {currentPartTab || 1}
+              {headerLabel}
             </div>
             <div className="test-layout__header-name">
               {examData?.name || skillData?.name || sectionData?.title || 'Test'}
@@ -480,7 +482,7 @@ export default function TestLayout({
                       className={`test-layout__part-tab ${currentPartTab === part.part ? 'active' : ''}`}
                       onClick={() => handlePartChange(part.part)}
                     >
-                      Part {part.part} - 1/{questionCount}
+                      {part.footerLabel || `Part ${part.part} - 1/${questionCount}`}
                     </button>
                   );
                 })}

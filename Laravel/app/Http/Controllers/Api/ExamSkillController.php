@@ -69,7 +69,8 @@ class ExamSkillController extends Controller
         if ($request->boolean('with_sections')) {
             $query->with([
                 'sections.questionGroups.questions', // For Reading/Listening
-                'sections.questions' // For Writing/Speaking
+                'sections.questions', // For Writing/Speaking
+                'sections.filters'
             ]);
         }
 

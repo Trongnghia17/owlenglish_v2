@@ -265,6 +265,8 @@ class SkillController extends Controller
      */
     public function update(Request $request, ExamSkill $skill)
     {
+        $this->normalizeSectionQuestionPayload($request);
+
         $validated = $request->validate([
             'exam_id' => 'required|exists:exams,id',
             'exam_test_id' => 'required|exists:exam_tests,id',
@@ -365,6 +367,37 @@ class SkillController extends Controller
             ->with('success', 'Skill đã được cập nhật thành công!');
     }
 
+    private function normalizeSectionQuestionPayload(Request $request): void
+    {
+        $skillType = $request->input('skill_type');
+
+        if (!in_array($skillType, ['reading', 'writing', 'listening', 'speaking'], true)) {
+            return;
+        }
+
+        $sections = $request->input('sections', []);
+
+        if (!is_array($sections)) {
+            return;
+        }
+
+        foreach ($sections as $index => $sectionData) {
+            if (!is_array($sectionData)) {
+                continue;
+            }
+
+            if (in_array($skillType, ['writing', 'speaking'], true)) {
+                unset($sectionData['groups']);
+            } else {
+                unset($sectionData['direct_questions']);
+            }
+
+            $sections[$index] = $sectionData;
+        }
+
+        $request->merge(['sections' => $sections]);
+    }
+
     /**
      * Process sections, question groups, and questions
      */
@@ -413,13 +446,18 @@ class SkillController extends Controller
                 );
             }
 
-            // Process question groups
-            $groupsData = $sectionData['groups'] ?? [];
-            $this->processQuestionGroups($section, $groupsData);
+            if ($skill->isSpeaking() || $skill->isWriting()) {
+                $this->processQuestionGroups($section, []);
 
-            // Process direct questions (for speaking/writing)
-            $directQuestionsData = $sectionData['direct_questions'] ?? [];
-            $this->processDirectQuestions($section, $directQuestionsData);
+                // Process direct questions (for speaking/writing)
+                $directQuestionsData = $sectionData['direct_questions'] ?? [];
+                $this->processDirectQuestions($section, $directQuestionsData);
+            } else {
+                // Process question groups (for reading/listening)
+                $groupsData = $sectionData['groups'] ?? [];
+                $this->processQuestionGroups($section, $groupsData);
+                $this->processDirectQuestions($section, []);
+            }
         }
 
         // Delete sections that are not in the request
