@@ -204,6 +204,7 @@ class ExamController extends Controller
     public function getSectionFilters(Request $request): JsonResponse
     {
         $query = ExamSection::query()
+            ->where('is_active', true)
             ->with([
                 'filters',
                 'skill.examTest.exam'
@@ -219,23 +220,33 @@ class ExamController extends Controller
             });
         }
 
-        $query->whereHas('skill.examTest.exam', function ($q) use ($request) {
+        $query->whereHas('skill', function ($skillQuery) use ($request) {
+            $skillQuery->where('is_active', true)
+                ->whereHas('examTest', function ($testQuery) use ($request) {
+                    $testQuery->where('is_active', true)
+                        ->whereHas('exam', function ($examQuery) use ($request) {
+                            $examQuery->where('is_active', true)
+                                ->whereHas('collections', function ($collectionQuery) {
+                                    $collectionQuery->where('is_active', true);
+                                });
 
-            if ($request->filled('type')) {
-                $q->where('type', $request->type);
-            }
+                            if ($request->filled('type')) {
+                                $examQuery->where('type', $request->type);
+                            }
 
-            if ($request->filled('level')) {
-                $q->where('level', $request->level);
-            }
+                            if ($request->filled('level')) {
+                                $examQuery->where('level', $request->level);
+                            }
 
-            if ($request->filled('collectionIds')) {
-                $collectionIds = is_array($request->collectionIds)
-                    ? $request->collectionIds
-                    : explode(',', $request->collectionIds);
+                            if ($request->filled('collectionIds')) {
+                                $collectionIds = is_array($request->collectionIds)
+                                    ? $request->collectionIds
+                                    : explode(',', $request->collectionIds);
 
-                $q->whereIn('exam_collection_id', $collectionIds);
-            }
+                                $examQuery->whereIn('exam_collection_id', $collectionIds);
+                            }
+                        });
+                });
         });
 
         if ($request->filled('search')) {

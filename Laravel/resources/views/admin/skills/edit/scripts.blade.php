@@ -426,7 +426,7 @@
                              @endforeach
 
                             </div>
-                                @endif
+                                @endforeach
                             </div>
                             ${buildSectionQuestionTypeSelectHtml()}
 

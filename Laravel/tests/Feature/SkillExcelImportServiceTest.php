@@ -146,7 +146,7 @@ class SkillExcelImportServiceTest extends TestCase
             $this->row([
                 'section_no' => 1,
                 'direct_question_no' => 2,
-                'question_content' => 'Write at least 250 words.',
+                'question_content' => 'Write at least 251 words.',
                 'point' => 9,
             ]),
         ]);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import TestLayout from '../components/TestLayout';
 import WritingTaskOne from '../components/writing/WritingTaskOne';
@@ -21,7 +21,7 @@ const WritingTest = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const examData = location.state?.examData || null;
-  
+
   const [answers, setAnswers] = useState({});
   const [timeRemaining, setTimeRemaining] = useState(DEFAULT_WRITING_TIME_LIMIT_SECONDS);
   const [currentPartTab, setCurrentPartTab] = useState(1);
@@ -44,7 +44,7 @@ const WritingTest = () => {
         setCurrentPartTab(1);
 
         let allGroups = [];
-        
+
         if (sectionId) {
           const [sectionResponse, skillResponse] = await Promise.all([
             getSectionById(sectionId, { with_questions: true }),
@@ -99,12 +99,12 @@ const WritingTest = () => {
     };
   }, [skillId, sectionId]);
 
-  const handleAnswerChange = (groupId, sectionKey, value) => {
+  const handleAnswerChange = useCallback((groupId, sectionKey, value) => {
     setAnswers(prev => ({
       ...prev,
       [getWritingAnswerKey(groupId, sectionKey)]: value
     }));
-  };
+  }, []);
 
   const parts = useMemo(
     () => questionGroups.map((group) => ({
@@ -176,6 +176,7 @@ const WritingTest = () => {
 
   return (
     <TestLayout
+      testTypeExam="writing"
       examData={examData}
       skillData={skillData}
       sectionData={sectionData}

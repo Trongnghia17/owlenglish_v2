@@ -97,7 +97,7 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Tiêu đè</th>
+                                <th>Tiêu đề</th>
                                 <th>Loại</th>
                                 <th>Bộ đê thi</th>
                                 <th>Nhóm đê thi</th>

@@ -65,4 +65,5 @@ class Exam extends Model
     {
         return $this->belongsTo(ExamCollection::class, 'exam_collection_id');
     }
+
 }

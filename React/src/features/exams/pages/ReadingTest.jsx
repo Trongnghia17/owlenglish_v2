@@ -466,13 +466,7 @@ const ReadingTest = () => {
   };
 
   if (loading) {
-    return (
-      <div className="reading-test__loading">
-        <div>
-          Đang tải dữ liệu bài đọc...
-        </div>
-      </div>
-    );
+    return <div className="reading-test__loading">Loading...</div>;
   }
 
   if (

@@ -24,6 +24,7 @@ export default function TestLayout({
   examData,
   skillData,
   sectionData,
+  testTypeExam,
   timeRemaining,
   setTimeRemaining,
   parts = [],
@@ -211,7 +212,7 @@ export default function TestLayout({
 
   const confirmDelete = async () => {
     if (!noteToDelete) return;
-    
+
     try {
       await deleteNote(noteToDelete.id);
       setNotes(notes.filter(note => note.id !== noteToDelete.id));
@@ -338,6 +339,31 @@ export default function TestLayout({
     window.getSelection().removeAllRanges();
   };
 
+  const isWritingTest = testTypeExam === 'writing';
+  const hasTask1 = questionGroups.some(group => group.taskNumber === 1);
+  const hasTask2 = questionGroups.some(group => group.taskNumber === 2);
+  const initialTimeRemainingRef = useRef(timeRemaining);
+  const getDisplayTime = () => {
+    if (!isWritingTest) {
+      return timeRemaining;
+    }
+    const elapsedTime = initialTimeRemainingRef.current - timeRemaining;
+    // Có cả Task 1 và Task 2 => hiển thị tổng 60 phút
+    if (hasTask1 && hasTask2) {
+      return Math.max(0, 60 * 60 - elapsedTime);
+    }
+
+    if (hasTask1) {
+      return Math.max(0, 20 * 60 - elapsedTime);
+    }
+
+    if (hasTask2) {
+      return Math.max(0, 40 * 60 - elapsedTime);
+    }
+
+    return timeRemaining;
+  };
+
   return (
     <div className="test-layout" data-font-size={fontSize}>
       {/* Header */}
@@ -449,7 +475,7 @@ export default function TestLayout({
 
           <div className="test-layout__timer">
             <img src={clockIcon} alt="" />
-            <span>{formatTime(timeRemaining)}</span>
+            <span>{formatTime(getDisplayTime())}</span>
           </div>
           {onSubmit && (
             <button className="test-layout__submit-button-header" onClick={handleSubmit}>
@@ -490,18 +516,20 @@ export default function TestLayout({
             )}
 
             {/* Question Numbers Grid */}
-            <div className="test-layout__question-numbers">
-              {allQuestionsInPart.map((q, index) => (
-                <button
-                  key={q.id}
-                  className={`test-layout__question-number-item ${hasAnswerValue(answers[q.id]) ? 'answered' : ''
-                    }`}
-                  onClick={() => handleQuestionClick(q.number || index + 1)}
-                >
-                  {q.number || index + 1}
-                </button>
-              ))}
-            </div>
+            {!isWritingTest && (
+              <div className="test-layout__question-numbers">
+                {allQuestionsInPart.map((q, index) => (
+                  <button
+                    key={q.id}
+                    className={`test-layout__question-number-item ${hasAnswerValue(answers[q.id]) ? 'answered' : ''
+                      }`}
+                    onClick={() => handleQuestionClick(q.number || index + 1)}
+                  >
+                    {q.number || index + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -732,8 +760,8 @@ export default function TestLayout({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="test-layout__modal-overlay" onClick={cancelDelete}>
-          <div 
-            className="test-layout__modal-content test-layout__submit-modal" 
+          <div
+            className="test-layout__modal-content test-layout__submit-modal"
             onClick={(e) => e.stopPropagation()}
             style={{
               display: 'flex',

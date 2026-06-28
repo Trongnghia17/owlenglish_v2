@@ -1305,6 +1305,16 @@ border: 1px solid var(--Mine-Shaft-100, #E7E7E7);
   background: #9CA3AF;
 }
 
+.reading-test__empty,
+.reading-test__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  color: #6b7280;
+  font-size: 18px;
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .reading-test__content {

@@ -323,7 +323,7 @@
                                 </div>
                             </div>
 
-                            <div class="mt-3 small text-muted">
+                            {{-- <div class="mt-3 small text-muted">
                                 <div class="fw-semibold text-dark mb-1">Cách nhập theo dạng đề</div>
                                 <div>
                                     Reading/Listening dùng các cột group/question/answer. Multiple choice nhập 1 dòng
@@ -343,7 +343,7 @@
                                     <code>direct_question_no</code>, <code>sample_answer</code>,
                                     <code>question_feedback</code>, <code>hint</code>.
                                 </div>
-                            </div>
+                            </div> --}}
 
                             @if ($skillImportPreview)
                                 <div class="mt-3">
@@ -597,7 +597,7 @@
 
                                             @if ($skillFilter)
                                                 @foreach ($skillFilter->children as $group)
-                                                    <div class="filter-group mb-3"
+                                                    <div class="filter-group mb-3 d-none"
                                                         data-group-type="{{ Str::slug($group->name) }}">
                                                         <strong>{{ $group->name }}</strong>
 

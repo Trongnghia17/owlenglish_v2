@@ -108,23 +108,31 @@
 }
 
 .sidebar-item__toggle--listening .exam-group-content .exam-group-item:hover {
-    background: #35A81512;
+    background: #183d0e12;
     border-left: 1px solid #35A815;
 }
 .sidebar-item__toggle--listening .exam-group-content .active {
     background: #35A81512;
     border-left: 1px solid #35A815;
 }
+.sidebar-item__toggle--listening .exam-group-content .active:hover {
+    background: #35A81512;
+    border-left: 1px solid #35A815;
+}
 .sidebar-item__toggle--reading .exam-group-content .exam-group-item:hover {
-    background: #FF420012;
+    background: #183d0e12;
     border-left: 1px solid #FF4200;
 }
 .sidebar-item__toggle--reading .exam-group-content .active {
     background: #FF420012;
     border-left: 1px solid #FF4200;
 }
+.sidebar-item__toggle--reading .exam-group-content .active:hover {
+    background: #FF420012;
+    border-left: 1px solid #FF4200;
+}
 .sidebar-item__toggle--speaking .exam-group-content .exam-group-item:hover {
-    background: #FEBE4017;
+    background: #183d0e12;
     border-left: 1px solid #FEBE40;
 }
 
@@ -132,12 +140,20 @@
     background: #FEBE4017;
     border-left: 1px solid #FEBE40;
 }
+.sidebar-item__toggle--speaking .exam-group-content .active:hover {
+    background: #FEBE4017;
+    border-left: 1px solid #FEBE40;
+}
 .sidebar-item__toggle--writing .exam-group-content .exam-group-item:hover {
-    background: #045CCE12;
+    background: #183d0e12;
     border-left: 1px solid #045CCE;
 }
 
 .sidebar-item__toggle--writing .exam-group-content .active {
+    background: #045CCE12;
+    border-left: 1px solid #045CCE;
+}
+.sidebar-item__toggle--writing .exam-group-content .active:hover {
     background: #045CCE12;
     border-left: 1px solid #045CCE;
 }

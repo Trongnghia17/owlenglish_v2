@@ -54,7 +54,23 @@
   line-height: 22px;
 }
 
-.writing-test__task-instruction,
+.writing-test__task-instruction{
+  padding: 0px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.writing-test__task-instruction img{
+    width: 100%;
+}
+.writing-test__task-instruction figure{
+  
+}
+
+.writing-test__task-instruction .first-paragraph-has-strong{
+  background-color: #f8fafc;
+  padding: 16px 20px 12px 20px;
+}
 .writing-test__answer-header {
   display: flex;
   align-items: center;
@@ -68,6 +84,84 @@
   font-weight: 600;
   line-height: normal;
 }
+
+ figure.table {
+  margin: 24px 0;
+  overflow-x: auto;
+}
+
+/* ===== Table ===== */
+.writing-test__task-instruction table {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border: 2px solid #d9d9d9;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.writing-test__task-instruction table strong{
+  font-size: 13px;
+}
+
+/* Cell */
+.writing-test__task-instruction td,
+.writing-test__task-instruction th {
+  padding: 10px;
+  border: 1px solid #d9d9d9;
+  vertical-align: middle;
+}
+
+/* Header title */
+.writing-test__task-instruction tr:first-child td {
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  border-bottom: 2px solid #d9d9d9;
+  padding: 16px 0;
+}
+
+/* Column header */
+.writing-test__task-instruction tr:nth-child(2) td {
+  background: #eef5ff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* First column */
+.writing-test__task-instruction td:first-child {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Zebra */
+.writing-test__task-instruction tr:nth-child(n + 3):nth-child(even) td {
+  background: #fafafa;
+}
+
+/* Hover */
+.writing-test__task-instruction tr:nth-child(n + 3):hover td {
+  background: #f5f9ff;
+}
+
+/* Remove outer borders */
+.writing-test__task-instruction tr:first-child td:first-child {
+  border-top-left-radius: 16px;
+}
+
+.writing-test__task-instruction tr:first-child td:last-child {
+  border-top-right-radius: 16px;
+}
+
+.writing-test__task-instruction tr:last-child td:first-child {
+  border-bottom-left-radius: 16px;
+}
+
+.writing-test__task-instruction tr:last-child td:last-child {
+  border-bottom-right-radius: 16px;
+}
+
 
 .writing-test__task-instruction p {
   margin: 0;
@@ -184,20 +278,20 @@
   border: 2px solid #e5e5e5;
   border-radius: 12px;
   background: #ffffff;
-  color: #1f2937;
+  color: #3B82F6;
   font-family: inherit;
   font-size: 14px;
   font-weight: 500;
   line-height: 24px;
   resize: vertical;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  resize: none;
 }
 
 .writing-test__textarea:focus {
   outline: none;
-  border-color: #045cce;
   background: #fbfdff;
-  box-shadow: 0 0 0 3px rgba(4, 92, 206, 0.1);
+  color: #3B82F6;
 }
 
 .writing-test__textarea::placeholder {
