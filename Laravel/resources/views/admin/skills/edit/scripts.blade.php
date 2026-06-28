@@ -348,7 +348,7 @@
                         </div>
                         <div class="card-body section-content collapse show" id="section-new-${sectionIndex}">
 
-                                    <div class="exam-filter-sidebar d-none" data-skill="{{ $skill->skill_type ?? '' }}">
+                                    <div class="exam-filter-sidebar" data-skill="{{ $skill->skill_type ?? '' }}">
                             @foreach($skillFilters as $skillSlug => $filterItem)
                         <div class="filter-skill {{ $skillSlug }} {{ $skillSlug != ($skill->skill_type ?? '') ? 'd-none' : '' }}"
                             data-skill="{{ $skill->skill_type  }}">

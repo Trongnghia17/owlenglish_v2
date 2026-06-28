@@ -582,7 +582,7 @@
 
                                             @if ($skillFilter)
                                                 @foreach ($skillFilter->children as $group)
-                                                    <div class="filter-group mb-3 d-none"
+                                                    <div class="filter-group mb-3"
                                                         data-group-type="{{ Str::slug($group->name) }}">
                                                         <strong>{{ $group->name }}</strong>
 
