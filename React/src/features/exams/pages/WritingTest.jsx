@@ -1,128 +1,162 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import TestLayout from '../components/TestLayout';
-import { getSkillById, getSectionById } from '../api/exams.api';
+import WritingTaskOne from '../components/writing/WritingTaskOne';
+import WritingTaskTwo from '../components/writing/WritingTaskTwo';
+import { getSkillById, getSectionById, submitTestResult } from '../api/exams.api';
+import {
+  DEFAULT_WRITING_TIME_LIMIT_SECONDS,
+  getWritingTimeLimitSeconds,
+  normalizeWritingSection
+} from '../utils/writingTest';
+import {
+  createWritingLayoutAnswers,
+  createWritingSubmissionAnswers,
+  getWritingAnswerKey
+} from '../utils/writingAnswers';
 import './WritingTest.css';
 
 const WritingTest = () => {
   const { skillId, sectionId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const examData = location.state?.examData || null;
   
   const [answers, setAnswers] = useState({});
-  const [timeRemaining, setTimeRemaining] = useState(3600); // 60 minutes default
+  const [timeRemaining, setTimeRemaining] = useState(DEFAULT_WRITING_TIME_LIMIT_SECONDS);
   const [currentPartTab, setCurrentPartTab] = useState(1);
   const [loading, setLoading] = useState(true);
   const [skillData, setSkillData] = useState(null);
   const [sectionData, setSectionData] = useState(null);
   const [questionGroups, setQuestionGroups] = useState([]);
-  const [parts, setParts] = useState([]);
   const [fontSize, setFontSize] = useState('normal');
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchExamData = async () => {
       try {
         setLoading(true);
-        let response;
-        let data;
-        
-        if (sectionId) {
-          response = await getSectionById(sectionId, { with_questions: true });
-          data = response.data?.data || response.data;
-          setSectionData(data);
-        } else {
-          response = await getSkillById(skillId, { with_sections: true });
-          data = response.data?.data || response.data;
-          setSkillData(data);
-        }
+        setAnswers({});
+        setSkillData(null);
+        setSectionData(null);
+        setQuestionGroups([]);
+        setCurrentPartTab(1);
 
-        console.log('Writing Test - Fetched data:', data);
-        
-        // Xử lý sections - Writing có sections nhưng không có question_groups
         let allGroups = [];
         
-        // Nếu fetch single section (sectionId provided)
-        if (sectionId && data?.id) {
-          // Data is a single section object
-          allGroups.push({
-            id: data.id,
-            part: 1,
-            content: data.content,
-            instructions: '', // Không set instructions để content hiển thị
-            questions: data.questions || [], // Writing có questions riêng lẻ
-            title: data.title || `Task 1`
-          });
-          setQuestionGroups(allGroups);
-          setParts([{ part: 1, name: 'Task 1' }]);
-          setCurrentPartTab(1);
-        } 
-        // Nếu fetch skill với sections (skillId provided)
-        else if (data?.sections && data.sections.length > 0) {
-          // Với Writing, mỗi section là một task
-          data.sections.forEach((section, index) => {
-            allGroups.push({
-              id: section.id,
-              part: index + 1,
-              content: section.content,
-              instructions: '', // Không set instructions để content hiển thị
-              questions: section.questions || [], // Writing có questions riêng lẻ
-              title: section.title || `Task ${index + 1}`
-            });
-          });
-          setQuestionGroups(allGroups);
-          
-          // Set parts
-          const uniqueParts = allGroups.map((group, index) => ({
-            part: index + 1,
-            name: `Task ${index + 1}`
-          }));
-          setParts(uniqueParts);
-          setCurrentPartTab(1);
-        } else if (data?.questionGroups) {
-          allGroups = data.questionGroups;
-          setQuestionGroups(data.questionGroups);
-          
-          // Extract unique parts
-          if (allGroups.length > 0) {
-            const uniqueParts = [...new Set(allGroups.map(g => g.part))]
-              .sort((a, b) => a - b)
-              .map(partNum => ({
-                part: partNum,
-                name: `Task ${partNum}`
-              }));
-            setParts(uniqueParts);
-            setCurrentPartTab(uniqueParts[0]?.part || 1);
-          }
-        }
-        
-        if (allGroups.length === 0) {
-          console.error('No sections or questionGroups found in data:', data);
+        if (sectionId) {
+          const [sectionResponse, skillResponse] = await Promise.all([
+            getSectionById(sectionId, { with_questions: true }),
+            skillId ? getSkillById(skillId) : Promise.resolve(null)
+          ]);
+
+          if (cancelled) return;
+
+          const loadedSectionData = sectionResponse.data?.data || sectionResponse.data;
+          const loadedSkillData = skillResponse?.data?.success
+            ? skillResponse.data.data
+            : null;
+          const normalizedSection = normalizeWritingSection(loadedSectionData, 1);
+
+          setSkillData(loadedSkillData);
+          setSectionData(loadedSectionData);
+          setTimeRemaining(
+            getWritingTimeLimitSeconds(loadedSkillData || loadedSectionData)
+          );
+          allGroups = [normalizedSection];
+        } else if (skillId) {
+          const response = await getSkillById(skillId, { with_sections: true });
+
+          if (cancelled) return;
+
+          const loadedSkillData = response.data?.data || response.data;
+          setSkillData(loadedSkillData);
+          setTimeRemaining(getWritingTimeLimitSeconds(loadedSkillData));
+
+          allGroups = (loadedSkillData?.sections || []).map((section, index) =>
+            normalizeWritingSection(section, index + 1)
+          );
         }
 
-        if (data?.duration) {
-          setTimeRemaining(data.duration * 60);
-        }
+        setQuestionGroups(allGroups);
+        setCurrentPartTab(allGroups[0]?.part || 1);
       } catch (error) {
-        console.error('Error fetching exam data:', error);
+        if (!cancelled) {
+          console.error('Error fetching exam data:', error);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchExamData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [skillId, sectionId]);
 
-  const handleAnswerChange = (questionId, value) => {
+  const handleAnswerChange = (groupId, sectionKey, value) => {
     setAnswers(prev => ({
       ...prev,
-      [questionId]: value
+      [getWritingAnswerKey(groupId, sectionKey)]: value
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting answers:', answers);
-    // TODO: Submit to API
-    // navigate('/exams/result');
+  const parts = useMemo(
+    () => questionGroups.map((group) => ({
+      id: group.id,
+      part: group.part,
+      headerLabel: group.taskLabel,
+      footerLabel: group.taskLabel
+    })),
+    [questionGroups]
+  );
+
+  const layoutAnswers = useMemo(
+    () => createWritingLayoutAnswers(answers, questionGroups),
+    [answers, questionGroups]
+  );
+
+  const handleSubmit = async () => {
+    try {
+      const answersArray = createWritingSubmissionAnswers(answers, questionGroups);
+      const allQuestionIds = answersArray.map((answer) => answer.question_id);
+
+      if (allQuestionIds.length === 0) {
+        alert('Bài writing này chưa có câu hỏi để nộp.');
+        return;
+      }
+
+      const configuredTimeLimit = getWritingTimeLimitSeconds(skillData || sectionData);
+      const answeredQuestions = answersArray.filter((answer) =>
+        String(answer.answer ?? '').trim() !== ''
+      ).length;
+
+      const response = await submitTestResult({
+        skill_id: skillId ? parseInt(skillId, 10) : null,
+        section_id: sectionId ? parseInt(sectionId, 10) : null,
+        test_id: examData?.id || null,
+        answers: answersArray,
+        all_question_ids: allQuestionIds,
+        time_spent: Math.max(0, configuredTimeLimit - timeRemaining),
+        total_questions: allQuestionIds.length,
+        answered_questions: answeredQuestions
+      });
+
+      if (response.data.success) {
+        navigate(`/test-result/${response.data.data.id}`);
+        return;
+      }
+
+      throw new Error(response.data.message || 'Không thể nộp bài');
+    } catch (error) {
+      console.error('Error submitting writing test:', error);
+      alert('Có lỗi xảy ra khi nộp bài. Vui lòng thử lại.');
+    }
   };
 
   const currentPartGroups = questionGroups.filter(g => g.part === currentPartTab);
@@ -142,7 +176,7 @@ const WritingTest = () => {
 
   return (
     <TestLayout
-      examData={skillData || sectionData}
+      examData={examData}
       skillData={skillData}
       sectionData={sectionData}
       timeRemaining={timeRemaining}
@@ -151,91 +185,29 @@ const WritingTest = () => {
       currentPartTab={currentPartTab}
       setCurrentPartTab={setCurrentPartTab}
       questionGroups={questionGroups}
-      answers={answers}
+      answers={layoutAnswers}
       onSubmit={handleSubmit}
-      showQuestionNumbers={true}
       fontSize={fontSize}
       onFontSizeChange={setFontSize}
     >
       <div className={`writing-test__content ${fontSize !== 'normal' ? `writing-test__content--${fontSize}` : ''}`}>
-        {currentPartGroups.map((group, groupIndex) => (
-          <div key={group.id} className="writing-test__task">
-            {/* Left Column - Instructions & Content */}
-            <div className="writing-test__task-left">
-              {/* Task Header */}
-              <div className="writing-test__task-header">
-                <h2 className="writing-test__task-title">
-                  Writing Task {group.part}
-                </h2>
-                
-              </div>
+        {currentPartGroups.map((group) => {
+          const TaskComponent = group.taskNumber === 2 ? WritingTaskTwo : WritingTaskOne;
 
-              {/* Task Instructions & Content */}
-              {group.instructions && (
-                <div 
-                  className="writing-test__task-instructions"
-                  dangerouslySetInnerHTML={{ __html: group.instructions }}
-                />
-              )}
-
-              {/* Section Content - Hướng dẫn thời gian */}
-              {group.content && (
-                <div 
-                  className="writing-test__task-content"
-                  dangerouslySetInnerHTML={{ __html: group.content }}
-                />
-              )}
-
-              {/* Question Content - ĐÂY LÀ ĐỀ BÀI CHÍNH */}
-              {group.questions && group.questions.length > 0 && (
-                <div className="writing-test__questions">
-                  {group.questions.map((question, qIndex) => (
-                    <div key={question.id} className="writing-test__question">
-                      {question.content && (
-                        <div 
-                          className="writing-test__question-content"
-                          dangerouslySetInnerHTML={{ __html: question.content }}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Right Column - Answer Area */}
-            <div className="writing-test__answer-section">
-              <div className="writing-test__answer-header">
-                <span className="writing-test__answer-label">
-                  {group.part}. Your article
-                </span>
-              </div>
-              
-              <textarea
-                className="writing-test__textarea"
-                placeholder="Start typing your answer here..."
-                value={answers[group.id] || ''}
-                onChange={(e) => handleAnswerChange(group.id, e.target.value)}
-              />
-              
-              <div className="writing-test__word-count-footer">
-                {(() => {
-                  const wordCount = (answers[group.id] || '').trim().split(/\s+/).filter(Boolean).length;
-                  const targetWords = group.part === 1 ? 150 : 250;
-                  return (
-                    <>
-                      <span>{wordCount} từ: </span>
-                      <span className={wordCount < targetWords ? 'text-red' : 'text-green'}>
-                        {wordCount}
-                      </span>
-                      <span>/{targetWords}</span>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
+          return (
+            <TaskComponent
+              key={group.id}
+              group={group}
+              answers={answers}
+              onAnswerChange={handleAnswerChange}
+            />
+          );
+        })}
+        {currentPartGroups.length === 0 && (
+          <div className="writing-test__empty">
+            Không tìm thấy task writing cho phần này.
           </div>
-        ))}
+        )}
       </div>
     </TestLayout>
   );

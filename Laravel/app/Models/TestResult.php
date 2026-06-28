@@ -19,11 +19,16 @@ class TestResult extends Model
         'time_spent',
         'status',
         'answers',
+        'writing_feedback',
+        'graded_by',
+        'graded_at',
     ];
 
     protected $casts = [
         'answers' => 'array',
+        'writing_feedback' => 'array',
         'score' => 'decimal:2',
+        'graded_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -44,5 +49,10 @@ class TestResult extends Model
     public function test(): BelongsTo
     {
         return $this->belongsTo(ExamTest::class, 'exam_test_id');
+    }
+
+    public function grader(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'graded_by');
     }
 }

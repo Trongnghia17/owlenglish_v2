@@ -251,14 +251,68 @@ class TestResultController extends Controller
      */
     public function show($id)
     {
-        $result = TestResult::with(['skill', 'section', 'test', 'user'])
+        $result = TestResult::with(['skill', 'section.examSkill', 'test', 'user'])
             ->where('user_id', auth()->id())
             ->findOrFail($id);
+
+        if ($this->isWritingResult($result)) {
+            $this->attachWritingPrompts($result);
+        }
 
         return response()->json([
             'success' => true,
             'data' => $result,
         ]);
+    }
+
+    private function isWritingResult(TestResult $result): bool
+    {
+        $skillType = $result->skill?->skill_type ?? $result->section?->examSkill?->skill_type;
+
+        return strtolower((string) $skillType) === 'writing';
+    }
+
+    private function attachWritingPrompts(TestResult $result): void
+    {
+        $answers = is_array($result->answers) ? $result->answers : [];
+        $questionIds = collect($answers)
+            ->pluck('question_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($questionIds->isEmpty()) {
+            return;
+        }
+
+        $prompts = ExamQuestion::query()
+            ->whereIn('id', $questionIds)
+            ->get(['id', 'content', 'feedback', 'hint'])
+            ->mapWithKeys(fn (ExamQuestion $question) => [
+                $question->id => $this->getWritingPromptHtml($question),
+            ]);
+
+        $result->answers = collect($answers)
+            ->map(function ($answer) use ($prompts) {
+                if (!is_array($answer)) {
+                    return $answer;
+                }
+
+                $prompt = $prompts->get($answer['question_id'] ?? null) ?: ($answer['prompt'] ?? '');
+
+                if ($prompt !== '') {
+                    $answer['prompt'] = $prompt;
+                    $answer['prompt_html'] = $prompt;
+                }
+
+                return $answer;
+            })
+            ->all();
+    }
+
+    private function getWritingPromptHtml(ExamQuestion $question): string
+    {
+        return trim((string) ($question->content ?: $question->feedback ?: $question->hint ?: ''));
     }
 
     /**

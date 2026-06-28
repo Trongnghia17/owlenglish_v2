@@ -578,6 +578,21 @@
                                             @php
                                                 $skillSlug = Str::slug($skill->skill_type);
                                                 $skillFilter = $skillFilters[$skillSlug] ?? null;
+                                                $sectionQuestionTypeFilterGroups = $skillFilter
+                                                    ? $skillFilter->children->filter(
+                                                        fn($group) => Str::startsWith(Str::slug($group->name), 'theo-dang'),
+                                                    )
+                                                    : collect();
+                                                $selectedQuestionTypeFilterId = null;
+
+                                                foreach ($sectionQuestionTypeFilterGroups as $questionTypeGroup) {
+                                                    foreach ($questionTypeGroup->children as $questionTypeValue) {
+                                                        if (in_array($questionTypeValue->id, $selectedFilterIds)) {
+                                                            $selectedQuestionTypeFilterId = $questionTypeValue->id;
+                                                            break 2;
+                                                        }
+                                                    }
+                                                }
                                             @endphp
 
                                             @if ($skillFilter)
@@ -602,6 +617,30 @@
                                                         @endforeach
                                                     </div>
                                                 @endforeach
+                                            @endif
+                                            @if (
+                                                ($skill->isSpeaking() || $skill->isWriting()) &&
+                                                    $sectionQuestionTypeFilterGroups->isNotEmpty())
+                                                <div class="mb-3">
+                                                    <label class="form-label">Question Type</label>
+                                                    <select class="form-select section-question-type-select">
+                                                        <option value="">Select question type</option>
+                                                        @foreach ($sectionQuestionTypeFilterGroups as $questionTypeGroup)
+                                                            @if ($sectionQuestionTypeFilterGroups->count() > 1)
+                                                                <optgroup label="{{ $questionTypeGroup->name }}">
+                                                            @endif
+                                                            @foreach ($questionTypeGroup->children as $questionTypeValue)
+                                                                <option value="{{ $questionTypeValue->id }}"
+                                                                    {{ (string) $selectedQuestionTypeFilterId === (string) $questionTypeValue->id ? 'selected' : '' }}>
+                                                                    {{ $questionTypeValue->name }}
+                                                                </option>
+                                                            @endforeach
+                                                            @if ($sectionQuestionTypeFilterGroups->count() > 1)
+                                                                </optgroup>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
+                                                </div>
                                             @endif
                                             <!-- Section Title -->
                                             <div class="mb-3">
